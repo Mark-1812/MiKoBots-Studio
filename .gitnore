@@ -1,0 +1,7 @@
+# Ignore Python bytecode files
+*.pyc
+__pycache__/
+
+dist/
+Output/
+build/
