@@ -2,6 +2,8 @@
 *.pyc
 __pycache__/
 
+main.spec
+
 dist/
 Output/
 build/
