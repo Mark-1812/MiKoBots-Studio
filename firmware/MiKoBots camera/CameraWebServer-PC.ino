@@ -24,8 +24,8 @@
 #define LED_GPIO_NUM       4
 
 
-const char* ssid = "Mark_EXT";
-const char* password = "Mark-106";
+const char* ssid = "wifi network";
+const char* password = "password";
 
 void startCameraServer();
 void setupLedFlash(int pin);
