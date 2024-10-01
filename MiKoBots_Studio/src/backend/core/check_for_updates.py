@@ -8,7 +8,7 @@ import time
 class CheckUpdate():
     def __init__(self):
         # URL of the webpage to check
-        self.url = "https://mikobots.com/downloads-mikobots-studio/"  # Replace with the target webpage URL
+        self.url = "https://mikobots.com/mikobots-studio/downloads-mikobots-studio/"  # Replace with the target webpage URL
         self.search_phrase = "Version"  # The phrase you want to search for
 
     def fetch_and_parse(self, url):
@@ -18,15 +18,24 @@ class CheckUpdate():
 
     def check_for_phrase_in_specific_section(self, soup, tag='article'):
         content = soup.find(tag)  # Replace 'body' with the specific tag or class you want to search in
-        
-        version_match = re.search(r'MiKoBots Studio version V(\d+\.\d+)', str(content))
+        print(content)
+        version_match = re.search(r'Mikobots Stuido version</strong> V(\d+\.\d+)', str(content))
         
         var.UPDATE_VERSION  = version_match.group(1) if version_match else None
         
-        description_match = re.search(r'Description:\s*(.*?)(</p>|$)', str(content))
+        description_match = re.search(r'<strong>Description:\s*</strong>\s*([^<]+)', str(content), re.DOTALL)
         var.UPDATE_DESCRIPTION = description_match.group(1).strip() if description_match else None
         
+        description_tag = soup.find(string="Description: ")  # Find the string "Description:"
+        if description_tag:
+            print("found")
+            # Get the next sibling, which should be the text after 'Description'
+            description = description_tag.find_next().get_text(strip=True)
+            var.UPDATE_DESCRIPTION = description
+        
+        print(f"var.UPDATE_VERSION {var.UPDATE_VERSION}")
         print(f"var.UPDATE_DESCRIPTION {var.UPDATE_DESCRIPTION}")
+        
         
         if float(var.UPDATE_VERSION ) > var.CURRENT_VERSION:
             return True
