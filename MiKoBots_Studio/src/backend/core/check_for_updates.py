@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 from backend.core.event_manager import event_manager
 import backend.core.variables as var
 import re
@@ -45,13 +45,14 @@ class CheckUpdate():
     def CheckUpdateSoftware(self):
         # Fetch and parse the current content of the website 
         try:
-            soup = self.fetch_and_parse(self.url)
+            #soup = self.fetch_and_parse(self.url)
             # Check if the specific phrase exists in the specified section
-            if self.check_for_phrase_in_specific_section(soup):
-                var.UPDATE = True
-            else:
-                var.UPDATE = False
-                
+            #if self.check_for_phrase_in_specific_section(soup):
+            #    var.UPDATE = True
+            #else:
+            #    var.UPDATE = False
+            var.UPDATE = False 
+
         except:
             var.UPDATE = False
             

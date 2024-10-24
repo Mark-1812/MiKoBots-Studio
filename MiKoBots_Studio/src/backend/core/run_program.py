@@ -19,9 +19,15 @@ class RunProgram():
 
     def RunScript(self, sim):     
         if sim and var.SIM and not var.PROGRAM_RUN:
-            script = event_manager.publish("request_program_field_get")[0]
-            self.script_thread = threading.Thread(target=self.execute_script, args=(script,))
-            self.script_thread.start()          
+            if event_manager.publish("request_get_program_tpe")[0]:
+                # blockly code
+                # get the blockly code
+                event_manager.publish("request_get_blockly_code")
+                pass
+            else:
+                script = event_manager.publish("request_program_field_get")[0]
+                self.script_thread = threading.Thread(target=self.execute_script, args=(script,))
+                self.script_thread.start()          
         elif not sim and (var.ROBOT_CONNECT or var.IO_CONNECT) and not var.PROGRAM_RUN:
             script = event_manager.publish("request_program_field_get")[0]
             self.script_thread = threading.Thread(target=self.execute_script, args=(script,))
@@ -31,6 +37,18 @@ class RunProgram():
                 tkinter.messagebox.showerror("Error", "Connect the robot")
             else:
                 tkinter.messagebox.showerror("Error", "Program is already running")
+
+    def RunBlocklyCode(self, code):
+        print(code)
+        try:
+            program = "from robot_library import Move\nrobot = Move()\n"
+            program += code
+            print(program)
+            exec(program)  # Warning: Use exec with caution as it can execute arbitrary code
+            self.script_thread = threading.Thread(target=self.execute_script, args=(program,))
+            self.script_thread.start() 
+        except Exception as e:
+            print(f"Error executing code: {e}")
     
     def execute_script(self, script):
         original_stdout = sys.stdout  # Save the original stdout

@@ -1,5 +1,5 @@
 import sys
-
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QApplication, QMainWindow, QApplication, QDialog, QLabel, QVBoxLayout, QMainWindow
 from gui.main_window import MainWindow
 from PyQt5.QtCore import Qt, QTimer, QThread
@@ -15,7 +15,7 @@ from gui.start_up_screen import StartupScreen
         
 class StartupWorker(QThread):
     """This class handles the startup process in the background."""
-    def run(self):
+    def run(self): 
         update_checker = CheckUpdate()  
         update_checker.CheckUpdateSoftware()
         FolderCheck()

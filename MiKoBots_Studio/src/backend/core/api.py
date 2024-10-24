@@ -73,6 +73,9 @@ def run_script(sim):
 def stop_script():
     run_program.StopScript()
 
+def run_blockly_code(code):
+    run_program.RunBlocklyCode(code)
+
 ###########################
 #   Move
 ###########################
@@ -148,7 +151,9 @@ def save_as_file():
     
 def open_file():
     save_open.OpenFile()
-    
+
+def blockly_converting(xmlString):
+    save_open.BlocklyConverting(xmlString)
 
 
 ####################

@@ -40,7 +40,7 @@ style_button = ("""
                 border: 0px solid black; 
                 border-radius: 3px; 
                 height: 20px; 
-                font-size: 12px;
+                font-size: 14px;
                 font-family: "Segoe UI";
             }
             QPushButton:hover { 
@@ -59,7 +59,7 @@ style_button_pressed = ("""
                 border-radius: 3px; 
                 height: 20px; 
                 width: 40px; 
-                font-size: 12px;
+                font-size: 14px;
                 font-family: Arial;
             }
             QPushButton:hover { 
@@ -78,7 +78,7 @@ style_button_red = ("""
                 border-radius: 3px; 
                 height: 20px; 
                 width: 40px; 
-                font-size: 12px;
+                font-size: 14px;
                 font-family: Arial;
             }
             QPushButton:hover { 
@@ -89,7 +89,25 @@ style_button_red = ("""
             }
             """)
 
-
+style_button_help = ("""
+            QPushButton { 
+                background-color: white; 
+                color: black; 
+                border: 0px solid blue; 
+                border-radius: 7px; 
+                height: 14px; 
+                width: 14px; 
+                font-size: 10px;
+                font-family: Arial;
+                font-weight: bold;
+            }
+            QPushButton:hover { 
+                background-color: lightblue; 
+            }
+            QPushButton:pressed { 
+                background-color: white; 
+            }
+            """)
 
 ## label
 style_label_title = ("""

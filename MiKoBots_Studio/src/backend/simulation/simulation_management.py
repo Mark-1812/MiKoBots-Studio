@@ -24,8 +24,8 @@ class SimulationManagement(QObject):
         
         self.points = []
         
-        self.step_size_deg = 0.5
-        self.step_size_mm = 1
+        self.step_size_deg = 1
+        self.step_size_mm = 2
         
         self.Motion_ok = True
         self.subscribeToEvents()

@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtGui import QCursor, QPixmap, QIcon, QSyntaxHighlighter, QTextCharFormat, QColor, QTextCursor, QFont
-from PyQt5.QtCore import Qt, QRegularExpression, QUrl, pyqtSignal, QStringListModel
+from PyQt5.QtCore import Qt, QRegularExpression, QUrl, pyqtSignal, QStringListModel, pyqtSlot
 from PyQt5.QtWidgets import QCompleter, QHBoxLayout, QPushButton, QLabel, QCheckBox, QComboBox, QSizePolicy, QApplication, QFileDialog, QFrame, QGridLayout, QTextEdit, QScrollBar, QLineEdit, QWidget
 import keyword
 
@@ -15,8 +16,13 @@ from robot_library import Move, IO, Tool, Vision, Connect4, TicTacToe, Gcode
 from gui.style import *
 
 import re
-
+import webbrowser
 import backend.core.variables as var
+
+from backend.core.api import run_blockly_code
+import os
+
+from backend.core.api import blockly_converting
 
 class ProgramField(QWidget):
     def __init__(self, frame):
@@ -35,21 +41,68 @@ class ProgramField(QWidget):
         event_manager.subscribe("request_program_field_insert", self.ProgramFieldInsert)
         event_manager.subscribe("request_program_field_get", self.ProgramFieldGet)
         event_manager.subscribe("request_program_field_read_only", self.ReadOnlyText)
+        event_manager.subscribe("request_get_program_tpe", self.GetProgramTpe)
+        event_manager.subscribe("request_get_blockly_code", self.GetBlocklyCode)
+        event_manager.subscribe("request_save_blockly_file", self.save_workspace)
+        event_manager.subscribe("request_load_blockly_file", self.load_workspace)
     
     def ReadOnlyText(self, state):
         self.PROGRAM_TEXT_WIDGET.setReadOnly(state)
-            
+
+    def GetProgramTpe(self):
+        if self.CHECKBOX_BLOCKLY.isChecked():
+            print("blockly coding")
+            return True
+        else:
+            print("not blockly coding")
+            return False 
+        
+    def GetBlocklyCode(self):
+        print("get blockl code")
+        self.web_view.page().runJavaScript("python.pythonGenerator.workspaceToCode(workspace);", run_blockly_code)
+        
+    @pyqtSlot()
+    def save_workspace(self):
+        # Call the saveWorkspace function in JavaScript and handle the result
+        print("save_workspace")
+        self.web_view.page().runJavaScript("saveWorkspace();", blockly_converting)
+
+    @pyqtSlot()
+    def load_workspace(self, xmlString):
+        try:
+            self.web_view.page().runJavaScript(f'loadWorkspace(`{xmlString}`);')
+            print("Workspace loaded.")
+        except FileNotFoundError:
+            print("No saved workspace found.")
+
     def FrameProgramming(self, layout):
         self.PROGRAM_NAME = QLabel("Program: New file.miko")
         self.PROGRAM_NAME.setStyleSheet(style_label_title)
         self.PROGRAM_NAME.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
-        layout.addWidget(self.PROGRAM_NAME, 0, 0, 1, 2)
+        self.PROGRAM_NAME.setFixedHeight(24)
+        layout.addWidget(self.PROGRAM_NAME, 0, 0)
         
+        # button_help = QPushButton("i")
+        # button_help.setStyleSheet(style_button_help)
+        # button_help.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # button_help.clicked.connect(lambda: webbrowser.open('https://www.mikobots.com'))
+        # layout.addWidget(button_help,0,0)
         
-        h_layout = QHBoxLayout()
-        h_layout.setContentsMargins(0, 0, 0, 0)  # Set margins to zero
-        h_layout.setSpacing(0)  # Set spacing to zer
-        
+
+        self.CHECKBOX_BLOCKLY = QCheckBox("Blockly")
+        self.CHECKBOX_BLOCKLY.setStyleSheet(style_checkbox)
+        layout.addWidget(self.CHECKBOX_BLOCKLY,1,0)
+        self.CHECKBOX_BLOCKLY.stateChanged.connect(lambda state: self.SwitchProgramStle(state))
+
+        self.h_layout = QHBoxLayout()
+        self.h_layout.setContentsMargins(0, 0, 1, 2)  # Set margins to zero
+        self.h_layout.setSpacing(0)  # Set spacing to zer 
+
+        self.frame = QFrame()
+        self.frame.setStyleSheet(style_frame)
+        self.frame.setFrameStyle(QFrame.NoFrame)
+        self.frame.setLayout(self.h_layout)
+
         # Create line numbers text area (non-editable)
         self.line_numbers = QTextEdit()
         self.line_numbers.setReadOnly(True)
@@ -86,21 +139,52 @@ class ProgramField(QWidget):
         """)
         
         
-        h_layout.addWidget(self.line_numbers)
-        h_layout.addWidget(self.PROGRAM_TEXT_WIDGET)
+        self.h_layout.addWidget(self.line_numbers)
+        self.h_layout.addWidget(self.PROGRAM_TEXT_WIDGET)
         
-        layout.addLayout(h_layout, 1, 0)
+        layout.addWidget(self.frame, 2, 0)
+
+        self.web_view = QWebEngineView()
         
+        # Get the current directory of the file
+        current_directory = os.path.dirname(__file__)
+
+        # Construct the relative path to blockly.html
+        blockly_path = os.path.abspath(os.path.join(current_directory, '../..', 'blockly', 'blockly.html'))
+
+        # Print the absolute path to blockly.html
+        blockly_path = blockly_path.replace('\\', '/')
+        print(blockly_path)
+        
+        self.web_view.setUrl(QUrl(blockly_path))  # Make sure to set the correct path to your HTML file
+        
+        
+        layout.addWidget(self.web_view, 2, 0)
+        self.web_view.hide()
+        layout.setRowStretch(1, 1)  # Set the stretch factor for row 0
+        layout.setColumnStretch(0, 1)  # Set the stretch factor for column 0
+
+
         self.PROGRAM_TEXT_WIDGET.append("from robot_library import Move\n")
         self.PROGRAM_TEXT_WIDGET.append('robot = Move()\n')
         self.PROGRAM_TEXT_WIDGET.append("robot.MoveJ([400,20,500,0,90,0],50,50)")
         self.PROGRAM_TEXT_WIDGET.append("robot.MoveJ([400,20,300,0,90,0],50,50)\n")  
         
+
         
         self.PROGRAM_TEXT_WIDGET.textChanged.connect(self.update_line_numbers)
        
         self.highlighter = HighlightText(self.PROGRAM_TEXT_WIDGET.document())
+
  
+    def SwitchProgramStle(self, state):
+        if state:
+            self.frame.hide()
+            self.web_view.show()
+        else:
+            self.frame.show()
+            self.web_view.hide()
+
     def update_line_numbers(self):
         # Get the number of lines in the text editor
         

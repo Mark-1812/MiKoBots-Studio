@@ -10,3 +10,4 @@ build/
 program/
 myenv/
 vscode/
+.vscode/

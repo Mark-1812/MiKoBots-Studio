@@ -1,6 +1,6 @@
 from PyQt5.QtGui import QCursor, QPixmap, QIcon, QDoubleValidator, QSyntaxHighlighter, QTextCharFormat, QColor, QTextCursor, QFont
 from PyQt5.QtCore import Qt, QRegularExpression, QUrl, pyqtSignal
-from PyQt5.QtWidgets import QPushButton, QSplitter, QMessageBox, QMainWindow, QLabel, QCheckBox, QComboBox, QSizePolicy, QApplication, QFileDialog, QFrame, QGridLayout, QTextEdit, QScrollBar, QLineEdit, QWidget
+from PyQt5.QtWidgets import QPushButton, QSplitter, QMessageBox, QMainWindow, QLabel, QCheckBox, QComboBox, QSizePolicy, QScrollArea, QApplication, QFileDialog, QFrame, QGridLayout, QTextEdit, QScrollBar, QLineEdit, QWidget
 
 from gui.style import *
 import webbrowser
@@ -72,7 +72,9 @@ class MainWindow(QWidget):
         self.middle_splitter = QSplitter(Qt.Vertical)
         
         self.right_splitter = QSplitter(Qt.Vertical)
-        main_splitter = QSplitter(Qt.Horizontal)
+        self.main_splitter = QSplitter(Qt.Horizontal)
+        
+        self.main_splitter.splitterMoved.connect(self.MainSplitterSize) 
         
         ## FRAME RIGHT
         
@@ -101,11 +103,19 @@ class MainWindow(QWidget):
         self.frame_5 = QFrame()
         self.frame_5.setMaximumHeight(280)
         self.frame_5.setFrameStyle(QFrame.NoFrame)
-        self.frame_5.setLayout(layout_frame_5)        
+        self.frame_5.setLayout(layout_frame_5)    
+        
+        # Create a QScrollArea
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setFrameStyle(QFrame.NoFrame)    
 
         self.frame_5_control = QFrame()
         self.frame_5_control.setFrameStyle(QFrame.NoFrame)
-        layout_frame_5.addWidget(self.frame_5_control, 0, 0)
+        
+        self.scroll_area.setWidget(self.frame_5_control)
+        self.scroll_area.setWidgetResizable(True)  # Allows the scroll area to resize with the frame
+
+        layout_frame_5.addWidget(self.scroll_area, 0, 0)
         
         layout_frame_5_min = QGridLayout()           
         self.frame_5_min = QFrame()
@@ -125,7 +135,8 @@ class MainWindow(QWidget):
                         
         layout_frame_5.addWidget(self.frame_5_min , 0, 0)
         
-        ##### FRAME 6
+        ##### FRAME 6 
+        ##### Settings frame
         layout_frame_6 = QGridLayout()
         layout_frame_6.setContentsMargins(0, 0, 0, 0)
         layout_frame_6.setSpacing(0)
@@ -157,14 +168,39 @@ class MainWindow(QWidget):
                         
         layout_frame_6.addWidget(self.frame_6_min , 0, 0)
         
+        
+        
+        
+        
+        
+        ##### add frame 4 - 5 - 6 to the right splitter 
+        
+        layout_frame_right_min = QGridLayout()  
+        self.frame_right_min = QFrame()
+        self.frame_right_min.setStyleSheet(style_frame)
+        self.frame_right_min.setLayout(layout_frame_right_min)   
+        
+        title = QLabel("Robot\n control")
+        title.setStyleSheet(style_label_title)
+        layout_frame_right_min.addWidget(title, 1, 0)
+        
+        button = QPushButton("+")
+        button.setStyleSheet(style_button)
+        button.setMaximumWidth(20)
+        button.clicked.connect(lambda: self.SizeUp(1))
+        layout_frame_right_min.addWidget(button, 0, 0)
+        self.frame_right_min.hide()
+        
+        ##### Make a frame for the right splitter if it is minimized to the right
+        
         self.right_splitter.addWidget(self.frame_4)        
         self.right_splitter.addWidget(self.frame_5)
         self.right_splitter.addWidget(self.frame_6)
+        self.right_splitter.addWidget(self.frame_right_min)
         
         self.right_splitter.splitterMoved.connect(self.RightSplitterSize)
         
 
-        
         ############
         ### FRAME MIDDLE
                  
@@ -232,9 +268,28 @@ class MainWindow(QWidget):
         layout_frame_3.addWidget(self.frame_3_min , 0, 0)
         
         ### MIDDLE SPLITTER
+        layout_frame_middle_min = QGridLayout()  
+        self.frame_middle_min = QFrame()
+        self.frame_middle_min.setStyleSheet(style_frame)
+        self.frame_middle_min.setLayout(layout_frame_middle_min)   
+        self.frame_middle_min.setMinimumWidth(250)
         
+        title = QLabel("program")
+        title.setStyleSheet(style_label_title)
+        layout_frame_middle_min.addWidget(title, 1, 0)
+        
+        button = QPushButton("+")
+        button.setStyleSheet(style_button)
+        button.setMaximumWidth(20)
+        button.clicked.connect(lambda: self.SizeUp(1))
+        layout_frame_middle_min.addWidget(button, 0, 0)
+        self.frame_middle_min.hide()
+
+        
+        #####################
         self.middle_splitter.addWidget(self.frame_2)        
         self.middle_splitter.addWidget(self.frame_3)
+        self.middle_splitter.addWidget(self.frame_middle_min)
         
         self.middle_splitter.splitterMoved.connect(self.MiddleSplitterSize)      
         self.middle_splitter.setSizes([100, 20])
@@ -243,12 +298,12 @@ class MainWindow(QWidget):
         self.frame1 = QFrame()
         self.frame1.setStyleSheet(style_frame)
         self.frame1.setFixedWidth(150)
-        main_splitter.addWidget(self.frame1)#, 0, 0, 4, 1)
+        self.main_splitter.addWidget(self.frame1)#, 0, 0, 4, 1)
         
         
         
-        main_splitter.addWidget(self.middle_splitter)
-        main_splitter.addWidget(self.right_splitter)
+        self.main_splitter.addWidget(self.middle_splitter)
+        self.main_splitter.addWidget(self.right_splitter)
         
         ControlField(self.frame_5_control)
         LogField(self.frame_3_log)
@@ -257,7 +312,7 @@ class MainWindow(QWidget):
         self.ShowHideTab = ShowHideTab(self.frame_4_tabs)
         MenuField(self.frame1, self.ShowHideTab)
         
-        layout.addWidget(main_splitter)
+        layout.addWidget(self.main_splitter)
         layout.update()
         
     def RightSplitterSize(self):
@@ -288,6 +343,23 @@ class MainWindow(QWidget):
         elif frame_6_height >= self.min_height_6:
             self.frame_6_settings.show()
             self.frame_6_min.hide()         
+
+    def MainSplitterSize(self):
+        width_splitter_middle = self.middle_splitter.width()
+        width_splitter_right = self.right_splitter.width()
+        
+        if width_splitter_right < 600:
+            self.frame_4.hide()
+            self.frame_5.hide()
+            self.frame_6.hide()
+            self.frame_right_min.show()
+            self.main_splitter.setSizes([1500, width_splitter_middle, 100])
+        else:
+            self.frame_4.show()
+            self.frame_5.show()
+            self.frame_6.show()
+            self.frame_right_min.hide()
+
 
     def MiddleSplitterSize(self):
         frame_2_height = self.frame_2.height()
@@ -322,6 +394,7 @@ class MainWindow(QWidget):
         frame_4_height = self.frame_4.height()
         frame_5_height = self.frame_5.height()
         frame_6_height = self.frame_6.height()
+        width_splitter_middle = self.middle_splitter.width()
 
         
         if frame == 2:
@@ -336,6 +409,9 @@ class MainWindow(QWidget):
         if frame == 6:
             self.right_splitter.setSizes([frame_4_height - (self.min_height_6-38), frame_5_height, self.min_height_6])
             self.RightSplitterSize()
+        if frame == 1:
+            self.main_splitter.setSizes([1000, width_splitter_middle, 1500])
+            self.MainSplitterSize()
             
     def show_main(self, startup_screen):
         startup_screen.accept()  # Close the startup screen

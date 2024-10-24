@@ -10,6 +10,9 @@ from gui.save_window import AskSave
 
 
 from backend.core.event_manager import event_manager
+
+import xmltodict
+import json
          
 class SaveOpen:
     def __init__(self):
@@ -20,6 +23,7 @@ class SaveOpen:
                     "origins",
                     "Selected robot",
                     "Selected tool",
+                    "Program blockly"
                     
         ]
         self.file_dialog = QFileDialog()
@@ -60,6 +64,7 @@ class SaveOpen:
         self.MikoFile[3] = event_manager.publish("request_get_origins_plotter")[0]
         self.MikoFile[4] = event_manager.publish("request_get_current_robot_nr")[0]
         self.MikoFile[5] = event_manager.publish("request_get_tool_nr")[0]
+        event_manager.publish("request_save_blockly_file")
         
         try:
             if self.program_path:
@@ -81,6 +86,7 @@ class SaveOpen:
         self.MikoFile[3] = event_manager.publish("request_get_origins_plotter")[0]
         self.MikoFile[4] = event_manager.publish("request_get_current_robot_nr")[0]
         self.MikoFile[5] = event_manager.publish("request_get_tool_nr")[0]
+        event_manager.publish("request_save_blockly_file")
         
         options = QFileDialog.Options()
         
@@ -123,12 +129,24 @@ class SaveOpen:
             self.MikoFile = ast.literal_eval(program)      
             self.SetProgram()
             
+            if len(self.MikoFile) == 6:
+                print("Old file")
+                self.MikoFile.append("Blockly")
+                print(self.MikoFile)
+            
     
     def SetProgram(self):
             
         # Program text
         event_manager.publish("request_program_field_insert", self.MikoFile[0])
         
+        # Blockly program
+        try:
+            print(self.MikoFile[6])
+            event_manager.publish("request_load_blockly_file", self.MikoFile[6])
+        except:
+            print("error old file")
+            
         # Gcode
         event_manager.publish("request_gcode_text_insert", self.MikoFile[1])
         
@@ -160,6 +178,12 @@ class SaveOpen:
         event_manager.publish("request_close_doc_origins")
         # Close all the objects in the plotter
         
-                
+    def BlocklyConverting(self, xmlString):
+        
+        print(xmlString)
+        # dict_data = xmltodict.parse(xmlString)
+        # json_data = json.dumps(dict_data, indent=4)
+        # print(json_data)      
+        self.MikoFile[6] = xmlString 
 
                 

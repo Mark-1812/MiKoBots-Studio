@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QPushButton, QLabel, QSizePolicy, QCheckBox, QLineEdit, QSpacerItem, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog
+from PyQt5.QtWidgets import QPushButton, QLabel, QSizePolicy, QLineEdit, QSpacerItem, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog
 from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
 
 from backend.core.event_manager import event_manager
