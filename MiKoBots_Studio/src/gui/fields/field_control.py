@@ -12,11 +12,11 @@ from backend.core.event_manager import event_manager
 from backend.core.api import send_pos_robot
 from backend.core.api import simulation_move_gui
 from backend.core.api import change_tool
-from backend.core.api import jog_joint
-from backend.core.api import move_j
-from backend.core.api import offset_j
 from backend.core.api import get_tool_info
-from backend.core.api import move_joint_pos
+
+from backend.core.api import run_single_line
+
+import gc
 
 class ControlField(QWidget):   
     def __init__(self, frame):
@@ -88,7 +88,7 @@ class ControlField(QWidget):
         layout.addWidget(space, 0, 3) 
 
         frame_move = QFrame()
-        frame_move.setMinimumWidth(100)
+        frame_move.setMinimumWidth(110)
         frame_move.setStyleSheet(style_frame)
         layout.addWidget(frame_move, 0, 4) 
         
@@ -121,6 +121,7 @@ class ControlField(QWidget):
     # Tool       
     def FrameTool(self, frame):
         layout = QGridLayout(frame)
+        layout.setContentsMargins(3, 3, 3, 3)
         
         self.LABEL_TOOL = QLabel("Tool")
         self.LABEL_TOOL.setStyleSheet(style_label_title)
@@ -166,23 +167,19 @@ class ControlField(QWidget):
         scroll_layout.addWidget(button, 1, 2)
         button.clicked.connect(lambda: self.ButtonMoveTool(1))
 
-        spacer = QSpacerItem(10, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        scroll_layout.addItem(spacer)
-
         label = QLabel("Relay tool state:")
         label.setStyleSheet(style_label_bold)
         scroll_layout.addWidget(label, 2, 0, 1, 3) 
 
         self.CHECKBOX_TOOL_OUTPUT = QCheckBox("ON / OFF")
         self.CHECKBOX_TOOL_OUTPUT.setStyleSheet(style_checkbox)
+        self.CHECKBOX_TOOL_OUTPUT.stateChanged.connect(self.ChangeStateTool)
         scroll_layout.addWidget(self.CHECKBOX_TOOL_OUTPUT, 3, 0, 1, 3)
 
-        spacer_widget = QWidget()
-        scroll_layout.addWidget(spacer_widget, 4, 0)
         
         label = QLabel("Current tool:")
         label.setStyleSheet(style_label_bold)
-        scroll_layout.addWidget(label, 5, 0, 1, 3) 
+        scroll_layout.addWidget(label, 4, 0, 1, 3) 
 
         self.TOOL_COMBO = QComboBox()
         self.TOOL_COMBO.setStyleSheet(style_combo)
@@ -190,8 +187,21 @@ class ControlField(QWidget):
         
         self.TOOL_COMBO.currentIndexChanged.connect(lambda index: change_tool(index))
         
-        scroll_layout.addWidget(self.TOOL_COMBO, 6, 0, 1, 3)
+        scroll_layout.addWidget(self.TOOL_COMBO, 5, 0, 1, 3)
+        
+        spacer_widget = QWidget()
+        scroll_layout.addWidget(spacer_widget, 6, 0)
+        
+    def ChangeStateTool(self, state):
+        if not self.simulation:
+            print("change tool state")
 
+            tool = var.TOOLS3D[var.SELECTED_TOOL][0]
+            
+            if state == 2:
+                run_single_line(f"tool.SetTool('{tool}')\ntool.State('HIGH')")
+            else:
+                run_single_line(f"tool.SetTool('{tool}')\ntool.State('LOW')")
 
     def AddToolCombo(self, tool):
         self.TOOL_COMBO.addItem(tool)  
@@ -212,7 +222,9 @@ class ControlField(QWidget):
         self.LABEL_TOOL_POS.setText(f"Pos: {pos}")
 
     def SetToolState(self, state):
+        self.CHECKBOX_TOOL_OUTPUT.blockSignals(True)
         self.CHECKBOX_TOOL_OUTPUT.setChecked(state) 
+        self.CHECKBOX_TOOL_OUTPUT.blockSignals(False)
          
     def ButtonMoveTool(self, dir):
         # chack if thye tool is a servo
@@ -225,7 +237,6 @@ class ControlField(QWidget):
             else:
                 pos = -1 * int(event_manager.publish("request_get_jog_distance")[0])
             
-            print(pos)
             simulation_move_gui(pos, "Tool_MoveTo")
         else:
             if dir == 1:
@@ -233,13 +244,14 @@ class ControlField(QWidget):
             else:
                 pos = -1 * int(event_manager.publish("request_get_jog_distance")[0])
                 
-            #offset_j(posAxis)
+            event_manager.publish("request_change_pos_tool", pos)
 
  
          
     # Frame move    
     def frameMove(self,frame):
         layout = QGridLayout(frame)
+        layout.setContentsMargins(3, 3, 3, 3)
         
         self.LABEL_MOVE = QLabel("Move")
         self.LABEL_MOVE.setStyleSheet(style_label_title)
@@ -357,28 +369,29 @@ class ControlField(QWidget):
         else:
             if self.CHECKBOX_MOVE.isChecked():
                 # joints
-                move_joint_pos(posJoint)
+                run_single_line(f"robot.MoveJointPos({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
             else:
                 # axis
-                move_j(posJoint)
-            
+                run_single_line(f"robot.MoveJ({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
             
     
     # Frame joint jog
     def FrameJointJog(self, frame):   
         layout = QGridLayout(frame)
-        
+        layout.setContentsMargins(3, 3, 3, 3)
+
         self.LABEL_JOG_JOINT = QLabel("Jog Joint")
         self.LABEL_JOG_JOINT.setStyleSheet(style_label_title)
         self.LABEL_JOG_JOINT.setMaximumHeight(20)
         self.LABEL_JOG_JOINT.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
-        layout.addWidget(self.LABEL_JOG_JOINT, 0, 0, 1, 3)
+        layout.addWidget(self.LABEL_JOG_JOINT, 0, 0)
         
         # create a scroll area
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet(style_scrollarea)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        
         
         scroll_widget = QWidget()
         scroll_widget.setStyleSheet(style_widget)
@@ -400,7 +413,7 @@ class ControlField(QWidget):
             label = QLabel(f"{var.NAME_JOINTS[i]} {var.POS_JOINT[i]} {var.UNIT_JOINT[i]}")
             label.setStyleSheet(style_label)
             label.setAlignment(QtCore.Qt.AlignCenter)
-            label.setMinimumWidth(90)
+            label.setMinimumWidth(80)
 
             button_plus = QPushButton("+")
             button_plus.clicked.connect(lambda state, idx=i: self.ButtonJointMove(idx, 1))
@@ -426,7 +439,7 @@ class ControlField(QWidget):
         if self.space_widget_joint:
             self.space_widget_joint.setParent(None)
             self.space_widget_joint.deleteLater()
-
+            
     def ChangeJointLabels(self, pos, name, unit):
         for i in range(var.NUMBER_OF_JOINTS):
             self.ButtonsJoint[i][1].setText(f"{name[i]}: {round(pos[i],2)} {unit[i]}")
@@ -438,25 +451,25 @@ class ControlField(QWidget):
                 posJoint[joint] = int(event_manager.publish("request_get_jog_distance")[0])
             else:
                 posJoint[joint] = -1 * int(event_manager.publish("request_get_jog_distance")[0])
-            
-            simulation_move_gui(posJoint, "jogJ")
+            run_single_line(f"robot.JogJoint({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
         else:
             if dir == 1:
                 posJoint[joint] = int(event_manager.publish("request_get_jog_distance")[0])
             else:
                 posJoint[joint] = -1 * int(event_manager.publish("request_get_jog_distance")[0])
-            
-            jog_joint(posJoint)
+                
+            run_single_line(f"robot.JogJoint({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
    
     # Frame axis jog             
     def FrameAxisJog(self, frame):  
         layout = QGridLayout(frame)
-        
+        layout.setContentsMargins(3, 3, 3, 3)
+
         self.LABEL_JOG_AXIS = QLabel("Jog Axis")
         self.LABEL_JOG_AXIS.setStyleSheet(style_label_title)
         self.LABEL_JOG_AXIS.setMaximumHeight(20)
         self.LABEL_JOG_AXIS.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
-        layout.addWidget(self.LABEL_JOG_AXIS, 0, 0, 1, 3)
+        layout.addWidget(self.LABEL_JOG_AXIS, 0, 0)
         
         # create a scroll area
         scroll = QScrollArea()
@@ -501,6 +514,9 @@ class ControlField(QWidget):
         self.layout_axis_jog.addWidget(self.space_widget_axis, self.layout_axis_jog.rowCount(), 0, 1, self.layout_axis_jog.columnCount())
 
     def DeleteButtonsAxis(self):
+        if len(self.ButtonsAxis) == 0:
+            return
+        
         for i in range(len(self.ButtonsAxis)):
             for j in range(3):
                 self.ButtonsAxis[i][j].setParent(None)
@@ -528,17 +544,21 @@ class ControlField(QWidget):
                 posAxis[axis] = event_manager.publish("request_get_jog_distance")[0]
             else:
                 posAxis[axis] = -1 * int(event_manager.publish("request_get_jog_distance")[0])
-            offset_j(posAxis)
+            
+            
+                
+            run_single_line(f"robot.OffsetJ({posAxis}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
 
     # Frame IO 
     def FrameIo(self, frame):
         layout = QGridLayout(frame)
+        layout.setContentsMargins(3, 3, 3, 3)
         
         self.LABEL_IO = QLabel("IO")
         self.LABEL_IO.setStyleSheet(style_label_title)
         self.LABEL_IO.setMaximumHeight(20)
         self.LABEL_IO.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
-        layout.addWidget(self.LABEL_IO, 0, 0, 1, 2)
+        layout.addWidget(self.LABEL_IO, 0, 0)
         
         # create a scroll area
         scroll = QScrollArea()

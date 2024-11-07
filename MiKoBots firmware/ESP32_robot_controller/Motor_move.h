@@ -11,11 +11,15 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
 
   for (int i = 0; i < NUMBER_OF_JOINTS; i++){
     robot[i].PosJDelta = (robot[i].PosJEnd - robot[i].PosJStart) * JointsInfo[i].StepPerDeg;
-    // Serial.print("Pos J end ");
+
+    // Serial.print("J");
+    // Serial.print(i);
+
+    // Serial.print(" Pos J end ");
     // Serial.print(robot[i].PosJEnd);
 
     // Serial.print(" Pos J start ");
-    // Serial.print(robot[i].PosJStart);
+    // Serial.println(robot[i].PosJStart);
 
     // Serial.print(" step per deg ");
     // Serial.print(JointsInfo[i].StepPerDeg);
@@ -147,6 +151,8 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
   // for loop
   long steps_to_do = maxSteps;
 
+  Serial.println(curDelay);
+
   for (int i = 0; i < maxSteps; i++){
     if(stop == 1){    // when the stop button is pressed go out of this for loop
       break;
@@ -158,7 +164,7 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
     for (int k = 0; k < NUMBER_OF_JOINTS; k++){
       digitalWrite(motors[k].step_pin,HIGH);
     }
-    delayMicroseconds(15);
+    delayMicroseconds(curDelay / 2);
     for (int j = 0; j < NUMBER_OF_JOINTS; j++){
       over[j] += robot[j].PosJDelta; 
       if (over[j] >= maxSteps){
@@ -172,7 +178,7 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
     else if (i > (maxSteps - CD)){
       curDelay += DecelDecrease;
     }
-    delayMicroseconds(curDelay - 15);
+    delayMicroseconds(curDelay / 2);
     steps_to_do--;
   }
 

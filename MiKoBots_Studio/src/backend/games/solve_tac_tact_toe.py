@@ -25,7 +25,7 @@ class solveTicTacToe():
         actions_list = [(play, i) for i in range(len(board)) if board[i] == self.BOARD_EMPTY]
         return actions_list
 
-    def result(self, board, a):
+    def GetResult(self, board, a):
         (play, index) = a
         board_copy = board.copy()
         board_copy[index] = play
@@ -56,7 +56,7 @@ class solveTicTacToe():
         action_list = self.actions(board)
         utils = []
         for action in action_list:
-            new_board = self.result(board, action)
+            new_board = self.GetResult(board, action)
             utils.append(self.utility(new_board, cost + 1))
 
         score = utils[0][0]
@@ -80,7 +80,7 @@ class solveTicTacToe():
         action_list = self.actions(board)
         utils = []
         for action in action_list:
-            new_board = self.result(board, action)
+            new_board = self.GetResult(board, action)
             
             
             utils.append((action, self.utility(new_board, 1)))
@@ -128,12 +128,12 @@ if __name__ == '__main__':
                 print('That coordinate is already taken. Please try again.')
                 continue
     
-            s = solve.result(s, (1, index))
+            s = solve.GetResult(s, (1, index))
             solve.print_board(s)
         else:
             print('\n\nThe is computer is playing its turn')
             action = solve.minimax(s)
-            s = solve.result(s, action[0])
+            s = solve.GetResult(s, action[0])
             solve.print_board(s)
 
     winner = solve.utility(s, 1)[0]

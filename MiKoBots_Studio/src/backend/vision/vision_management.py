@@ -2,8 +2,7 @@ import backend.core.variables as var
 import numpy as np
 import cv2
 
-import backend.vision.vision_var as VD
-import tkinter.messagebox
+import math
 
 import time
 import threading
@@ -11,19 +10,19 @@ import requests
 
 from backend.core.event_manager import event_manager
 
+from gui.windows.message_boxes import ErrorMessage
+
 class VisionManagement():
     def __init__(self):
         super().__init__()       
         self._stop_event = threading.Event() 
         
-        self.image_HSV = None 
         self.valid_URL = False
         
         self.cap = None
-        self.subscribeToEvents()
-    
-    def subscribeToEvents(self):
-        event_manager.subscribe("request_close_cam", self.CloseCam)
+        self.stop = False   
+        
+        self.image_HSV = None
        
     def CloseCam(self):
         if var.CAM_CONNECT:
@@ -32,6 +31,7 @@ class VisionManagement():
             #self.cap.release()
                    
     def is_valid_url(self, url):
+        print(url)
         try:
             event_manager.publish("request_cam_connect_button_color", False)
             
@@ -41,75 +41,85 @@ class VisionManagement():
         except requests.RequestException:
             return False
 
-    def ConnectCam(self):
+    def ConnectCam(self, addres = None):
+        print(addres)
         if var.CAM_CONNECT == 0:
-            com_port_adress = event_manager.publish("request_get_cam_port")
-            if com_port_adress[0].isdigit():
-                self.cap = cv2.VideoCapture(int(com_port_adress[0]))
-                print(self.cap)
-            elif self.is_valid_url(com_port_adress): 
+            com_port_adress = addres
+            if self.is_valid_url(com_port_adress): 
+                print(f"com port {com_port_adress}")
                 #self.url = 'http://192.168.1.184:81/stream'     
                 self.cap = cv2.VideoCapture(com_port_adress)
-                
+            else:
+                self.cap = cv2.VideoCapture(addres)
+            
+            
             if self.cap.isOpened():
                 event_manager.publish("request_cam_connect_button_color", True)
-                print("camere opened")
                 var.CAM_CONNECT = 1
                 self._stop_event.clear()
                 self.video()  
                 # Proceed with connecting to the camera stream
             else:
                 event_manager.publish("request_cam_connect_button_color", False)
-                tkinter.messagebox.showinfo("info", "Cannot find the camera, check if you have the right COM port or URL")
-            
+                ErrorMessage(var.LANGUAGE_DATA.get("message_not_find_cam"))
+
+                
+                
         else:
             var.CAM_CONNECT = 0
             try:
-                self._stop_event.set()
                 time.sleep(0.1)
+                self._stop_event.set()
                 self.cap.release()
+                
                 event_manager.publish("request_cam_connect_button_color", False)
                 print("cam disconnect")
             except: 
                 print("error relasing cam")
  
     def threadCAM(self):
-        while not self._stop_event.is_set():
-            time.sleep(0.005)
+        while not self._stop_event.is_set() and self.cap.isOpened():
             try:
-                ret, frame = self.cap.read()
-                if ret:
-                    VD.image_RGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)              
-                    
-                    event_manager.publish("request_set_pixmap_video", VD.image_RGB)
-            except: 
-                pass 
+                time.sleep(0.01)
+                if self.cap.isOpened():  # Check the stop condition
+                    ret, self.frame = self.cap.read()
+                    if not ret:
+                        print("Failed to grab frame")
+                        continue
+                    image_RGB = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)   
+                               
+                    if var.CAM_SQUARE:
+                        self.ShowCalSquare(image_RGB)
+                               
+                    event_manager.publish("request_set_pixmap_video", image_RGB)
+            except Exception as e:
+                print(f"Error in threadCAM: {e}")
+  
+            
+    def ShowCalSquare(self, image):
+        self.height_picture, self.width_picture, ch = image.shape 
+        
+        y_1 = int(0.1 * self.height_picture)
+        h_1 = int(0.8 * self.height_picture)
+        
+        w_1 = int(0.8 * self.height_picture)
+        x_1 = int((self.width_picture - w_1) / 2)
+        
+        self.square_size_pixel = 0.8 * self.height_picture
+        
+        cv2.rectangle(image, (x_1, y_1), (x_1+w_1, y_1+h_1), (0, 255, 0), 2)
+        
+        return image
+            
+    def GetImageFrame(self):
+        return self.frame
             
     def video(self):            
         t_threadRead = threading.Thread(target=self.threadCAM)  
         t_threadRead.start()
 
-    def mask_image(self, color_name):
-        if color_name in var.VISION_COLOR_OPTIONS:
-            if len(var.VISION_COLOR_OPTIONS[color_name]) == 2:
-                lower_color = np.array(var.VISION_COLOR_OPTIONS[color_name][0])
-                upper_color = np.array(var.VISION_COLOR_OPTIONS[color_name][1])
-                mask = cv2.inRange(VD.image_HSV, lower_color, upper_color)
-            elif len(var.VISION_COLOR_OPTIONS[color_name]) == 4:
-                lower_color1 = np.array(var.VISION_COLOR_OPTIONS[color_name][0])
-                upper_color1 = np.array(var.VISION_COLOR_OPTIONS[color_name][1]) 
-                mask1 = cv2.inRange(VD.image_HSV, lower_color1, upper_color1)
-                lower_color2 = np.array(var.VISION_COLOR_OPTIONS[color_name][2])
-                upper_color2 = np.array(var.VISION_COLOR_OPTIONS[color_name][3]) 
-                mask2 = cv2.inRange(VD.image_HSV, lower_color2, upper_color2)
-                
-                mask = mask1 + mask2
-                
-            return mask, VD.image_HSV
-        else:
-            print("color not found")
         
-    def mask(self, color_name, image):
+    def GetMask(self, color_name, image):
         if color_name in var.VISION_COLOR_OPTIONS:
             if len(var.VISION_COLOR_OPTIONS[color_name]) == 2:
                 lower_color = np.array(var.VISION_COLOR_OPTIONS[color_name][0])
@@ -128,22 +138,29 @@ class VisionManagement():
             return mask
         else:
             print("color not found")                
-                 
-    def capture_frame(self, RGB = None):
-        ret, frame = var.VISION_CAP.read()
-        if ret:
-            # Convert BGR to RGB
-            if RGB == None:
-                image_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-                return image_HSV
-            else:
-                image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                return image_rgb
 
-    def CalibrateVision(self, data):
-        var.TOOL_SETTINGS_CAM = data
+
+    def DrawAxis(self, img, p_, q_, color, scale):
+        p = list(p_)
+        q = list(q_)
+
+        ## [visualization1]
+        angle = math.atan2(p[1] - q[1], p[0] - q[0]) # angle in radians
+        hypotenuse = math.sqrt((p[1] - q[1]) * (p[1] - q[1]) + (p[0] - q[0]) * (p[0] - q[0]))
+
+        # Here we lengthen the arrow by a factor of scale
+        q[0] = p[0] - scale * hypotenuse * math.cos(angle)
+        q[1] = p[1] - scale * hypotenuse * math.sin(angle)
+        cv2.line(img, (int(p[0]), int(p[1])), (int(q[0]), int(q[1])), color, 3, cv2.LINE_AA)
+
+        # create the arrow hooks
+        p[0] = q[0] + 9 * math.cos(angle + math.pi / 4)
+        p[1] = q[1] + 9 * math.sin(angle + math.pi / 4)
+        cv2.line(img, (int(p[0]), int(p[1])), (int(q[0]), int(q[1])), color, 3, cv2.LINE_AA)
+
+        p[0] = q[0] + 9 * math.cos(angle - math.pi / 4)
+        p[1] = q[1] + 9 * math.sin(angle - math.pi / 4)
+        cv2.line(img, (int(p[0]), int(p[1])), (int(q[0]), int(q[1])), color, 3, cv2.LINE_AA)
+        ## [visualization1]
         
-        var.TOOL_SETTINGS_CAM[4] = event_manager.publish("request_label_width_video")[0]
-        print(var.TOOL_SETTINGS_CAM)
-        
-        #event_manager.publish("request_save_robot_button")       
+        return img              

@@ -1,5 +1,5 @@
 from PyQt5.QtCore import QObject
-from PyQt5.QtWidgets import  QFileDialog
+from PyQt5.QtWidgets import  QFileDialog, QMessageBox
 
 import numpy as np
 from stl import mesh
@@ -8,9 +8,13 @@ from backend.core.event_manager import event_manager
 from backend.calculations.convert_matrix import XYZToMatrix, MatrixToXYZ
 from backend.file_managment.file_management import FileManagement
 
-import tkinter.messagebox
 import json
 import os
+from pathlib import Path
+
+from gui.windows.message_boxes import WarningMessageRe
+
+import backend.core.variables as var
 
 class SimulationObjectWindow(QObject):
     def __init__(self):
@@ -176,9 +180,12 @@ class SimulationObjectWindow(QObject):
         self.SaveObjectModels()
     
     def DeleteSTLObject1(self, item):  
-        if not tkinter.messagebox.askokcancel("Delete", "Are you sure you want to delete this file? This action is permanent, and the model will no longer be available in any other files."):
-            return
-        
+        answer = WarningMessageRe(var.LANGUAGE_DATA.get("message_sure_delete_model"))
+
+        # Check the response
+        if answer == False:
+            return  # User chose 'No'
+    
         if item == self.origin_object_nr:
             event_manager.publish("request_clear_plotter_object")
             
@@ -201,6 +208,9 @@ class SimulationObjectWindow(QObject):
         # Get the right path for the platform
         file_path_1 = self.file_management.GetFilePath(self.Objects_stl1[item][1])
         file_path_2 = self.file_management.GetFilePath(self.Objects_stl1[item][2])
+
+        file_path_1 = Path(file_path_1)
+        file_path_2 = Path(file_path_2)
             
         # Delete the stl files
         file_path_1.unlink()
@@ -308,7 +318,9 @@ class SimulationObjectWindow(QObject):
         self.Objects_stl2[item] = []
 
         # Delete all the items out of the plotter
-        event_manager.publish("request_delete_item_plotter")
+        event_manager.publish("request_delete_item_plotter") 
+        
+        print(self.Objects_stl2)
          
         # make a new list delete the empty 
         Objects_stl2_old = self.Objects_stl2
@@ -317,6 +329,7 @@ class SimulationObjectWindow(QObject):
             if Objects_stl2_old[i] != []:
                 self.Objects_stl2.append(Objects_stl2_old[i])  
       
+        print(self.Objects_stl2)
 
         event_manager.publish("request_delete_buttons_2_object")
          
@@ -332,6 +345,7 @@ class SimulationObjectWindow(QObject):
             event_manager.publish("request_add_item_to_plotter", data)
             
             self.pos_object_nr = i
+            self.ShowPosObject(i)
             self.ChangePosObject()
 
 

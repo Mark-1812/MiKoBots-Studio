@@ -1,8 +1,8 @@
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtGui import QCursor, QPixmap, QIcon, QSyntaxHighlighter, QTextCharFormat, QColor, QTextCursor, QFont
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
+from PyQt5.QtGui import QCursor, QPixmap, QSyntaxHighlighter, QTextCharFormat, QColor, QTextCursor, QFont
 from PyQt5.QtCore import Qt, QRegularExpression, QUrl, pyqtSignal, QStringListModel, pyqtSlot
-from PyQt5.QtWidgets import QCompleter, QHBoxLayout, QPushButton, QLabel, QCheckBox, QComboBox, QSizePolicy, QApplication, QFileDialog, QFrame, QGridLayout, QTextEdit, QScrollBar, QLineEdit, QWidget
+from PyQt5.QtWidgets import QCompleter, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QCheckBox, QComboBox, QSizePolicy, QApplication, QFileDialog, QFrame, QGridLayout, QTextEdit, QScrollBar, QLineEdit, QWidget
 import keyword
 
 from backend.core.event_manager import event_manager
@@ -11,18 +11,15 @@ from code import InteractiveConsole
 
 import keyword
 
-from robot_library import Move, IO, Tool, Vision, Connect4, TicTacToe, Gcode
+#from robot_library import Move, IO, Tool, Vision, Connect4, TicTacToe
 
 from gui.style import *
-
 import re
-import webbrowser
-import backend.core.variables as var
-
-from backend.core.api import run_blockly_code
 import os
 
-from backend.core.api import blockly_converting
+from backend.core.api import run_blockly_code
+
+import backend.core.variables as var
 
 class ProgramField(QWidget):
     def __init__(self, frame):
@@ -31,6 +28,8 @@ class ProgramField(QWidget):
         frame_layout = QGridLayout()
         frame.setLayout(frame_layout)
 
+        self.font_size = 11
+        self.xmlString = "test"
         self.FrameProgramming(frame_layout)
         
         self.subscribeToEvents()
@@ -41,10 +40,12 @@ class ProgramField(QWidget):
         event_manager.subscribe("request_program_field_insert", self.ProgramFieldInsert)
         event_manager.subscribe("request_program_field_get", self.ProgramFieldGet)
         event_manager.subscribe("request_program_field_read_only", self.ReadOnlyText)
-        event_manager.subscribe("request_get_program_tpe", self.GetProgramTpe)
+        event_manager.subscribe("request_get_program_type", self.GetProgramTpe)
         event_manager.subscribe("request_get_blockly_code", self.GetBlocklyCode)
         event_manager.subscribe("request_save_blockly_file", self.save_workspace)
         event_manager.subscribe("request_load_blockly_file", self.load_workspace)
+        event_manager.subscribe("request_clear_blockly_file", self.clear_workspace)
+    
     
     def ReadOnlyText(self, state):
         self.PROGRAM_TEXT_WIDGET.setReadOnly(state)
@@ -65,7 +66,12 @@ class ProgramField(QWidget):
     def save_workspace(self):
         # Call the saveWorkspace function in JavaScript and handle the result
         print("save_workspace")
-        self.web_view.page().runJavaScript("saveWorkspace();", blockly_converting)
+        self.web_view.page().runJavaScript("saveWorkspace();", self.BlocklyConverting)
+
+    def BlocklyConverting(self, xmlString):
+        event_manager.publish("request_program_xmlString", xmlString)
+        
+
 
     @pyqtSlot()
     def load_workspace(self, xmlString):
@@ -74,6 +80,14 @@ class ProgramField(QWidget):
             print("Workspace loaded.")
         except FileNotFoundError:
             print("No saved workspace found.")
+            
+            
+    @pyqtSlot()
+    def clear_workspace(self):
+        print("Clearing workspace")
+        # Run JavaScript to clear the Blockly workspace
+        self.web_view.page().runJavaScript("workspace.clear();")  
+        
 
     def FrameProgramming(self, layout):
         self.PROGRAM_NAME = QLabel("Program: New file.miko")
@@ -119,7 +133,9 @@ class ProgramField(QWidget):
                 border-bottom-right-radius: 0px; 
                 border-bottom-left-radius: 5px;   
                 border-top-left-radius: 5px;     
+                color: black;
             }
+            
         """)
         
         self.PROGRAM_TEXT_WIDGET = CustomTextEdit(self) 
@@ -127,40 +143,54 @@ class ProgramField(QWidget):
         self.PROGRAM_TEXT_WIDGET.setLineWrapMode(QTextEdit.NoWrap)
         self.PROGRAM_TEXT_WIDGET.verticalScrollBar().valueChanged.connect(self.sync_scrollbars)
         self.PROGRAM_TEXT_WIDGET.setFont(QFont("Consolas", 11))
-        self.PROGRAM_TEXT_WIDGET.setStyleSheet("""
-            QTextEdit {
-                padding: 5;
-                background-color: white;
-                border-top-right-radius: 5px;  
-                border-bottom-right-radius: 5px;  
-                border-bottom-left-radius: 0px;   
-                border-top-left-radius: 0px;      
-            }
-        """)
+        self.PROGRAM_TEXT_WIDGET.setStyleSheet(style_textedit_program)
         
         
         self.h_layout.addWidget(self.line_numbers)
         self.h_layout.addWidget(self.PROGRAM_TEXT_WIDGET)
-        
-        layout.addWidget(self.frame, 2, 0)
+
+
+        self.button_plus = QPushButton("+")
+        self.button_plus.setFixedSize(30,30)
+        self.button_plus.setStyleSheet(style_button_zoom)
+        self.button_plus.clicked.connect(lambda: self.change_font_size(1))
+
+        self.button_min = QPushButton("-")
+        self.button_min.setFixedSize(30,30)
+        self.button_min.setStyleSheet(style_button_zoom)
+        self.button_min.clicked.connect(lambda: self.change_font_size(-1))
+
+        button_layout = QVBoxLayout()
+        button_layout.setContentsMargins(20, 20, 20, 20)  # Set padding around the button
+        button_layout.addWidget(self.button_plus)
+        button_layout.addWidget(self.button_min)
 
         self.web_view = QWebEngineView()
-        
+        self.web_view.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
+        self.web_view.settings().setAttribute(QWebEngineSettings.PluginsEnabled, False)
+        self.web_view.settings().setAttribute(QWebEngineSettings.WebGLEnabled, False)
+        self.web_view.settings().setAttribute(QWebEngineSettings.FullScreenSupportEnabled, False)
+
+
+
         # Get the current directory of the file
         current_directory = os.path.dirname(__file__)
-
-        # Construct the relative path to blockly.html
         blockly_path = os.path.abspath(os.path.join(current_directory, '../..', 'blockly', 'blockly.html'))
-
+        self.web_view.setUrl(QUrl.fromLocalFile(blockly_path))  # Make sure to set the correct path to your HTML file
+        # Read the HTML file and set it in the QWebEngineView
+        # with open(blockly_path, 'r', encoding='utf-8') as file:
+        #     blockly_html = file.read()
+        #     print(blockly_html)
+        #     self.web_view.setHtml(blockly_html)
+        #     self.web_view.page().runJavaScript("console.log('Page loaded')")
+            
         # Print the absolute path to blockly.html
-        blockly_path = blockly_path.replace('\\', '/')
-        print(blockly_path)
-        
-        self.web_view.setUrl(QUrl(blockly_path))  # Make sure to set the correct path to your HTML file
-        
+        #blockly_path = blockly_path.replace('\\', '/')
         
         layout.addWidget(self.web_view, 2, 0)
-        self.web_view.hide()
+
+
+        #self.blockly_frame.hide()
         layout.setRowStretch(1, 1)  # Set the stretch factor for row 0
         layout.setColumnStretch(0, 1)  # Set the stretch factor for column 0
 
@@ -170,20 +200,47 @@ class ProgramField(QWidget):
         self.PROGRAM_TEXT_WIDGET.append("robot.MoveJ([400,20,500,0,90,0],50,50)")
         self.PROGRAM_TEXT_WIDGET.append("robot.MoveJ([400,20,300,0,90,0],50,50)\n")  
         
-
+        layout.addWidget(self.frame, 2, 0)
+        layout.addLayout(button_layout, 2, 0, alignment=Qt.AlignBottom | Qt.AlignRight)        
         
         self.PROGRAM_TEXT_WIDGET.textChanged.connect(self.update_line_numbers)
        
         self.highlighter = HighlightText(self.PROGRAM_TEXT_WIDGET.document())
 
+    def change_font_size(self, size):
+        new_size = self.highlighter.font_size + size  # Increase font size by 2
+        self.highlighter.update_font_size(new_size)
+
+        
+        self.line_numbers.setFontPointSize(new_size)
+
+        self.PROGRAM_TEXT_WIDGET.selectAll()
+        cursor = self.PROGRAM_TEXT_WIDGET.textCursor()
+        char_format = cursor.charFormat()
+
+        font = QFont(char_format.fontFamily(), new_size)
+        char_format.setFont(font)
+
+        cursor.mergeCharFormat(char_format)
+
+        # Deselect the text
+        cursor.movePosition(QTextCursor.Start)
+        self.PROGRAM_TEXT_WIDGET.setTextCursor(cursor)
+
  
     def SwitchProgramStle(self, state):
+        current_directory = os.path.dirname(__file__)
+        print(current_directory)
+        blockly_path = os.path.abspath(os.path.join(current_directory, '../..', 'blockly', 'blockly.html'))
+        print(blockly_path)
         if state:
             self.frame.hide()
-            self.web_view.show()
+            self.button_min.hide()
+            self.button_plus.hide()
         else:
             self.frame.show()
-            self.web_view.hide()
+            self.button_min.show()
+            self.button_plus.show()
 
     def update_line_numbers(self):
         # Get the number of lines in the text editor
@@ -217,64 +274,85 @@ class ProgramField(QWidget):
     
     def SetProgramName(self, name):
         self.PROGRAM_NAME.setText(f"Program: {name}")
-        
+
         
 
 class HighlightText(QSyntaxHighlighter):
-    def __init__(self, parent=None):
-        super(HighlightText, self).__init__(parent)
+    def __init__(self, document, font="Consolas", font_size=11):
+        super(HighlightText, self).__init__(document)
         
-        font = "Consolas"
-        font_size = 11
-
+        self.font = font
+        self.font_size = font_size
         self.highlighting_rules = []
+
+        # Initialize text formats
+        self.normal_text_format = QTextCharFormat()
+        self.keyword_format = QTextCharFormat()
+        self.string_format = QTextCharFormat()
+        self.comment_format = QTextCharFormat()
+        self.brown_format = QTextCharFormat()
+        
+        # Set font and foreground for each format
+        self.set_formats()
+
         # Normal text
-        normal_text_format = QTextCharFormat()
-        normal_text_format.setForeground(Qt.black)
-        normal_text_format.setFont(QFont(font, font_size))
-        self.highlighting_rules.append((QRegularExpression(r'[^\s]+'), normal_text_format))  # Match any non-whitespace characters
+        self.highlighting_rules.append((QRegularExpression(r'[^\s]+'), self.normal_text_format))  # Match any non-whitespace characters
 
         # Python keywords
-        keyword_format = QTextCharFormat()
-        keyword_format.setForeground(QColor("#339c9a"))
-        keyword_format.setFont(QFont(font, font_size))  # Change the font here
         keyword_list = keyword.kwlist
-        self.highlighting_rules.extend([(r'\b%s\b' % keyword, keyword_format) for keyword in keyword_list])
+        self.highlighting_rules.extend([(QRegularExpression(r'\b%s\b' % keyword), self.keyword_format) for keyword in keyword_list])
 
         # Multi-line strings
-        string_format = QTextCharFormat()
-        string_format.setForeground(Qt.lightGray)
-        string_format.setFont(QFont(font, font_size))  # Change the font here
-        self.highlighting_rules.append((QRegularExpression(r'""".*"""'), string_format))
-        self.highlighting_rules.append((QRegularExpression(r"'''.*'''"), string_format))
+        self.highlighting_rules.append((QRegularExpression(r'""".*?"""'), self.string_format))
+        self.highlighting_rules.append((QRegularExpression(r"'''.*?'''"), self.string_format))
 
         # Comments
-        comment_format = QTextCharFormat()
-        comment_format.setForeground(Qt.darkGreen)
-        comment_format.setFont(QFont(font, font_size))  # Change the font here
-        self.highlighting_rules.append((QRegularExpression(r'#[^\n]*'), comment_format))
+        self.highlighting_rules.append((QRegularExpression(r'#[^\n]*'), self.comment_format))
 
         # Highlight text between double quotes in brown
-        brown_format = QTextCharFormat()
-        brown_format.setForeground(QColor(139, 69, 19))  # Brown color
-        brown_format.setFont(QFont(font, font_size))
-        self.highlighting_rules.append((QRegularExpression(r'"(.*?)"'), brown_format))
-        
-        # Highlight text between double quotes in brown
-        brown_format = QTextCharFormat()
-        brown_format.setForeground(QColor(139, 69, 19))  # Brown color
-        brown_format.setFont(QFont(font, font_size))
-        self.highlighting_rules.append((QRegularExpression(r"'(.*?)'"), brown_format))
-        
+        self.highlighting_rules.append((QRegularExpression(r'"(.*?)"'), self.brown_format))
+        self.highlighting_rules.append((QRegularExpression(r"'(.*?)'"), self.brown_format))
 
-    def highlightBlock(self, text):        
+    def set_formats(self):
+        """Set the font size and color for each QTextCharFormat."""
+        self.normal_text_format.setForeground(Qt.black)
+        self.normal_text_format.setFont(QFont(self.font, self.font_size))
+        
+        self.keyword_format.setForeground(QColor("#339c9a"))
+        self.keyword_format.setFont(QFont(self.font, self.font_size))
+        
+        self.string_format.setForeground(Qt.lightGray)
+        self.string_format.setFont(QFont(self.font, self.font_size))
+        
+        self.comment_format.setForeground(Qt.darkGreen)
+        self.comment_format.setFont(QFont(self.font, self.font_size))
+        
+        self.brown_format.setForeground(QColor(139, 69, 19))
+        self.brown_format.setFont(QFont(self.font, self.font_size))
+
+    def highlightBlock(self, text):
+        # Apply formatting even to empty lines
+        self.setFormat(0, len(text), self.normal_text_format)
+        
         for pattern, format in self.highlighting_rules:
             expression = QRegularExpression(pattern)
             match = expression.match(text)
             while match.hasMatch():
                 self.setFormat(match.capturedStart(), match.capturedLength(), format)
                 match = expression.match(text, match.capturedEnd())
-                
+
+        if text.strip() == "":
+            self.setFormat(0, len(text), self.normal_text_format)  # Ensure empty lines have the default format
+            
+
+    def update_font_size(self, new_size):
+
+
+        self.font_size = new_size
+        self.set_formats()  # Update formats with the new font size
+        self.rehighlight()  # Rehighlight the text with the updated formats
+
+
 class CustomTextEdit(QTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)

@@ -7,15 +7,25 @@ import sys
 from backend.core.event_manager import event_manager
 
 import backend.core.variables as var
+import locale
 
 class FileManagement:
     def __init__(self):
         os_system = platform.system()
         self.platform = os_system
         
-        if os_system == "darwin":
+                # Get the default locale
+        lang, _ = locale.getdefaultlocale()
+
+        # Set the documents folder name based on the language
+        documents_folder = "Documents"  # Default to English
+
+        print(lang)
+
+        if os_system == "Darwin":
             # macOS-specific code
-            self.file_path = Path.home() / "Documents" / "MyAppData" / "MiKoBots"
+            self.file_path = Path.home() / documents_folder / "MyAppData" / "MiKoBots"
+            print(self.file_path)
         elif os_system == "Windows":
             # Windows-specific code
             dll = ctypes.windll.shell32
@@ -29,13 +39,18 @@ class FileManagement:
             # Linux and other platforms
             self.file_path = Path.home() / "Documents" / "MyAppData" / "MiKoBots"
         
+        print(f"file path {self.file_path}")
+        
     def GetPathFolder(self):
         os_system = platform.system()
         self.platform = os_system
+
+        print(os_system)
         
-        if os_system == "darwin":
+        if os_system == "Darwin":
             # macOS-specific code
             file_path = Path.home() / "Documents" / "MyAppData"
+            print(file_path)
         elif os_system == "Windows":
             # Windows-specific code
             dll = ctypes.windll.shell32
@@ -62,15 +77,34 @@ class FileManagement:
         return file_path
     
     
+    def LanguagePath(self, language):
+        try:
+            if self.platform == "Windows":
+                base_path = os.path.dirname(sys.executable)
+                language_path = os.path.join(base_path, 'assets', 'language', language)
+                language_path = os.path.normpath(language_path)
+            else:
+                base_path = os.path.dirname(os.path.dirname(sys.executable))
+                language_path= os.path.join(base_path, 'Resources', 'assets', 'language', language)
+                language_path = os.path.normpath(language_path)
+            
+        except AttributeError:
+            pass
+
+        return language_path
+
     # Function to get the correct path to the assets directory
     def resource_path(self, image):
         """ Get the absolute path to the resource (image file). Handles PyInstaller's temp folder. """
         try:
-            # When running as a PyInstaller bundle, _MEIPASS is created
-            #base_path = sys._MEIPASS
-            base_path = os.path.dirname(sys.executable)
-            image_path = os.path.join(base_path, 'assets', 'images', image)
-            image_path = os.path.normpath(image_path)
+            if self.platform == "Windows":
+                base_path = os.path.dirname(sys.executable)
+                image_path = os.path.join(base_path, 'assets', 'images', image)
+                image_path = os.path.normpath(image_path)
+            else:
+                base_path = os.path.dirname(os.path.dirname(sys.executable))
+                image_path = os.path.join(base_path, 'Resources', 'assets', 'images', image)
+                image_path = os.path.normpath(image_path)
             
         except AttributeError:
             # If not bundled, use the current directory
@@ -79,9 +113,5 @@ class FileManagement:
             image_path = os.path.join(current_directory, '../../..', 'assets', 'images', image)
             image_path = os.path.normpath(image_path)
             
-            pass
-        
-        
-        var.Test = str(image_path)
         
         return image_path

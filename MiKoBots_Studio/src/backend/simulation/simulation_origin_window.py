@@ -29,15 +29,15 @@ class SimulationOriginWindow(QObject):
         self.CreateAxes(item)
   
     def CreateAxes(self, item):
-        event_manager.publish("request_add_axis_to_plotter", item)   
+        event_manager.publish("request_add_axis_to_plotter", item) 
+        event_manager.publish("request_change_pos_axis", item, self.ORIGIN[item])
+          
                      
     def SaveOrigin(self, item):      
         data = event_manager.publish("request_get_data_origin", item)
-
         self.ORIGIN[item] = data[0]
 
-        #self.UpdateAxes(item, self.ORIGIN[item])
-        event_manager.publish("request_change_pos_axis", item, self.ORIGIN[item])
+        event_manager.publish("request_change_pos_axis", item, self.ORIGIN[item]) 
         
         origins_new = []
         for i in range(len(self.ORIGIN)):
@@ -45,7 +45,6 @@ class SimulationOriginWindow(QObject):
                 origins_new.append(self.ORIGIN[i])
         
         self.ORIGIN = origins_new
-        print(self.ORIGIN)
    
     def DeleteOrigin(self, item):
         # delete out of plotter

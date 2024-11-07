@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, pyqtSignal, QRegularExpression
+
+from PyQt5.QtCore import Qt, pyqtSignal, QRegularExpression, QMetaObject, Q_ARG
 from PyQt5.QtWidgets import QGridLayout, QTextEdit, QScrollBar, QLineEdit, QWidget
 from PyQt5.QtGui import  QTextCursor, QSyntaxHighlighter, QTextCharFormat, QFont, QColor
 
@@ -10,7 +11,6 @@ from backend.core.event_manager import event_manager
 from datetime import datetime
 
 from gui.style import *
-
    
 class LogField(QWidget):
     log_signal = pyqtSignal(str)
@@ -46,20 +46,28 @@ class LogField(QWidget):
         self.LOG_TEXT_WIDGET.setVerticalScrollBar(self.log_text_scrollbar)
         
     def InsertLog(self, text):
+
         if not text.strip():
             return
         
         current_time = datetime.now().strftime("%H:%M:%S")
         log_message = f"{current_time} -> {text}"
+
+        QMetaObject.invokeMethod(
+            self.LOG_TEXT_WIDGET,
+            "append",
+            Qt.QueuedConnection,
+            Q_ARG(str, log_message)
+        )
         
-        self.LOG_TEXT_WIDGET.setReadOnly(False)
+        #self.LOG_TEXT_WIDGET.setReadOnly(False)
         current_place = self.log_text_scrollbar.value()
         
         if current_place == self.log_text_scrollbar.maximum():
-            self.LOG_TEXT_WIDGET.append(log_message)
+            #self.LOG_TEXT_WIDGET.append(log_message)
             self.log_text_scrollbar.setValue(self.log_text_scrollbar.maximum())
         else:
-            self.LOG_TEXT_WIDGET.append(log_message)
+            #self.LOG_TEXT_WIDGET.append(log_message)
             self.log_text_scrollbar.setValue(current_place)
             
         self.LOG_TEXT_WIDGET.setReadOnly(True)

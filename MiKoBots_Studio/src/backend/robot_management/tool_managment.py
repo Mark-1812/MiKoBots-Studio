@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QPushButton, QLabel, QSizePolicy, QCheckBox, QLineEdit, QSpacerItem, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog
+from PyQt5.QtWidgets import QMessageBox, QLabel, QSizePolicy, QCheckBox, QLineEdit, QSpacerItem, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog
 from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
 from PyQt5.QtGui import QTextCharFormat, QTextCursor, QColor, QDoubleValidator
 
@@ -6,8 +6,8 @@ import backend.core.variables as var
 
 import numpy as np
 import os
-import json
 from stl import mesh
+from pathlib import Path
 
 from backend.calculations.kinematics_6_axis import ForwardKinematics_6, InverseKinmatics_6
 from backend.calculations.kinematics_3_axis import ForwardKinematics_3, InverseKinematics_3
@@ -15,9 +15,9 @@ from backend.calculations.convert_matrix import MatrixToXYZ
 
 from backend.file_managment.file_management import FileManagement
 
-import tkinter.messagebox
-
 from backend.core.event_manager import event_manager
+
+from gui.windows.message_boxes import WarningMessageRe
 
 class ToolManagment(QObject):
     def __init__(self):
@@ -30,13 +30,7 @@ class ToolManagment(QObject):
         
         self.file_management = FileManagement()
         
-        self.subscribeToEvents()
-        
         self.selected_tool = None
-   
-    def subscribeToEvents(self):
-        event_manager.subscribe("setup_tool_robot", self.setup)  
-        event_manager.subscribe("request_get_tool_nr", self.GetToolNr)
         
     def GetToolNr(self):
         return var.SELECTED_TOOL
@@ -44,9 +38,9 @@ class ToolManagment(QObject):
     def GetToolInfo(self):
         return var.TOOL_TYPE
         
-    def setup(self):
+    def SetupTool(self):
         event_manager.publish("request_delete_buttons_tool")
-        event_manager.publish("request_clear_plotter_3d_model")
+        event_manager.publish("request_clear_plotter_tool")
         event_manager.publish("request_delete_tool_combo")
         
         for i in range(len(var.TOOLS3D)):
@@ -116,10 +110,13 @@ class ToolManagment(QObject):
         event_manager.publish("request_add_tool_combo", "No tool")
         event_manager.publish("request_save_robot_tool")
         
+       
+       
             
     def changeTool(self, tool):
         event_manager.publish("request_delete_tool_plotter")
     
+        # if no tool
         if (tool + 1) > len(var.TOOLS3D):
             var.SELECTED_TOOL = len(var.TOOLS3D)
             var.TOOL_FRAME = [0,0,0,0,0,0] 
@@ -138,7 +135,6 @@ class ToolManagment(QObject):
             file_path = self.file_management.GetFilePath(var.TOOLS3D[tool][2])
             
             data = [file_path, var.TOOLS3D[tool][3], np.eye(4), np.eye(4)]
-            print(file_path)
             
             event_manager.publish("request_add_tool_to_plotter", data)
  
@@ -150,6 +146,10 @@ class ToolManagment(QObject):
             var.TOOL_OFFSET_CAM = var.TOOLS3D[tool][9]
             var.TOOL_TURN_CAM = var.TOOLS3D[tool][10]
             var.TOOL_SETTINGS_CAM = var.TOOLS3D[tool][11] 
+            
+            print(var.TOOLS3D[tool][0])
+            event_manager.publish("request_send_settings_tool", var.TOOLS3D[tool][0])  
+            
                     
         var.SELECTED_TOOL = tool
         
@@ -160,26 +160,28 @@ class ToolManagment(QObject):
         elif var.NUMBER_OF_JOINTS == 3:
             matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0])
             event_manager.publish("request_move_robot", matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
-
-
-
-    
                     
     def ShowSettings(self, tool):
         self.selected_tool = tool
         tool_settings = var.TOOLS3D[self.selected_tool]
         event_manager.publish("request_show_tool_settings", tool_settings)
+        event_manager.publish("request_clear_plotter_tool")
         file_path = self.file_management.GetFilePath(tool_settings[2])
         event_manager.publish("request_show_tool", file_path)
                        
     def DeleteTool(self, item):
-        if not tkinter.messagebox.askokcancel("Delete", "Are you sure you want to delete this tool?"):
+        answer = WarningMessageRe(var.LANGUAGE_DATA.get("message_sure_delete_tool"))
+    
+        if answer == False:
             return
         
         # Get the right path for the platform
         file_path_1 = self.file_management.GetFilePath(var.TOOLS3D[item][1])
         file_path_2 = self.file_management.GetFilePath(var.TOOLS3D[item][2])
-                            
+
+        file_path_1 = Path(file_path_1)
+        file_path_2 = Path(file_path_2)
+
         # Delete the stl files
         file_path_1.unlink()
         file_path_2.unlink()
@@ -202,7 +204,7 @@ class ToolManagment(QObject):
             event_manager.publish("request_add_tool_combo", var.TOOLS3D[i][0]) 
             
         event_manager.publish("request_add_tool_combo", "No tool")
-        event_manager.publish("request_save_robot_tool")
+        event_manager.publish("request_save_robot_tool")         
                 
     def UpdateSettings(self): 
         if self.selected_tool == None:

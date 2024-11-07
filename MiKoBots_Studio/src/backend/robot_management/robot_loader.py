@@ -1,5 +1,5 @@
 from PyQt5.QtCore import QObject
-from PyQt5.QtWidgets import QFileDialog, QWidget
+from PyQt5.QtWidgets import QFileDialog
 
 import json
 import backend.core.variables as var
@@ -8,8 +8,7 @@ import os
 import stat
 import shutil
 import zipfile
-
-import tkinter.messagebox
+from pathlib import Path
 
 from backend.calculations.kinematics_6_axis import ForwardKinematics_6
 from backend.calculations.kinematics_3_axis import ForwardKinematics_3
@@ -18,6 +17,9 @@ from backend.calculations.convert_matrix import MatrixToXYZ
 from backend.file_managment.file_management import FileManagement
 
 from backend.core.event_manager import event_manager
+
+from gui.windows.message_boxes import InfoMessage, ErrorMessage, WarningMessageRe
+
 
 class RobotLoader(QObject):
 
@@ -30,29 +32,23 @@ class RobotLoader(QObject):
                  
         var.SELECTED_ROBOT = 0
         
-        self.subscribeToEvents()
-        
          #a list with all the robots that exsist
-        self.robotFile = []
-
-    def subscribeToEvents(self):
-        event_manager.subscribe("setup_robot", self.setup_robot) 
-        event_manager.subscribe("request_change_robot", self.ChangeRobot)
-        event_manager.subscribe("request_get_current_robot_nr", self.GetCurrentRobotNr)
-        
-    def GetCurrentRobotNr(self):
-        robot_name = var.ROBOTS[var.SELECTED_ROBOT][0]
-        
-        return robot_name
-        
-         
-    def setup_robot(self):
+        self.robotFile = []    
+             
+    def SetupRobot(self):
         # Platform for file path
         folder_path = self.file_management.GetFilePath("/Robot_library") 
         folders = []
+
+        folder_path = Path(folder_path)
         
         if os.path.exists(folder_path) and os.path.isdir(folder_path):
-            folders = [f.name for f in folder_path.iterdir() if f.is_dir()]
+            folders = []
+
+            for folder in folder_path.iterdir():
+                if folder.is_dir():  # Check if the item is a directory
+                    folders.append(folder.name)
+
             folders = sorted(folders)
             print(f"folders... {folders}")
         else:
@@ -63,12 +59,17 @@ class RobotLoader(QObject):
             var.ROBOTS[i][0] = folders[i]
             
             event_manager.publish("request_robot_buttons", i, var.ROBOTS[i][0])
+            event_manager.publish("request_add_robot_combo", var.ROBOTS[i][0])
 
         if len(folders) > 0:
             try:
-                event_manager.publish("request_set_robot", var.SELECTED_ROBOT)
+                event_manager.publish("request_set_robot_radio", var.SELECTED_ROBOT)
+                event_manager.publish("request_set_robot_combo", var.SELECTED_ROBOT)
+                self.ChangeRobot(var.SELECTED_ROBOT)
             except:
-                event_manager.publish("request_set_robot", 0)
+                event_manager.publish("request_set_robot_radio", 0)
+                event_manager.publish("request_set_robot_combo", 0)
+                self.ChangeRobot(0)
                 var.SELECTED_ROBOT = 0
         else:
             print("NO robots found")
@@ -88,6 +89,9 @@ class RobotLoader(QObject):
         event_manager.publish("request_delete_buttons_axis")
         event_manager.publish("request_delete_buttons_move")
         event_manager.publish("request_delete_settings_fields")
+        
+        event_manager.publish("request_set_robot_combo", robot)
+        event_manager.publish("request_set_robot_radio", robot)
           
         var.SELECTED_ROBOT = robot
         
@@ -141,9 +145,6 @@ class RobotLoader(QObject):
                 event_manager.publish("request_create_buttons_axis", var.NUMBER_OF_JOINTS)  
                 event_manager.publish("request_create_buttons_move", var.NUMBER_OF_JOINTS, var.NAME_JOINTS, var.NAME_AXIS)        
                 
-                # delete the old tools and load the new tool buttons
-                event_manager.publish("setup_tool_robot")
-                
                 # delete the old robot and load the new robot buttons
                 event_manager.publish("setup_3d_model")
                 
@@ -167,7 +168,7 @@ class RobotLoader(QObject):
 
         except FileNotFoundError:
             print("No File Found")
-       
+        
       
     # send position robot
     def SendPosRobot(self, SIM):
@@ -182,10 +183,6 @@ class RobotLoader(QObject):
     def CreateNewRobot(self):
         # first save the current robot
         if len(var.ROBOTS) > 0:
-            save = tkinter.messagebox.askyesno("Question", "Do you want to save the current robot?.")
-            if save:
-                self.SaveRobot()
-        
             # look how many robots already exsist, and create a new robot
             item = len(var.ROBOTS)
             
@@ -236,7 +233,10 @@ class RobotLoader(QObject):
         self.SaveRobot()        
         
         # change the robot
-        event_manager.publish("request_set_robot", var.SELECTED_ROBOT)
+        
+        event_manager.publish("request_set_robot_radio", var.SELECTED_ROBOT)
+        event_manager.publish("request_set_robot_combo", var.SELECTED_ROBOT)
+        self.ChangeRobot(var.SELECTED_ROBOT)
 
     def SaveRobot(self, Info = None):
         # Change the name of the folder, if the name of the robot is changed
@@ -289,58 +289,69 @@ class RobotLoader(QObject):
         self.ChangeRobot(var.SELECTED_ROBOT)
         
         if Info:
-            tkinter.messagebox.showinfo("Settings Saved", "Changes have been saved.")
+            InfoMessage(var.LANGUAGE_DATA.get("title_Settings_saved"), var.LANGUAGE_DATA.get("changes_been_saved"))
             
     def DeleteRobot(self):
-        import shutil
+        response = WarningMessageRe(var.LANGUAGE_DATA.get("message_sure_delete_robot"))
         
-        delete = tkinter.messagebox.askyesno("Warning", "Are you sure that you want to delete this robot?")
+        if response:
+            pass
         
-        # only if there are more than one robots      
-        if len(var.ROBOTS) > 1 and delete:
-            # Delete the folder with the robots informations
-            folder_name =  var.ROBOTS[var.SELECTED_ROBOT][0]
-            
-            # Platform for file path
-            folder = self.file_management.GetFilePath("/Robot_library/" + folder_name)
-            
-            # Remove the folder and its contents
-            try:
-                for root, dirs, files in os.walk(folder):
-                    for dir in dirs:
-                        os.chmod(os.path.join(root, dir), stat.S_IRWXU)
-                    for file in files:
-                        os.chmod(os.path.join(root, file), stat.S_IRWXU)                
-                shutil.rmtree(folder)
-                print(f"Folder '{folder}' and its contents have been deleted.")
-            except OSError as e:
-                print(f"Error: {e.strerror}")
+        if len(var.ROBOTS) <= 1:
+            ErrorMessage(var.LANGUAGE_DATA.get("message_delete_last_robot"))
+            return
 
-            var.ROBOTS[var.SELECTED_ROBOT] = []    
-            robots_old = var.ROBOTS
-            var.ROBOTS = []
-            
-            # Delete the current robot out the list of robots and make a new list
-            for i in range(len(robots_old)):
-                if robots_old[i] != []:
-                    var.ROBOTS.append(robots_old[i])
-                    
-            # delete all the current buttons
-            event_manager.publish("request_delete_robot_buttons")
         
-            # Create new buttons
-            for i in range(len(var.ROBOTS)):
-                robot_name = var.ROBOTS[i][0]
-                event_manager.publish("request_robot_buttons", i, robot_name)
+        ROBOT_DELETE = var.SELECTED_ROBOT
+        
+        # Make the first the selected robot
+        var.SELECTED_ROBOT = 0
+        event_manager.publish("request_set_robot_radio", var.SELECTED_ROBOT)
+        event_manager.publish("request_set_robot_combo", var.SELECTED_ROBOT)
+        self.ChangeRobot(var.SELECTED_ROBOT)
+        self.SaveRobot()           
+        
+
+        # Delete the folder with the robots informations
+        folder_name =  var.ROBOTS[ROBOT_DELETE][0]
+        
+        # Platform for file path
+        folder = self.file_management.GetFilePath("/Robot_library/" + folder_name)
+        
+        # Remove the folder and its contents
+        try:
+            for root, dirs, files in os.walk(folder):
+                for dir in dirs:
+                    os.chmod(os.path.join(root, dir), stat.S_IRWXU)
+                for file in files:
+                    os.chmod(os.path.join(root, file), stat.S_IRWXU)                
+            shutil.rmtree(folder)
+            print(f"Folder '{folder}' and its contents have been deleted.")
+        except OSError as e:
+            try:
+                os.chmod(folder, stat.S_IRWXU)
+                shutil.rmtree(folder)
+            except:
+                ErrorMessage(var.LANGUAGE_DATA.get("message_not_delete_folder"), folder)
+
+        var.ROBOTS[ROBOT_DELETE] = []    
+        robots_old = var.ROBOTS
+        var.ROBOTS = []
+        
+        # Delete the current robot out the list of robots and make a new list
+        for i in range(len(robots_old)):
+            if robots_old[i] != []:
+                var.ROBOTS.append(robots_old[i])
+                
+        # delete all the current buttons
+        event_manager.publish("request_delete_robot_buttons")
+    
+        # Create new buttons
+        for i in range(len(var.ROBOTS)):
+            robot_name = var.ROBOTS[i][0]
+            event_manager.publish("request_robot_buttons", i, robot_name)
             
-            # Make the first the selected robot
-            var.SELECTED_ROBOT = 0
-            event_manager.publish("request_set_robot", var.SELECTED_ROBOT)
             
-            self.SaveRobot()
-            
-        elif len(var.ROBOTS) == 1:
-            tkinter.messagebox.showerror("Error", "You can not delete the last robot.")
 
     def ImportRobot(self):
         # select the zip that you want to import
@@ -408,13 +419,11 @@ class RobotLoader(QObject):
                 
         
         # # change the robot
-        event_manager.publish("request_set_robot", var.SELECTED_ROBOT)       
-
+        event_manager.publish("request_set_robot_radio", var.SELECTED_ROBOT)
+        event_manager.publish("request_set_robot_combo", var.SELECTED_ROBOT)       
+        self.ChangeRobot(var.SELECTED_ROBOT)
         self.SaveRobot()
         
-        
-        
-    
     def ExportRobot(self):
         # make a zip file of the selected robot
         

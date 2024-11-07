@@ -34,6 +34,7 @@ JOG_ACCEL = "50"
 
 CAM_CONNECT = 0
 CAM_PORT = 0
+CAM_SQUARE = False
 
 FILE_PATH = None
 
@@ -83,6 +84,8 @@ ROBOT_CONNECT = False
 ROBOT_BUSY = False
 ROBOT_HOME = False
 ROBOT_SER = None
+ROBOT_BLUETOOTH = False
+ROBOT_BT_CLIENT = None
 ROBOT_PAUZE = False
 ROBOT_COM = "3"
 ROBOT_JOINT_MOVE = None
@@ -106,6 +109,8 @@ VISION_COLOR_OPTIONS = {"RED": [[0, 50, 105], [25, 255, 255], [165, 50, 10], [17
 
 # variables related to the connection of the robot
 IO_CONNECT = False
+IO_BLUETOOTH = False
+IO_BT_CLIENT = None
 IO_BUSY = False
 IO_SER = None
 IO_COM = "5"
@@ -117,9 +122,12 @@ TOOL_PLOTTER = [None, None, None, None]
 
 SAVED = False
 
-font_size = 16
-color = "black"
+COLOR_RANGE = None
 
-Test = "test"
+LANGUAGE = 'en'
+LANGUAGE_DATA =None 
 
-colors_options = {"RED": [[0, 50, 105], [25, 255, 255], [165, 50, 10], [179, 255, 255]], "GREEN": [[30, 80, 30], [85, 255, 255]], "BLUE": [[95, 95, 100], [135, 255, 255]], "YELLOW": [[20, 100, 100], [35, 255, 255]], "ORAGNE": [[10, 100, 100], [20, 255, 255]], "PURPLE": [[130, 100, 100], [160, 255, 255]], "PINK": [[140, 100, 100], [180, 255, 255]], "CYAN": [[85, 100, 100], [100, 255, 255]], "WHITE": [[0, 0, 200], [179, 50, 255]], "BLACK": [[0, 0, 0], [179, 255, 30]]}
+
+TOOL_CLASS = None
+
+SETTINGS_FILE = None

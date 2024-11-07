@@ -1,11 +1,18 @@
 // FIRMWARE for the robot
 // Version 0.1  
 
-#define DEVICE "IO" // DEVICE is ROBOT or IO
+#define DEVICE_ROBOT 1
+#define DEVICE_IO 0
+
+// Set which device is being used
+#define DEVICE DEVICE_ROBOT  // Change this to DEVICE_IO to use the IO device
+
 
 #define MAX_NUMBER_OF_JOINTS 6
 #include <math.h>
 #include <ESP32Servo.h>
+
+// Define robot variables 
 
 int NUMBER_OF_JOINTS = 6;
 
@@ -18,11 +25,9 @@ char alphabet[] = {
   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
   'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
 };
-char Axis_name[] = {'X', 'Y', 'Z', 'y', 'p', 'r'};
-char Joint_name[] = {'J1', 'J2', 'J3', 'J4', 'J5','J6'};
 
-String Joint_name_string[] = {"J1", "J2", "J3", "J4", "J5","J6"};
-
+String Axis_name[] = {"X", "Y", "Z", "y", "p", "r"};
+String Joint_name[] = {"J1", "J2", "J3", "J4", "J5","J6"};
 
 // structure of the Joint information
 typedef struct{
@@ -94,13 +99,110 @@ int pauze = 0;
 #include "Motor_move.h"
 #include "Kinematics_6.h"
 #include "Kinematics_3.h"
+#include "Robot_commands.h"
+#include "Tool_commands.h"
+#include "IO_commands.h"
 #include "error.h"
 #include <Arduino.h>
 #include <TaskScheduler.h>
 
+
+
+
+
+
+
+
+///// Bluetooth settings and libraries
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+
+#if DEVICE == DEVICE_ROBOT
+    #define CHARACTERISTIC_UUID "c42e42e4-8214-420c-944d-e127cc0f20ba"  // UUID for ROBOT
+    #define SERVICE_UUID        "a917e658-9c1a-4901-bbb8-92d54cfa2fdd" 
+    #define type_device  "ROBOT"
+#elif DEVICE == DEVICE_IO
+    #define CHARACTERISTIC_UUID "19680482-86af-4892-ab79-962e98f41045"  // UUID for IO
+    #define SERVICE_UUID        "30a96603-6e34-49d8-9d64-a13f68fefab6"
+    #define type_device  "IO"
+#else
+    #error "DEVICE must be defined as ROBOT or IO"
+#endif
+
+// Create a BLE server and characteristic
+BLEServer* pServer = NULL;
+BLECharacteristic* pCharacteristic = NULL;
+bool deviceConnected = false;
+
+void sent_message(String message){
+  if (deviceConnected){
+    if (pCharacteristic->getValue() == "") {
+      String responseData = message;
+      pCharacteristic->setValue(responseData.c_str());
+      pCharacteristic->notify(); // Notify the client that data has been sent
+      vTaskDelay(3 / portTICK_PERIOD_MS);
+      pCharacteristic->setValue("");
+    }
+  }
+  Serial.println(message);
+}
+
+void sent_message_task1(String message){
+  if (deviceConnected){
+      String responseData = message;
+      pCharacteristic->setValue(responseData.c_str());
+      pCharacteristic->notify(); // Notify the client that data has been sent
+      vTaskDelay(3 / portTICK_PERIOD_MS);
+      pCharacteristic->setValue("");
+  }
+  Serial.println(message);
+}
+
+// Callback class to handle connection events
+class MyServerCallbacks : public BLEServerCallbacks {
+    void onConnect(BLEServer* pServer) override {
+        deviceConnected = true;
+        Serial.println("Device connected");
+    }
+
+    void onDisconnect(BLEServer* pServer) override {
+        deviceConnected = false;
+        Serial.println("Device disconnected");
+        pServer->startAdvertising();
+    }
+};
+
+
+/// send a message with bluetooth
+
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(19200);
+  Serial.begin(115200);
+  BLEDevice::init("Robot_MiKoBots");  // Custom BLE name here
+
+  // Create BLE server
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+
+  if (pServer == NULL) {
+    Serial.println("Failed to create BLE server");
+    while (1); // Halt the program
+  }
+
+  // Create a BLE service
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+  pCharacteristic = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID,
+                      BLECharacteristic::PROPERTY_READ |
+                      BLECharacteristic::PROPERTY_WRITE |
+                      BLECharacteristic::PROPERTY_NOTIFY
+                    );
+  pCharacteristic->addDescriptor(new BLE2902());
+  pService->start();
+
+
   
   for(int i = 0; i < MAX_NUMBER_OF_JOINTS; i++){
     robot[i].PosJStart = 0.01;
@@ -120,11 +222,20 @@ void setup() {
     while (1); // Halts the program
   }
 
+  
+
+  // Start advertising
+  pServer->getAdvertising()->start();
+  Serial.println("BLE Device is Ready to Pair");
+
+  Serial.print("Free heap: ");
+  Serial.println(ESP.getFreeHeap());
+
   //create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
   xTaskCreatePinnedToCore(
                     Task1code,   /* Task function. */
                     "Task1",     /* name of task. */
-                    6000,       /* Stack size of task */
+                    8192,       /* Stack size of task */
                     NULL,        /* parameter of the task */
                     1,           /* priority of the task */
                     &Task1,      /* Task handle to keep track of created task */
@@ -135,14 +246,17 @@ void setup() {
   xTaskCreatePinnedToCore(
                     Task2code,   /* Task function. */
                     "Task2",     /* name of task. */
-                    8000,       /* Stack size of task */
+                    12288,       /* Stack size of task */
                     NULL,        /* parameter of the task */
                     1,           /* priority of the task */
                     &Task2,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
   delay(300);
 
-  Serial.println("");
+
+  String Message = String(type_device) + "_CONNECTED";
+  sent_message(Message);
+
 }
 
 
@@ -162,79 +276,90 @@ char buffer[MAX_BUFFER_SIZE]; // Character array to hold serial input
 
 void Task1code(void * pvParameters) {
   while (true) {
+    // Process Serial Input
     while (Serial.available() > 0) {
-      char c = Serial.read();
-      if (c == '\n') {
-        String str(buffer);
-        if (str == "stop") {
-          stop = 1;  
-        }
-        else if (str == "pauze"){
-          Serial.println("pauze");
-          pauze = 1;
-        } 
-        else if (str == "play"){
-          stop = 0;
-          pauze = 0;
-          Serial.println("END");
-        }
-        else if (str == "CONNECT"){
-          Serial.print(DEVICE);
-          Serial.println("_CONNECTED");
-        }
-        else if (str != "stop" and str != "pauze" and str != "play" and str != "") {
-          // Store the line in the buffer
-          if (xSemaphoreTake(mutex, portMAX_DELAY) == pdTRUE){
-            if (lineIndex < BUFFER_SIZE) {
-              lines[lineIndex] = str;
-              lineIndex = (lineIndex + 1); //% BUFFER_SIZE; // Wrap around if the buffer is full
+        char c = Serial.read();
+        if (c == '\n') {
+            String str(buffer);
+            processCommand(str);  // Process command in a separate function
+            memset(buffer, 0, sizeof(buffer));  // Clear buffer
+        } else {
+            if (strlen(buffer) < (sizeof(buffer) - 1)) {
+                strncat(buffer, &c, 1);
             }
-
-            else{
-               Serial.println("Error: Buffer overflow");
-            }
-
-            if (lineIndex > BUFFER_SIZE - 2 ){
-              Serial.println("wait");
-            }
-
-            xSemaphoreGive(mutex);
-          }
         }
-
-        memset(buffer, 0, sizeof(buffer));
-      } else {
-        strncat(buffer, &c, 1);
-      }
     }
 
-    // check for signals from inputs
-    for(int i = 0; i < 10; i++){
-      if(io_type[i] == 1){
-        if (!digitalRead(io_pin[i]) and io_state[i] == 0){
-          Serial.print("Input ");
-          Serial.print(i);
-          Serial.print(" ");
-          Serial.println(1);
-          io_state[i] = 1;
-        }
-        if (digitalRead(io_pin[i]) and io_state[i] == 1){
-          Serial.print("Input ");
-          Serial.print(i);
-          Serial.print(" ");
-          Serial.println(0);
-          io_state[i] = 0;          
-        }
-      }
+    // Process Bluetooth Input
+    if (deviceConnected && pCharacteristic->getValue() != "") {
+        String recievedData = pCharacteristic->getValue().c_str();
+        pCharacteristic->setValue("");  // Clear after reading
+        processCommand(recievedData);  // Process command in a separate function
+        recievedData = "";
     }
 
-    delay(2);
+
+    checkInputs();  // Separate function for input checks
+    vTaskDelay(100 / portTICK_PERIOD_MS);  // Use vTaskDelay instead of delay
   }
 }
 
-String command;
+void processCommand(const String& command) {
+    if (command == "stop") {
+        stop = 1;  
+    } else if (command == "pauze") {
+        sent_message_task1("pauze");
+        pauze = 1;
+    } else if (command == "play") {
+        stop = 0;
+        pauze = 0;
+        sent_message_task1("END");
+    } else if (command == "CONNECT") {
+        String Message = String(type_device) + "_CONNECTED";
+        sent_message_task1(Message);
+    } else if (command != "stop" and command != "pauze" and command != "play" and command != "" and command != "go" and command != "wait" and command != "END" and command != "POS" and command != "POS:") {
+        storeInBuffer(command);  // Separate function to store data
+    }
+}
+
+void storeInBuffer(const String& data) {
+  if (xSemaphoreTake(mutex, portMAX_DELAY) == pdTRUE) {
+    if (lineIndex < BUFFER_SIZE) {
+      lines[lineIndex] = data;
+      lineIndex++;
+    } else {
+      sent_message_task1("Error: Buffer overflow");
+    }
+    if (lineIndex > BUFFER_SIZE - 2) {
+      sent_message_task1("wait");
+    }
+    xSemaphoreGive(mutex);
+  }
+}
+
+void checkInputs() {
+  for (int i = 0; i < 10; i++) {
+    if (io_type[i] == 1) {
+      if (!digitalRead(io_pin[i]) && io_state[i] == 0) {
+        String command = String("Input " + String(i) + " 1");
+        sent_message(command);
+        io_state[i] = 1;
+      }
+      if (digitalRead(io_pin[i]) && io_state[i] == 1) {
+        String command = String("Input " + String(i) + " 0");
+        sent_message(command);
+        io_state[i] = 0;          
+      }
+    }
+  }
+}
+
+
+
+
 String coordinates;
 void Task2code(void * pvParameters) {
+  String command;
   while (true) {
     while (stop == 0){
       if (xSemaphoreTake(mutex, portMAX_DELAY) == pdTRUE){
@@ -250,46 +375,49 @@ void Task2code(void * pvParameters) {
       String typeOfCommand = command.substring(0, spaceIndex);
       coordinates = command.substring(spaceIndex + 1);
 
+      typeOfCommand.trim();
+
       // Commands
-      if (DEVICE == "ROBOT" and typeOfCommand == "MoveL") MoveL();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "MoveJ") MoveJ();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "jogL") jogL();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "jogJ") jogJ();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "OffsetJ") offsetJ();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "OffsetL") offsetL();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "Home") home_Joints();
+      if (type_device  == "ROBOT" and typeOfCommand.equals("MoveL")) MoveL(command);
+      else if (type_device  == "ROBOT" and typeOfCommand.equals("MoveJ")) MoveJ(command);
+      else if (type_device  == "ROBOT" and typeOfCommand.equals("MoveJoint")) MoveJoint(command);
+      else if (type_device  == "ROBOT" and typeOfCommand.equals("jogL")) jogL(command);
+      else if (type_device  == "ROBOT" and typeOfCommand.equals("jogJ")) jogJ(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("OffsetJ")) offsetJ(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("OffsetL")) offsetL(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Home")) home_Joints(command);
 
       // commands tool
-      else if (typeOfCommand == "Tool_move_to") tool_move_to();
-      else if (typeOfCommand == "Tool_state") tool_state();  
+      else if (typeOfCommand.equals("Tool_move_to")) tool_move_to(command);
+      else if (typeOfCommand.equals("Tool_state")) tool_state(command);  
 
       // commands IO
-      else if (typeOfCommand == "IO_digitalWrite") IO_digitalWrite();
+      else if (typeOfCommand.equals("IO_digitalWrite")) IO_digitalWrite(command);
 
       // Settings robot
-      else if (DEVICE == "ROBOT" and typeOfCommand == "Set_number_of_joints") set_number_of_joints();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "Set_motor_pin") set_motor_pin();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "Set_switch_pin") set_switch_pin();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "Set_max_pos") set_max_pos();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "Set_lim_pos") set_lim_pos();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "Set_step_deg") set_step_deg();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "Set_dir_joints") set_direction_joint();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "Set_dh_par") set_dh_par();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "Set_speed") set_speed();
-      else if (DEVICE == "ROBOT" and typeOfCommand == "Set_home_settings") set_homing();
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_number_of_joints")) set_number_of_joints(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_motor_pin")) set_motor_pin(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_switch_pin")) set_switch_pin(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_max_pos")) set_max_pos(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_lim_pos")) set_lim_pos(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_step_deg")) set_step_deg(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_dir_joints")) set_direction_joint(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_dh_par")) set_dh_par(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_speed")) set_speed(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_home_settings")) set_homing(command);
 
       // Settings Tool
-      else if (typeOfCommand == "Set_tools") set_TOOL();
-      else if (typeOfCommand == "Set_tool_frame") set_tool_frame();
+      else if (typeOfCommand.equals("Set_tools")) set_TOOL(command);
+      else if (typeOfCommand.equals("Set_tool_frame")) set_tool_frame(command);
 
       // Settings IO
-      else if (typeOfCommand == "Set_IO_pin") set_IO_pin();
+      else if (typeOfCommand.equals("Set_io_pin")) set_IO_pin(command);
 
-      // If the command does not match send END
+      //If the command does not match send END
       else{
-        Serial.print("Error< do not regonize this command: ");
-        Serial.println(typeOfCommand);
-        Serial.println("END");
+        String message = "Error: do not regonize this command: " + typeOfCommand;
+        sent_message(message);
+        sent_message("END");
       }
     
 
@@ -302,7 +430,7 @@ void Task2code(void * pvParameters) {
         lineIndex--;
 
         if(lineIndex < BUFFER_SIZE - 1){
-          Serial.println("go");
+          sent_message("go");
         } 
         xSemaphoreGive(mutex);
       }
@@ -319,839 +447,24 @@ void Task2code(void * pvParameters) {
         xSemaphoreGive(mutex);
       }
     }
-    delay(5);
+    vTaskDelay(5 / portTICK_PERIOD_MS);  
   }
-  delay(5);
+  vTaskDelay(10 / portTICK_PERIOD_MS);
 }
 
-
-float read_String(char code, float val) {
-  unsigned int startPos = 0;  // Start at the beginning of the buffer
-  while (startPos >= 0 && startPos < coordinates.length()) {
-    int foundPos = coordinates.indexOf(code, startPos); // Find the position of the code
-    if (foundPos >= 0) {
-      // If you find the code, extract the digits that follow into a float and return it
-      String numberStr = coordinates.substring(foundPos + 1, coordinates.indexOf(' ', foundPos));
-      return numberStr.toFloat();
-    }
-    startPos = coordinates.indexOf(' ', startPos) + 1; // Take a step to the letter after the next space
-  }
-  return val; // End reached, nothing found, return the default value
-}
-
-//// settings update
-void set_number_of_joints(){
-  int pos = command.indexOf('A');
-
-  NUMBER_OF_JOINTS = command.substring(pos + 1).toInt();
-
-  Serial.println("Number of joints are set");
-  Serial.println("END"); 
-}
-
-void set_motor_pin(){
-  int pos_setting[12];
-
-  for(int i = 0; i < NUMBER_OF_JOINTS * 2; i++){
-    pos_setting[i] = command.indexOf(alphabet[i]);
-  }
-
-  int j = 0;
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    motors[i].step_pin = command.substring(pos_setting[j] + 1, pos_setting[j + 1]).toInt();
-    if (i < NUMBER_OF_JOINTS - 1){
-      motors[i].dir_pin = command.substring(pos_setting[j + 1] + 1, pos_setting[j + 2]).toInt();
-    } else{
-      motors[i].dir_pin = command.substring(pos_setting[j + 1] + 1).toInt();
-    }
-    j = j + 2;
-  }
-
-
-  for(int i=0; i < NUMBER_OF_JOINTS; i++) {  
-    // set the motor pin & scale
-    pinMode(motors[i].step_pin,OUTPUT);
-    pinMode(motors[i].dir_pin,OUTPUT);
-  }
-
-  Serial.println("Motor pins settings are updated");
-  Serial.println("END");
-}
-
-void set_switch_pin(){
-  int pos_setting[12];
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    pos_setting[i] = command.indexOf(alphabet[i]);
-  }
-
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    if (i < NUMBER_OF_JOINTS - 1){
-      motors[i].limit_switch_pin = command.substring(pos_setting[i] + 1, pos_setting[i + 1]).toInt();
-    } else{
-      motors[i].limit_switch_pin = command.substring(pos_setting[i] + 1).toInt();
-    }
-  }
-
-  for(int i=0; i < NUMBER_OF_JOINTS; i++) {  
-    pinMode(motors[i].limit_switch_pin,INPUT_PULLUP);
-  }
-
-  Serial.println("Switch pins settings are updated");
-  Serial.println("END");
-}
-
-void set_lim_pos(){
-  int pos_setting[12];
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    pos_setting[i] = command.indexOf(alphabet[i]);
-  }
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    if (i < NUMBER_OF_JOINTS - 1){
-      JointsInfo[i].PosLimitSwitch = command.substring(pos_setting[i] + 1, pos_setting[i + 1]).toInt();
-    } else{
-      JointsInfo[i].PosLimitSwitch = command.substring(pos_setting[i] + 1).toInt();
-    }
-  }
-
-  Serial.println("Position limit switch settings are updated");
-  Serial.println("END");
-}
-
-void set_max_pos(){
-  int pos_setting[12];
-
-  for(int i = 0; i < NUMBER_OF_JOINTS * 2; i++){
-    pos_setting[i] = command.indexOf(alphabet[i]);
-  }
-
-  int j = 0;
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    JointsInfo[i].MinPos = command.substring(pos_setting[j] + 1, pos_setting[j + 1]).toInt();
-    if (i < NUMBER_OF_JOINTS - 1){
-      JointsInfo[i].MaxPos = command.substring(pos_setting[j + 1] + 1, pos_setting[j + 2]).toInt();
-    } else{
-      JointsInfo[i].MaxPos = command.substring(pos_setting[j + 1] + 1).toInt();
-    }
-    j = j + 2;
-  }
-
-  Serial.println("Position settings are updated");
-  Serial.println("END");
-}
-
-void set_step_deg(){
-  int pos_setting[12];
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    pos_setting[i] = command.indexOf(alphabet[i]);
-  }
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    if (i < NUMBER_OF_JOINTS - 1){
-      JointsInfo[i].StepPerDeg = command.substring(pos_setting[i] + 1, pos_setting[i + 1]).toInt();
-    } else{
-      JointsInfo[i].StepPerDeg = command.substring(pos_setting[i] + 1).toInt();
-    }
-  }
-
-  Serial.println("Steps per degree settings are updated");
-  Serial.println("END");
-}
-
-void set_direction_joint(){
-  int pos_setting[12];
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    pos_setting[i] = command.indexOf(alphabet[i]);
-  }
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    if (i < NUMBER_OF_JOINTS - 1){
-      JointsInfo[i].DirJoint = command.substring(pos_setting[i] + 1, pos_setting[i + 1]).toInt();
-    } else{
-      JointsInfo[i].DirJoint = command.substring(pos_setting[i] + 1).toInt();
-    }
-  }
-
-  Serial.println("Direction of the joints settings are updated");
-  Serial.println("END");
-}
-
-void set_homing(){
-  int pos_setting[12];
-
-  for(int i = 0; i < NUMBER_OF_JOINTS * 2; i++){
-    pos_setting[i] = command.indexOf(alphabet[i]);
-  }
-
-  int j = 0;
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    JointsInfo[i].HomingOrder = command.substring(pos_setting[j] + 1, pos_setting[j + 1]).toInt();
-    if (i < NUMBER_OF_JOINTS - 1){
-      JointsInfo[i].HomingPos = command.substring(pos_setting[j + 1] + 1, pos_setting[j + 2]).toInt();
-    } else{
-      JointsInfo[i].HomingPos = command.substring(pos_setting[j + 1] + 1).toInt();
-    }
-    j = j + 2;
-  }
-
-  Serial.println("Homing settings are updated");
-  Serial.println("END");
-}
-
-void set_dh_par(){
-  int pos_setting[24];
-
-  int posA = command.indexOf('A');
-  String NEWcommand = command.substring(posA);
-
-  for(int i = 0; i < NUMBER_OF_JOINTS * 4; i++){
-    pos_setting[i] = NEWcommand.indexOf(alphabet[i]);
-  }
-
-  int j = 0;
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    DHparams[i][0] = NEWcommand.substring(pos_setting[j] + 1, pos_setting[j + 1]).toFloat();
-    DHparams[i][1] = NEWcommand.substring(pos_setting[j + 1] + 1, pos_setting[j + 2]).toFloat();
-    DHparams[i][2] = NEWcommand.substring(pos_setting[j + 2] + 1, pos_setting[j + 3]).toFloat();
-
-    if (i < NUMBER_OF_JOINTS - 1){
-      DHparams[i][3] = NEWcommand.substring(pos_setting[j + 3] + 1, pos_setting[j + 4]).toFloat();
-    } else{
-      DHparams[i][3] = NEWcommand.substring(pos_setting[j + 3] + 1).toFloat();
-    }
-    j = j + 4;
-  }
-
-  //DECLARE R06 NEG FRAME
-  R06_neg_matrix[2][3] = -DHparams[5][2];
-
-  Serial.println("DH parameters settings are updated");
-  Serial.println("END");
-}
-
-void set_speed(){
-  int pos_setting[12];
-
-  for(int i = 0; i < NUMBER_OF_JOINTS * 2; i++){
-    pos_setting[i] = command.indexOf(alphabet[i]);
-  }
-
-  int j = 0;
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    JointsInfo[i].MaxSpeed = command.substring(pos_setting[j] + 1, pos_setting[j + 1]).toInt();
-    if (i < NUMBER_OF_JOINTS - 1){
-      JointsInfo[i].MaxAccel = command.substring(pos_setting[j + 1] + 1, pos_setting[j + 2]).toInt();
-    } else{
-      JointsInfo[i].MaxAccel = command.substring(pos_setting[j + 1] + 1).toInt();
-    }
-    j = j + 2;
-  }
-
-  Serial.println("Speed settings are updated");
-  Serial.println("END");
-}
-
-
-// Settings Tool
-void set_TOOL(){
-  /*
-    Tool pin
-    Relay 0 or 1 
-    Servo min
-    Servo max
-  */
-
-  int pos_1_TOOL = command.indexOf('A');
-  int pos_2_TOOL = command.indexOf('B');
-  int pos_3_TOOL = command.indexOf('C');
-  int pos_4_TOOL = command.indexOf('D');
-
-  tool_pin = command.substring(pos_1_TOOL + 1, pos_2_TOOL).toInt();
-  tool_type = command.substring(pos_2_TOOL + 1, pos_3_TOOL).toInt();
-  servo_min = command.substring(pos_3_TOOL + 1, pos_4_TOOL).toInt();
-  servo_max = command.substring(pos_4_TOOL + 1).toInt();
-
-  if (tool_type == 0) {
-    servoTool.attach(tool_pin);
-  }
-
-  Serial.println("TOOL is set");
-  Serial.println("END");
-}
-
-void set_tool_frame(){
-  int pos_setting[12];
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    pos_setting[i] = command.indexOf(alphabet[i]);
-  }
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    if (i < NUMBER_OF_JOINTS - 1){
-      TOOL_FRAME[i] = command.substring(pos_setting[i] + 1, pos_setting[i + 1]).toInt();
-    } else{
-      TOOL_FRAME[i] = command.substring(pos_setting[i] + 1).toInt();
-    }
-  }
-
-  Serial.println("Tool frame is updated");
-  Serial.println("END");
-}
-
-// Settings IO
-void set_IO_pin(){
-  int pos_IO_1_PIN = command.indexOf('A');
-  int pos_IO_2_PIN = command.indexOf('B');
-  int pos_IO_3_PIN = command.indexOf('C');
-
-  int io_number = command.substring(pos_IO_1_PIN + 1, pos_IO_2_PIN).toInt();
-  io_pin[io_number] = command.substring(pos_IO_2_PIN + 1, pos_IO_3_PIN).toInt();
-
-  String type = command.substring(pos_IO_3_PIN + 1);
-
-  if (type == "INPUT"){
-    pinMode(io_pin[io_number], INPUT_PULLUP);
-    io_type[io_number] = 1;
-    
-  } else if (type == "OUTPUT"){
-    pinMode(io_pin[io_number], OUTPUT);
-    io_type[io_number] = 0;
-  }
-
-  Serial.println("IO pins are set");
-  Serial.println("END");
-}
-
-
-// functions Move robot
-void home_Joints(){
-
-  /*
-    for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-      robot[i].PosJStart = 0.01;
-    }
-
-    for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-      Serial.print(i + 1);
-      Serial.print(" out of ");
-      Serial.println(NUMBER_OF_JOINTS);
-
-      // look for the joint that has to be homed first
-      for(int j = 0; j < NUMBER_OF_JOINTS; j++){
-        // See if the joint order is the same 
-        if(JointsInfo[j].HomingOrder == i + 1){
-
-          Serial.print("Home joint: ");
-          Serial.println(JointsInfo[j].HomingOrder);
-
-          moveToLimit(j);
-          robot[j].PosJEnd = JointsInfo[j].HomingPos;
-          MotorMoveJ(50, 80, 0, 0);
-        }
-      }
-  }
-
-    for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-      robot[i].PosJEnd = 0;
-    }
-
-    if(NUMBER_OF_JOINTS == 6){
-      ForwardKinematic_6_PosEnd();
-    }
-    if(NUMBER_OF_JOINTS == 3){
-      ForwardKinematic_3_PosEnd();
-    }
-    
-  */
-
-  Serial.println("home");
-  Serial.println("END");
-}
-
-void moveToLimit(int joint){
-  
-  // set the direction of the joint towards the limit
-  int direction;
-  if (JointsInfo[joint].DirJoint == 1){
-    if (JointsInfo[joint].PosLimitSwitch < 0){
-      direction = 0;
-    }
-    else{
-      direction = 1;
-    }
-  }
-  if (JointsInfo[joint].DirJoint == 0){
-    if (JointsInfo[joint].PosLimitSwitch < 0){
-      direction = 1;
-    }
-    else{
-      direction = 0;
-    }
-  }
-  
-
-  Serial.println("move back");
-
-  // if the endswitch is already detected first move away from the endswitch
-  unsigned long switchStartTime = 0;
-  float speed_del = 1000000 / ((20.0 / 100.0) * JointsInfo[joint].MaxSpeed * JointsInfo[joint].StepPerDeg);
-  Serial.println(float((40 / 100)) * JointsInfo[joint].MaxSpeed * JointsInfo[joint].StepPerDeg);
-  Serial.println((40.0 / 100.0) * JointsInfo[joint].MaxSpeed * JointsInfo[joint].StepPerDeg);
-  Serial.println(speed_del);
-  digitalWrite(motors[joint].dir_pin, ((direction == 0) ? HIGH : LOW));
-  while(true)
-  {
-    // Start the timer if the switch signal is just detected
-    if (digitalRead(motors[joint].limit_switch_pin) == 0) {
-        switchStartTime = switchStartTime;
-        Serial.println("do not touch the limit switch");
-    }
-    else{
-      switchStartTime = millis();
-    }
-    if (millis() - switchStartTime >= 30) {
-      // Stop moving
-      break;
-    }
-
-    digitalWrite(motors[joint].step_pin, HIGH);
-    delayMicroseconds(5);
-    digitalWrite(motors[joint].step_pin, LOW);
-    delayMicroseconds(speed_del);
-  }
-
-
-  Serial.println("move till switch is touched");
-  delay(500);
-  // move to the limit switch until the switch is activated
-  switchStartTime = 0;
-  speed_del = 1000000/((40.0 / 100.0) * JointsInfo[joint].MaxSpeed * JointsInfo[joint].StepPerDeg);
-  digitalWrite(motors[joint].dir_pin, ((direction == 0) ? LOW : HIGH));
-  while(true)
-  {
-    // Start the timer if the switch signal is just detected
-    if (digitalRead(motors[joint].limit_switch_pin) == 1) {
-        switchStartTime = switchStartTime;
-    }
-    else{
-      switchStartTime = millis();
-    }
-    if (millis() - switchStartTime >= 30) {
-      // Stop moving
-      break;
-    }
-
-    digitalWrite(motors[joint].step_pin, HIGH);
-    delayMicroseconds(5);
-    digitalWrite(motors[joint].step_pin, LOW);
-    delayMicroseconds(speed_del);
-  }
-  switchStartTime = 0;
-
-
-
-
-  Serial.println("move 5 degrees back");
-  delay(500);
-  // move away from the limit switch
-  speed_del = 1000000/((40.0 / 100.0) * JointsInfo[joint].MaxSpeed * JointsInfo[joint].StepPerDeg);
-  int steps_to_move = JointsInfo[joint].StepPerDeg * 12;
-  digitalWrite(motors[joint].dir_pin, ((direction == 0) ? HIGH : LOW));
-  for(int i = 0; i < steps_to_move; i++){
-    digitalWrite(motors[joint].step_pin, HIGH);
-    delayMicroseconds(5);
-    digitalWrite(motors[joint].step_pin, LOW);
-    delayMicroseconds(speed_del);
-  }
-
-
-
-  Serial.println("move till switch is touched");
-  delay(500);
-  // move slowly back to the limit switch
-  switchStartTime = 0;
-  speed_del = 1000000/((5.0 / 100.0) * JointsInfo[joint].MaxSpeed * JointsInfo[joint].StepPerDeg);
-  digitalWrite(motors[joint].dir_pin, ((direction == 0) ? LOW : HIGH));
-  while(true)
-  {
-    // Start the timer if the switch signal is just detected
-    if (digitalRead(motors[joint].limit_switch_pin) == 1) {
-        switchStartTime = switchStartTime;
-    }
-    else{
-      switchStartTime = millis();
-    }
-    if (millis() - switchStartTime >= 30) {
-      // Stop moving
-      break;
-    }
-
-    digitalWrite(motors[joint].step_pin, HIGH);
-    delayMicroseconds(5);
-    digitalWrite(motors[joint].step_pin, LOW);
-    delayMicroseconds(speed_del);
-  }
-  switchStartTime = 0;
-
-  robot[joint].PosJStart = JointsInfo[joint].PosLimitSwitch;
-}
-
-void offsetJ(){
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    robot[i].PosEnd = robot[i].PosStart + read_String(Axis_name[i],robot[i].PosStart);
-  }
-
-  int speed = read_String('s',50);
-  int accel = read_String('a',50);
-
-  if (NUMBER_OF_JOINTS == 6){
-    InverseKinematic_6();
-  }
-
-  MotorMoveJ(accel, speed, 0, 0);
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    robot[i].PosStart = robot[i].PosEnd;
-  }
-
-  sendPos();
-}
-
-void offsetL(){
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    robot[i].PosEnd = robot[i].PosStart + read_String(Axis_name[i],robot[i].PosStart);
-  }
-
-  int speed = read_String('s',50);
-  int accel = read_String('a',50);
-
-  //error = check_for_error();
-
-  if(error){
-    Serial.println("f\n");
-  }
-  else{
-    int direction[NUMBER_OF_JOINTS];
-    int maxDelta = 0;
-    for (int i = 0; i < NUMBER_OF_JOINTS; i++){
-      if(robot[i].PosEnd > robot[i].PosStart) direction[i] = 1;
-      else direction[i] = 0;
-      robot[i].PosDelta = abs(robot[i].PosEnd - robot[i].PosStart);
-      if (robot[i].PosDelta > maxDelta){
-        maxDelta = robot[i].PosDelta;
-      }
-    }
-
-    float pointDistance = 0.5;
-    int totalPoints = maxDelta / pointDistance;
-    float incremants[NUMBER_OF_JOINTS];
-
-    for (int i = 0; i < NUMBER_OF_JOINTS; i++){
-      incremants[i] = robot[i].PosDelta / totalPoints;
-    }
-
-    for (int i = 0; i < totalPoints; i++){
-      if (stop == 1) break;
-      for (int L = 0; L < NUMBER_OF_JOINTS; L++){
-        if (direction[L] == 1) robot[L].PosEnd = robot[L].PosStart + incremants[L];
-        if (direction[L] == 0) robot[L].PosEnd = robot[L].PosStart - incremants[L];
-      }
-
-      if(NUMBER_OF_JOINTS == 6){
-        InverseKinematic_6();
-      }
-      
-
-      //error = check_for_error();
-      if (error != 1){
-        MotorMoveJ(accel, speed, speed, speed);
-        for (int j = 0; j < NUMBER_OF_JOINTS; j++){
-          robot[j].PosStart = robot[j].PosEnd;
-        }
-      }
-      else{
-        i = totalPoints;
-      }
-    }
-  }
-  sendPos();
-}
-
-void jogJ(){
-  // find the new position of the robot
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    robot[i].PosJEnd = robot[i].PosJStart + read_String(Joint_name[i], robot[i].PosStart);
-  }
-
-  int speed = read_String('s',50);
-  int accel = read_String('a',50);
-
-  error = check_for_error();
-  if (error != 1)
-  {
-    MotorMoveJ(accel, speed, 0, 0);
-
-    if(NUMBER_OF_JOINTS == 6){
-      ForwardKinematic_6_PosEnd();
-    }
-    if(NUMBER_OF_JOINTS == 3){
-      ForwardKinematic_3_PosEnd();
-    }    
-
-    for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-      robot[i].PosJStart = robot[i].PosJEnd;
-    }
-  }
-  sendPos();
-}
-
-void jogL(){
-  // find the new position of the robot
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    robot[i].PosEnd = robot[i].PosStart + read_String(Axis_name[i],robot[i].PosStart);
-  }
-
-  int speed = read_String('s',50);
-  int accel = read_String('a',50);
-
-  if(NUMBER_OF_JOINTS == 6){
-    InverseKinematic_6();
-  }
-  
-  error = check_for_error();
-
-  if(error != 1){
-    int direction[NUMBER_OF_JOINTS];
-    float maxDelta = 0;
-    for (int i = 0; i < NUMBER_OF_JOINTS; i++){
-      if (stop == 1) break;
-
-      if(robot[i].PosEnd > robot[i].PosStart) direction[i] = 1;
-      else direction[i] = 0;
-      robot[i].PosDelta = abs(robot[i].PosEnd - robot[i].PosStart);
-      if (robot[i].PosDelta > maxDelta){
-        maxDelta = robot[i].PosDelta;
-      }
-    }
-    float pointDistance = 1;
-    int totalPoints = maxDelta / pointDistance;
-
-    float incremants[NUMBER_OF_JOINTS];
-
-    for (int i = 0; i < NUMBER_OF_JOINTS; i++){
-      incremants[i] = robot[i].PosDelta / totalPoints;
-    }
-
-    for (int i = 0; i < totalPoints; i++){
-      for (int L = 0; L < NUMBER_OF_JOINTS; L++){
-        if (direction[L] == 1) robot[L].PosEnd = robot[L].PosStart + incremants[L];
-        if (direction[L] == 0) robot[L].PosEnd = robot[L].PosStart - incremants[L];
-      }
-
-      if(NUMBER_OF_JOINTS == 6){
-        InverseKinematic_6();
-      }
-
-      //error = check_for_error();
-      if(error != 1){
-        MotorMoveJ(accel, speed, speed, speed);
-        for (int j = 0; j < NUMBER_OF_JOINTS; j++){
-          robot[j].PosStart = robot[j].PosEnd;
-        }
-      }
-      else{
-        i = totalPoints;;
-      }
-    }
-  }
-  sendPos();
-}
-
-void MoveJ(){
-  // MoveJ X400 Y0 Z300 y0 p180 r0 s50 a50
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    robot[i].PosEnd = read_String(Axis_name[i],robot[i].PosStart);
-  }
-
-  int speed = read_String('s',50);
-  int accel = read_String('a',50);
-
-  if(NUMBER_OF_JOINTS == 6){
-    InverseKinematic_6();
-  }
-
-
-  //error = check_for_error();
-  if (error != 1){
-    MotorMoveJ(accel, speed, 0, 0);
-
-    for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-      robot[i].PosStart = robot[i].PosEnd;
-    }
-  }
-  sendPos();
-}
-
-void MoveL(){
-  // find the new position of the robot
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    robot[i].PosEnd = read_String(Axis_name[i],robot[i].PosStart);
-  }
-
-  int speed = read_String('s',50);
-  int accel = read_String('a',50);
-
-  if(error){
-    Serial.println("f\n");
-  }
-  else{
-    int direction[NUMBER_OF_JOINTS];
-    int maxDelta = 0;
-    for (int i = 0; i < NUMBER_OF_JOINTS; i++){
-      if(robot[i].PosEnd > robot[i].PosStart) direction[i] = 1;
-      else direction[i] = 0;
-      robot[i].PosDelta = abs(robot[i].PosEnd - robot[i].PosStart);
-      if (robot[i].PosDelta > maxDelta){
-        maxDelta = robot[i].PosDelta;
-      }
-    }
-
-    float pointDistance =2;
-    int totalPoints = maxDelta / pointDistance;
-    if (totalPoints < 1){
-      totalPoints = 1;
-    }
-    float incremants[NUMBER_OF_JOINTS];
-
-    for (int i = 0; i < NUMBER_OF_JOINTS; i++){
-      incremants[i] = robot[i].PosDelta / totalPoints;
-    }
-
-    for (int i = 0; i < totalPoints; i++){
-      if (stop == 1) break;
-      for (int L = 0; L < NUMBER_OF_JOINTS; L++){
-        if (direction[L] == 1) robot[L].PosEnd = robot[L].PosStart + incremants[L];
-        if (direction[L] == 0) robot[L].PosEnd = robot[L].PosStart - incremants[L];
-      }
-
-      if(NUMBER_OF_JOINTS == 6){
-        InverseKinematic_6();
-      }
-      
-      //error = check_for_error();
-      if (error != 1){
-        MotorMoveJ(accel, speed, speed, speed);
-        for (int j = 0; j < NUMBER_OF_JOINTS; j++){
-          robot[j].PosStart = robot[j].PosEnd;
-          // Serial.print(robot[j].PosStart);
-          // Serial.print(" ");
-        }
-        // Serial.println("");
-      }
-
-      else{
-        i = totalPoints;
-      }
-
-    }
-    
-  }
-
-  sendPos();
-}
-
-
-// Functions tool
-
-void tool_state(){
-  int pos_1_TOOL = command.indexOf('(');
-  int pos_2_TOOL = command.indexOf(')');
-  String state = command.substring(pos_1_TOOL + 1, pos_2_TOOL);
-
-  Serial.print("state ");
-  Serial.print(state);
-  Serial.println(" f");
-
-
-
-  if (state == "LOW"){
-    digitalWrite(tool_pin, LOW);
-  }
-  else if (state == "HIGH"){
-    digitalWrite(tool_pin, HIGH);
-  }
-
-
-}
-
-void tool_move_to(){
-  int pos_1_TOOL = command.indexOf('(');
-  int pos_2_TOOL = command.indexOf(')');
-  int New_pos = command.substring(pos_1_TOOL + 1, pos_2_TOOL).toInt();
-
-  float togo_pos = New_pos * ((servo_max - servo_min) / 100.0);
-
-  if ((togo_pos - tool_pos) > 0){
-    for (int pos = tool_pos; pos <= New_pos; pos += 1){
-      delay(20);
-      servoTool.write(pos);
-    }
-  }
-  else{
-    for (int pos = tool_pos; pos > New_pos; pos -= 1){
-      delay(20);
-      servoTool.write(pos);
-    }
-  }
-
-  tool_pos = togo_pos;
-
-  Serial.print("POS: G ");
-  Serial.println(tool_pos);
-
-  Serial.println("END");
-}
-
-// Functions IO
-void IO_digitalWrite(){
-
-
-  int pos_1_IO = command.indexOf('P');
-  int pos_2_IO = command.indexOf('S');
-
-  int io_number = command.substring(pos_1_IO + 1, pos_2_IO).toInt();
-  int state = command.substring(pos_2_IO + 1).toInt();
-
-  Serial.print("Pin number: ");
-  Serial.println(io_pin[io_number]);
-
-  if (state == 0) digitalWrite(io_pin[io_number], LOW);
-  else if (state == 1) digitalWrite(io_pin[io_number], HIGH);
-}
 
 void sendPos(){
-  Serial.print("POS: ");
+  String command = "POS: ";
 
   for(int i = 0; i< NUMBER_OF_JOINTS; i++){
-    Serial.print(Axis_name[i]);
-    Serial.print(" ");
-    Serial.print(robot[i].PosEnd);
-    Serial.print(" ");
+    command = command + Axis_name[i] + " " + robot[i].PosEnd + " ";
   }
 
   for(int i = 0; i< NUMBER_OF_JOINTS; i++){
-    Serial.print(Joint_name_string[i]);
-    Serial.print(" ");
-    Serial.print(robot[i].PosJEnd);
-    Serial.print(" ");
+    command = command + Joint_name[i] + " " + robot[i].PosJEnd + " ";
   }
 
-  Serial.println("");
+  sent_message(command);
+  sent_message("END");
 
-  Serial.println("END");
 }

@@ -21,6 +21,10 @@ Blockly.defineBlocksWithJsonArray([
           ],
           [
             "green",
+            "GREEN"
+          ],
+          [
+            "blue",
             "BLUE"
           ],
           [

@@ -11,3 +11,9 @@ program/
 myenv/
 vscode/
 .vscode/
+venvmac/
+.venvmac/
+venvlaptop/
+.venvlaptop/
+venv/
+.venv/

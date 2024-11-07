@@ -1,21 +1,18 @@
 import time        
-import tkinter.messagebox  
+from PyQt5.QtWidgets import  QFileDialog, QMessageBox
 import pygame
 import threading
 
 import backend.core.variables as var
-
-from robot_library import Move
-
 from backend.core.event_manager import event_manager
+
+from gui.windows.message_boxes import ErrorMessage
  
 class XBox:
-    def __init__(self):
-        self.move = Move()#var.ROBOT_NAME)
-        
+    def __init__(self):  
         self.xbox_on = 0
         self.current_state_index = 0
-        
+      
         self.states = ["Move X Y Z", "Move y p r", "Move J1 J2 J3", "Move J4 J5 J6"]
         
         self.controller = None
@@ -28,7 +25,7 @@ class XBox:
         else:
             self.xbox_on = 0
             event_manager.publish("request_button_controller_connect", False)
-
+            
     def xbox(self):
         def threadXbox():
             pygame.init()
@@ -42,13 +39,13 @@ class XBox:
                     break
 
             if self.controller is None:
-                print("Xbox controller not found. Make sure it's connected.")
                 pygame.quit()
-                tkinter.messagebox.showinfo("Connection","Cannot find the xbox controller")
+                ErrorMessage(var.LANGUAGE_DATA.get("message_not_found_xbox"))
+
             else:
                 event_manager.publish("request_button_controller_connect", True)
                 event_manager.publish("request_state_controller_label", self.states[self.current_state_index])
-                
+              
             while self.xbox_on == 1 and self.controller:
                 pygame.event.pump()
                 Joystick_Left_stick_LR = int(self.controller.get_axis(0) * 200)  # Scale the value to match your motor position range
@@ -63,7 +60,7 @@ class XBox:
                 Joystick_Right_Bumper = int(self.controller.get_button(5) * 200) 
                 Joystick_Left_Bumper = int(self.controller.get_button(4) * 200)
                 Joystick_A_Button = int(self.controller.get_button(0))     
-                
+               
                            
                               
                 if JoyStick_Dpad == (-1,0):
@@ -97,7 +94,7 @@ class XBox:
                 if Joystick_Left_Trigger > 100:
                     #self.ProgramLines.ProgramJogGripper(1)
                     pass
-                
+              
                 if Joystick_Right_Trigger > 100:
                     #self.ProgramLines.ProgramJogGripper(0)
                     pass
@@ -120,8 +117,8 @@ class XBox:
                         pos = [0,0,-jog_distance,0,0,0]
                     
                     if len(pos) > 0:
-                        self.move.OffsetJ(pos,var.JOG_SPEED,var.JOG_ACCEL)
-                
+                        event_manager.publish("request_robot_offset_j", pos)  
+           
                 elif self.current_state_index == 1:
                     pos = []
                     if Joystick_Left_stick_LR > 100:
@@ -138,7 +135,7 @@ class XBox:
                         pos = [0,0,0,0,0,-jog_distance]
                     
                     if len(pos) > 0:
-                        self.move.OffsetJ(pos,var.JOG_SPEED,var.JOG_ACCEL)
+                        event_manager.publish("request_robot_offset_j", pos)  
                         
                 elif self.current_state_index == 2:
                     pos = []
@@ -156,7 +153,7 @@ class XBox:
                         pos = [0,0,-jog_distance,0,0,0]
                         
                     if len(pos) > 0:
-                        self.move.JogJoint(pos,var.JOG_SPEED,var.JOG_ACCEL) 
+                        event_manager.publish("request_robot_jog_joint", pos) 
                             
                 elif self.current_state_index == 3:
                     pos = []
@@ -174,8 +171,8 @@ class XBox:
                         pos = [0,0,0,0,0,-jog_distance]
                         
                     if len(pos) > 0:
-                        self.move.JogJoint(pos,var.JOG_SPEED,var.JOG_ACCEL)
-                
+                        event_manager.publish("request_robot_jog_joint", pos) 
+               
                 time.sleep(0.05)
                     
             pygame.quit()

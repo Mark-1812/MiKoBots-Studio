@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <script src="blockly/blockly_compressed.js"></script>
@@ -13,6 +14,10 @@
     <script src="Custom_blocks/ROBOT_3/generators/python.js"></script>
     <script src="Custom_blocks/VISION/blocks_vision.js"></script>
     <script src="Custom_blocks/VISION/generators/python.js"></script>
+    <script src="Custom_blocks/IO/blocks_io.js"></script>
+    <script src="Custom_blocks/IO/generators/python.js"></script>
+    <script src="Custom_blocks/TOOLS/blocks_tools.js"></script>
+    <script src="Custom_blocks/TOOLS/generators/python.js"></script>
     <style>
         body {
             margin: 0;
@@ -133,12 +138,6 @@
                         <block type="lists_split"></block>
                         <block type="lists_sort"></block>
                     </category>
-                    <category name="Colour" colour="20">
-                        <block type="colour_picker"></block>
-                        <block type="colour_random"></block>
-                        <block type="colour_rgb"></block>
-                        <block type="colour_blend"></block>
-                    </category>
                     <category name="Variables" colour="330" custom="VARIABLE"></category>
                     <category name="Functions" colour="290" custom="PROCEDURE"></category>
                     <category name="Robot 6 axis" colour="210">  
@@ -152,6 +151,17 @@
                         <block type="MoveL_3"></block>    
                         <block type="OffsetJ_3"></block> 
                         <block type="OffsetL_3"></block>   
+                    </category>
+                    <category name="Tool" colour="210">  
+                        <block type="set_tool"></block>   
+                        <block type="tool_move_to"></block>  
+                        <block type="tool_state"></block>  
+                    </category>
+                    <category name="I/O" colour="210">  
+                        <block type="io_pin"></block>   
+                        <block type="set_io_pin"></block>   
+                        <block type="io_digital_write"></block>   
+                        <block type="io_digital_read"></block>   
                     </category>
                     <category name="Vision" colour="210">  
                         <block type="vision_find_objects"></block>   

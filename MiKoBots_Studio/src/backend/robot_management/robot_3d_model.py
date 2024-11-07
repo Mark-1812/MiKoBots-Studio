@@ -1,12 +1,12 @@
-from PyQt5.QtWidgets import QPushButton, QLabel, QSizePolicy, QLineEdit, QSpacerItem, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog
-from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
+from PyQt5.QtWidgets import  QFileDialog
+from PyQt5.QtCore import QObject
 
 from backend.core.event_manager import event_manager
 import backend.core.variables as var
 
 from backend.file_managment.file_management import FileManagement
 
-import tkinter.messagebox
+from gui.windows.message_boxes import WarningMessageRe
 
 import os
 from pathlib import Path
@@ -149,14 +149,19 @@ class Robot3dModel(QObject):
         event_manager.publish("request_clear_plotter_3d_model")
         event_manager.publish("request_show_3d_model", file_path)
 
-    def DeleteRobotItem(self, item):
-        if not tkinter.messagebox.askokcancel("Delete", "Are you sure you want to delete this file? This action is permanent, this could damage the robot"):
-            return
+    def DeleteRobotItem(self, item):  
+        answer = WarningMessageRe(var.LANGUAGE_DATA.get("Message_delete_for_sure"), var.LANGUAGE_DATA.get("Message_action_damage_robot"))
      
+        if answer == False:
+            return
+
         # Get the name of the folder of the current robot
         file_path_1 = self.file_management.GetFilePath(var.ROBOT3D[item][1])
         file_path_2 = self.file_management.GetFilePath(var.ROBOT3D[item][2])
                 
+        file_path_1 = Path(file_path_1)
+        file_path_2 = Path(file_path_2)
+
         file_path_1.unlink()
         file_path_2.unlink()
         
@@ -173,35 +178,7 @@ class Robot3dModel(QObject):
         for i in range(len(var.ROBOT3D)):
             event_manager.publish("request_create_buttons_3d_model", i, var.ROBOT3D)
             
-        event_manager.publish("request_save_robot_tool")
-      
-    def MovePlotterItem(self, item, dir):
-        event_manager.publish("request_delete_buttons_3d_model")
-    
-        Robot_stl_old = var.ROBOT3D
-        var.ROBOT3D = []
-        
-        if dir == 1 and item != 0:
-            for i in range(len(Robot_stl_old)):
-                if i == item - 1:
-                    var.ROBOT3D.append(Robot_stl_old[i + 1])
-                elif i == item:
-                    var.ROBOT3D.append(Robot_stl_old[i - 1])
-                else:
-                    var.ROBOT3D.append(Robot_stl_old[i])
-        elif dir == 0 and item != len(Robot_stl_old) - 1:
-            for i in range(len(Robot_stl_old)):
-                if i == item + 1:
-                    var.ROBOT3D.append(Robot_stl_old[i - 1])
-                elif i == item:
-                    var.ROBOT3D.append(Robot_stl_old[i + 1])
-                else:
-                    var.ROBOT3D.append(Robot_stl_old[i])   
-        else:
-            var.ROBOT3D = Robot_stl_old
-                
-        for i in range(len(var.ROBOT3D)):
-            event_manager.publish("request_create_buttons_3d_model", i, var.ROBOT3D)                  
+        event_manager.publish("request_save_robot_tool")        
                        
     def Show3dModelSettings(self, item):
         self.model_3d_item = item
