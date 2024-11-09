@@ -6,7 +6,7 @@ from gui.style import *
 
 from backend.core.event_manager import event_manager
 
-from backend.core.api import save_robot
+from backend.robot_management  import save_robot
 
 class RobotSettings(QWidget):
     def __init__(self, frame):
@@ -32,7 +32,6 @@ class RobotSettings(QWidget):
         event_manager.subscribe("request_delete_settings_fields", self.DeleteSettingsFields)
         
     def LoadSettings(self, settings_file):
-        print("load settings...")
         # Add the logic to load robot settings here
                    
         for i, setting in enumerate(self.settings):
@@ -129,7 +128,6 @@ class RobotSettings(QWidget):
            
         def checkbox_toggled():
             if self.entry_nr_joints.text() == "3" and self.checkbox.isChecked():
-                print("extra linkage")
                 self.Extra_Linkage = 1
             else:
                 self.Extra_Linkage = 0
@@ -424,9 +422,10 @@ class CreateFields():
             self.labels_col[i].setParent(None)
             self.labels_col[i].deleteLater()
             
-        if self.spacer_widget:    
+        if self.spacer_widget:  
             self.spacer_widget.setParent(None)
             self.spacer_widget.deleteLater()
+
             
 
         self.entry_boxes = []

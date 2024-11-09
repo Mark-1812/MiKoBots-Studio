@@ -126,7 +126,6 @@ class RobotWindow(QWidget):
             self.frame_3.hide()
             self.frame_4.hide()   
             self.frame_5.show()   
-
         
     def closeEvent(self, event):
         self.RobotTools.ClosePlotter()

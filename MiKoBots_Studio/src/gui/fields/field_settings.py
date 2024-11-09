@@ -8,9 +8,9 @@ from gui.style import *
 
 import backend.core.variables as var
 
-from backend.core.api import xbox_on
-from backend.core.api import change_robot
-from backend.core.api import send_settings_robot
+from backend.xbox import xbox_on
+from backend.robot_management  import change_robot
+from backend.robot_management  import send_settings_robot
 
 from gui.windows.robot_settings.robot_frame import RobotWindow
 from gui.windows.vision import VisionWindow
@@ -90,7 +90,7 @@ class SettingsField(QWidget):
         self.combo_robot = QComboBox()
         self.combo_robot.currentIndexChanged.connect(lambda index: change_robot(index))
         self.combo_robot.setStyleSheet(style_combo)
-        self.combo_robot.setMaximumWidth(150)
+        self.combo_robot.setFixedWidth(150)
         layout.addWidget(self.combo_robot,1,0)
         
         image_path = self.file_management.resource_path('settings.png')
@@ -128,7 +128,9 @@ class SettingsField(QWidget):
         layout.addWidget(spacer_widget, 0, 4, 3, 1)
         
     def AddRobotCombo(self, robot):
+        self.combo_robot.blockSignals(True)
         self.combo_robot.addItem(robot)
+        self.combo_robot.blockSignals(False)
         
     def SetRobotCombo(self, robot):
         
@@ -142,7 +144,6 @@ class SettingsField(QWidget):
                
         
     def ShowRobotWindow(self):
-        print("open window")
         self.RobotWindow.show()
         self.RobotWindow.raise_()
         self.RobotWindow.Robot3DModel.open_plotter()
@@ -239,6 +240,6 @@ class SettingSlider():
             value = int(text)
             self.slider.setValue(value)
         except:
-            print("error wrong type")
+            print(var.LANGUAGE_DATA.get("message_fill_in_rounf_number"))
                     
 

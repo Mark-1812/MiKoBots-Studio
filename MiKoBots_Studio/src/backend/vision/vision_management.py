@@ -31,7 +31,6 @@ class VisionManagement():
             #self.cap.release()
                    
     def is_valid_url(self, url):
-        print(url)
         try:
             event_manager.publish("request_cam_connect_button_color", False)
             
@@ -42,12 +41,9 @@ class VisionManagement():
             return False
 
     def ConnectCam(self, addres = None):
-        print(addres)
         if var.CAM_CONNECT == 0:
             com_port_adress = addres
-            if self.is_valid_url(com_port_adress): 
-                print(f"com port {com_port_adress}")
-                #self.url = 'http://192.168.1.184:81/stream'     
+            if self.is_valid_url(com_port_adress):    
                 self.cap = cv2.VideoCapture(com_port_adress)
             else:
                 self.cap = cv2.VideoCapture(addres)
@@ -73,9 +69,9 @@ class VisionManagement():
                 self.cap.release()
                 
                 event_manager.publish("request_cam_connect_button_color", False)
-                print("cam disconnect")
+                print(var.LANGUAGE_DATA.get("message_camera_connected"))
             except: 
-                print("error relasing cam")
+                print(var.LANGUAGE_DATA.get("message_error_releasing_cam"))
  
     def threadCAM(self):
         while not self._stop_event.is_set() and self.cap.isOpened():
@@ -84,7 +80,7 @@ class VisionManagement():
                 if self.cap.isOpened():  # Check the stop condition
                     ret, self.frame = self.cap.read()
                     if not ret:
-                        print("Failed to grab frame")
+                        print(var.LANGUAGE_DATA.get("message_failed_grab_frame"))
                         continue
                     image_RGB = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)   
                                
@@ -137,7 +133,7 @@ class VisionManagement():
                 
             return mask
         else:
-            print("color not found")                
+            print(var.LANGUAGE_DATA.get("message_no_colors"))                
 
 
     def DrawAxis(self, img, p_, q_, color, scale):

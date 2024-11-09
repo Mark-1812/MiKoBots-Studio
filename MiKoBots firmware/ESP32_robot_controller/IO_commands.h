@@ -21,6 +21,7 @@ void set_IO_pin(String command){
     io_type[io_number] = 1;
   } else if (type == "OUTPUT"){
     pinMode(io_pin[io_number], OUTPUT);
+    digitalWrite(io_pin[io_number], HIGH);
     io_type[io_number] = 0;
   } 
 
@@ -37,8 +38,8 @@ void IO_digitalWrite(String command){
   int io_number = command.substring(pos_1_IO + 1, pos_2_IO).toInt();
   int state = command.substring(pos_2_IO + 1).toInt();
 
-  if (state == 0) digitalWrite(io_pin[io_number], LOW);
-  else if (state == 1) digitalWrite(io_pin[io_number], HIGH);
+  if (state == 1) digitalWrite(io_pin[io_number], LOW);
+  else if (state == 0) digitalWrite(io_pin[io_number], HIGH);
 
   String message = "State " + String(io_pin[io_number]) + " " + String(state);
   

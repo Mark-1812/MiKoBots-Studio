@@ -9,16 +9,16 @@ import vtk
 
 from backend.core.event_manager import event_manager
 
-from backend.core.api import open_object_models
-from backend.core.api import show_origin_object
-from backend.core.api import change_origin_object
-from backend.core.api import delete_stl_object_1
-from backend.core.api import add_new_object_model
-from backend.core.api import add_object_to_plotter
-from backend.core.api import show_pos_object
-from backend.core.api import change_pos_object
-from backend.core.api import delete_object_plotter
-from backend.core.api import change_color_object
+from backend.simulation import open_object_models
+from backend.simulation import show_origin_object
+from backend.simulation import change_origin_object
+from backend.simulation import delete_stl_object_1
+from backend.simulation import add_new_object_model
+from backend.simulation import add_object_to_plotter
+from backend.simulation import show_pos_object
+from backend.simulation import change_pos_object
+from backend.simulation import delete_object_plotter
+from backend.simulation import change_color_object
 
 class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
     def __init__(self, parent=None):

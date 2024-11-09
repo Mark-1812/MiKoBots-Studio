@@ -177,7 +177,6 @@ class XBox:
                     
             pygame.quit()
             event_manager.publish("request_state_controller_label", "")
-            print("quit pi game")
                     
         t_xbox = threading.Thread(target=threadXbox)  
         t_xbox.start()

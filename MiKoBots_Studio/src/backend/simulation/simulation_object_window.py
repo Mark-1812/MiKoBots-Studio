@@ -83,7 +83,7 @@ class SimulationObjectWindow(QObject):
                     name = self.Objects_stl1[i][0]
                     event_manager.publish("request_create_buttons_1_object", i, name)
         except:
-            print("error occured file not found")        
+            print(var.LANGUAGE_DATA.get("message_no_3d_model"))        
 
     def SaveObjectModels(self):
         settings_file = self.Objects_stl1
@@ -95,7 +95,7 @@ class SimulationObjectWindow(QObject):
             with open(file_path, 'w') as file:
                 json.dump(settings_file, file, indent=4)  
         except:
-            print("error saving settings file 3d models")
+            print(var.LANGUAGE_DATA.get("message_error_saving_settings"))
     
     def ShowOriginObject(self, item):
         self.origin_object_nr = item
@@ -193,13 +193,10 @@ class SimulationObjectWindow(QObject):
         ## Also delete it out of the main plotter   
         items = []
         for i in range(len(self.Objects_stl2)):
-            print(f"{self.Objects_stl2[i][0]} == {self.Objects_stl1[item][0]}")
             if self.Objects_stl2[i][0] == self.Objects_stl1[item][0]:
                 items.append(i)
                 
-        print(items)
         items_to_delete = sorted(items, reverse=True)
-        print(items_to_delete)
         
         for i in range(len(items_to_delete)):
             self.DeleteObjectPlotter(items_to_delete[i])
@@ -319,8 +316,6 @@ class SimulationObjectWindow(QObject):
 
         # Delete all the items out of the plotter
         event_manager.publish("request_delete_item_plotter") 
-        
-        print(self.Objects_stl2)
          
         # make a new list delete the empty 
         Objects_stl2_old = self.Objects_stl2
@@ -328,9 +323,7 @@ class SimulationObjectWindow(QObject):
         for i in range(len(Objects_stl2_old)):
             if Objects_stl2_old[i] != []:
                 self.Objects_stl2.append(Objects_stl2_old[i])  
-      
-        print(self.Objects_stl2)
-
+                
         event_manager.publish("request_delete_buttons_2_object")
          
         # Make new items

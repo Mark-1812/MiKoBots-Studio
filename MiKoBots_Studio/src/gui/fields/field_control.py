@@ -9,12 +9,13 @@ import backend.core.variables as var
 
 from backend.core.event_manager import event_manager
 
-from backend.core.api import send_pos_robot
-from backend.core.api import simulation_move_gui
-from backend.core.api import change_tool
-from backend.core.api import get_tool_info
+from backend.robot_management import send_pos_robot
+from backend.robot_management import change_tool
+from backend.robot_management import get_tool_info
 
-from backend.core.api import run_single_line
+
+from backend.simulation import simulation_move_gui
+from backend.run_program import run_single_line
 
 import gc
 
@@ -194,7 +195,6 @@ class ControlField(QWidget):
         
     def ChangeStateTool(self, state):
         if not self.simulation:
-            print("change tool state")
 
             tool = var.TOOLS3D[var.SELECTED_TOOL][0]
             
@@ -204,13 +204,17 @@ class ControlField(QWidget):
                 run_single_line(f"tool.SetTool('{tool}')\ntool.State('LOW')")
 
     def AddToolCombo(self, tool):
+        self.TOOL_COMBO.blockSignals(True)
         self.TOOL_COMBO.addItem(tool)  
+        self.TOOL_COMBO.blockSignals(False)
         
     def DeleteToolsCombo(self):
         self.TOOL_COMBO.clear()
 
     def SetToolCombo(self, tool):
+        self.TOOL_COMBO.blockSignals(True)
         self.TOOL_COMBO.setCurrentIndex(tool)
+        self.TOOL_COMBO.blockSignals(False)
         
     def EnableToolCombo(self, enable):
         if enable:
@@ -360,11 +364,9 @@ class ControlField(QWidget):
         if self.simulation:
             if self.CHECKBOX_MOVE.isChecked():
                 # joints
-                print("Move joint")
                 simulation_move_gui(posJoint, "MoveJoint")
             else:
                 # axis
-                print("MoveJ axis")
                 simulation_move_gui(posJoint, "MoveJ")
         else:
             if self.CHECKBOX_MOVE.isChecked():
@@ -531,21 +533,19 @@ class ControlField(QWidget):
             self.ButtonsAxis[i][1].setText(f"{name[i]}: {round(pos[i])} {unit[i]}")
 
     def ButtonAxisMove(self, axis, dir):
-        posAxis = [0]*6
+        posAxis = [0]*var.NUMBER_OF_JOINTS
         if self.simulation:
             if dir == 1:
                 posAxis[axis] = event_manager.publish("request_get_jog_distance")[0]
             else:
                 posAxis[axis] = -1 * int(event_manager.publish("request_get_jog_distance")[0])
-            print(posAxis)
+                
             simulation_move_gui(posAxis, "OffsetJ")
         else:
             if dir == 1:
                 posAxis[axis] = event_manager.publish("request_get_jog_distance")[0]
             else:
                 posAxis[axis] = -1 * int(event_manager.publish("request_get_jog_distance")[0])
-            
-            
                 
             run_single_line(f"robot.OffsetJ({posAxis}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
 

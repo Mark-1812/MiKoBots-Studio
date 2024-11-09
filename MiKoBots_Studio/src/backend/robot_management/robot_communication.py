@@ -48,8 +48,7 @@ class TalkWithRobotBT(QThread):
         
         if SERVICE_UUID_ROBOT not in characteristic_uuids:
             await var.ROBOT_BT_CLIENT.disconnect()
-            
-            event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_wrong_device")) 
+            print(var.LANGUAGE_DATA.get("message_wrong_device")) 
 
     async def ConnectRobotBT(self, device_name = None):
         # if robot is connected disconnect
@@ -58,14 +57,13 @@ class TalkWithRobotBT(QThread):
             await var.ROBOT_BT_CLIENT.disconnect()
             var.ROBOT_CONNECT = False
             var.ROBOT_HOME = False  
+            var.ROBOT_BLUETOOTH = False  
             event_manager.publish("request_robot_connect_button_color", False)
             event_manager.publish("request_robot_home_button_color", False)
             event_manager.publish("request_disable_robot_button", False)
         # if robot is not connected connect
         else:
             event_manager.publish("request_disable_robot_button", True)
-            
-            print("connect robot")
             var.ROBOT_BT_CLIENT = BleakClient(device_name)
 
             await var.ROBOT_BT_CLIENT.connect()
@@ -75,16 +73,14 @@ class TalkWithRobotBT(QThread):
                 asyncio.run_coroutine_threadsafe(self.SendLineToRobot("CONNECT"), self.loop)
                 await var.ROBOT_BT_CLIENT.start_notify(CHARACTERISTIC_UUID_ROBOT, self.ReadDataRobot) # start reading data
             else:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_faild_connect_bt")) 
+                print(var.LANGUAGE_DATA.get("message_faild_connect_bt")) 
                 
             event_manager.publish("request_disable_robot_button", False)
                 
     async def CloseRobot(self):
-        # close the robot if it is connected
-        print(f"robot connected {var.ROBOT_CONNECT}")
-        
+        # close the robot if it is connected    
         if var.ROBOT_CONNECT:
-            print("disconnect trobot try1")
+            print("disconnect trobot try")
             await var.ROBOT_BT_CLIENT.disconnect()
 
     async def ReadDataRobot(self, sender, data):
@@ -92,10 +88,8 @@ class TalkWithRobotBT(QThread):
         data_text = ""
         try:
             data_text = data.decode('utf-8')
-            print(f"data from esp32: {data_text}")
         except UnicodeDecodeError:
             data_text = ""
-            print("Received non-UTF-8 encoded data:", data)
 
 
         if data_text == "wait":
@@ -110,7 +104,7 @@ class TalkWithRobotBT(QThread):
             event_manager.publish("request_show_connection")
             self.SendSettingsRobot()    
         elif data_text.strip() == "IO_CONNECTED":
-            event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_io_instead_of_robot"))
+            print(var.LANGUAGE_DATA.get("message_io_instead_of_robot"))
         elif data_text.strip() == "home":
             var.ROBOT_HOME = True
             event_manager.publish("request_robot_home_button_color", True)
@@ -153,8 +147,8 @@ class TalkWithRobotBT(QThread):
                 event_manager.publish("request_label_pos_joint", var.POS_JOINT, var.NAME_JOINTS, var.UNIT_JOINT)
                 event_manager.publish("request_label_pos_axis", var.POS_AXIS, var.NAME_AXIS, var.UNIT_AXIS)
         else:
-            data_text = "ESP32> " + data_text
-            event_manager.publish("request_insert_new_log", data_text) 
+            data_text = "ROBOT: " + data_text
+            print(data_text) 
 
     async def SendLineToRobot(self, message):
         while self.pause_event.is_set():
@@ -162,10 +156,20 @@ class TalkWithRobotBT(QThread):
             
         time.sleep(0.2)
         var.ROBOT_BUSY = True
-            
-        print(f"Message send {message}")
+
+        
         if var.ROBOT_BT_CLIENT and var.ROBOT_BT_CLIENT.is_connected:
+            #print(f"Message send {message}")
             await var.ROBOT_BT_CLIENT.write_gatt_char(CHARACTERISTIC_UUID_ROBOT, message.encode())
+        else:
+            await var.ROBOT_BT_CLIENT.disconnect()
+            print(var.LANGUAGE_DATA.get("message_lost_connection_robot"))
+            var.ROBOT_BLUETOOTH = False
+            var.ROBOT_CONNECT = False
+            var.ROBOT_HOME = False  
+            var.ROBOT_BUSY = False
+            event_manager.publish("request_robot_connect_button_color", False)
+            event_manager.publish("request_robot_home_button_color", False)
             
     def run(self):
         self.loop.run_forever()
@@ -204,12 +208,17 @@ class TalkWithRobotBT(QThread):
                 command = f'Set_number_of_joints A{var.NUMBER_OF_JOINTS}'
                 asyncio.run_coroutine_threadsafe(self.SendLineToRobot(command), self.loop)
                 time.sleep(0.2)
-
+                
+                if var.SETTINGS["Set_extra_joint"][0] == 1:
+                    command = f'Set_extra_joint A1'
+                    asyncio.run_coroutine_threadsafe(self.SendLineToRobot(command), self.loop)
+                    time.sleep(0.2)
                            
+
                 for i, setting in enumerate(var.SETTINGS):
                     settings = var.SETTINGS[category_names[i]]
-
-                    if settings[1] == "" and  category_names[i] != 'Set_extra_joint':
+                    if settings[1] == "" and  category_names[i] != 'Set_extra_joint' and  category_names[i] != 'Set_io_pin':
+                        
                         command = make_line_ABC(settings[0], category_names[i])
                         asyncio.run_coroutine_threadsafe(self.SendLineToRobot(command), self.loop)
                         time.sleep(0.2)
@@ -220,22 +229,24 @@ class TalkWithRobotBT(QThread):
             
         else:
             if var.ROBOT_BUSY == 1:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA("message_robot_busy")) 
+                print(var.LANGUAGE_DATA.get("message_robot_busy")) 
                 
             elif var.ROBOT_CONNECT == 0: 
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_robot_not_connected")) 
+                print(var.LANGUAGE_DATA.get("message_robot_not_connected")) 
                 ErrorMessage(var.LANGUAGE_DATA.get("message_robot_not_connected"))
       
     def StopProgram(self):
         if var.ROBOT_BT_CLIENT.is_connected:
             asyncio.run_coroutine_threadsafe(self.SendLineToRobot("stop"), self.loop)
             
-        print("stop robot")
-        time.sleep(2)
+        print("Stop robot, wait 3 seconds before sending new command.")
+        time.sleep(3)
         var.ROBOT_BUSY = 0
         
         if var.ROBOT_BT_CLIENT.is_connected:
             asyncio.run_coroutine_threadsafe(self.SendLineToRobot("play"), self.loop)         
+
+
 
 
 class TalkWithRobotCOM():
@@ -253,13 +264,12 @@ class TalkWithRobotCOM():
             var.ROBOT_CONNECT = False
             var.ROBOT_HOME = False  
             var.ROBOT_SER.close()
-            event_manager.publish("request_insert_new_log", "Disconnect robot")
+            print("Disconnect robot")
             event_manager.publish("request_robot_connect_button_color", False)
             event_manager.publish("request_robot_home_button_color", False)
             event_manager.publish("request_disable_robot_button", False)
 
         elif not var.ROBOT_CONNECT and var.ROBOT_COM:
-            print("try to connect")
             try:        
                 var.ROBOT_COM = com_port
                 var.ROBOT_SER = serial.Serial(var.ROBOT_COM, baudrate=115200)#, timeout=1)
@@ -283,19 +293,20 @@ class TalkWithRobotCOM():
                     event_manager.publish("request_robot_connect_button_color", True)
                     self.SendSettingsRobot()
                 else:
-                    event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_failed_connection_com"))
+                    print(var.LANGUAGE_DATA.get("message_failed_connection_com"))
                     var.ROBOT_SER.close()
             
             except serial.SerialException:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_failed_connection_com"))
+                print(var.LANGUAGE_DATA.get("message_failed_connection_com"))
                         
         else:
             if var.ROBOT_BUSY == 1:       
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA("message_robot_busy")) 
+                print(var.LANGUAGE_DATA.get("message_robot_busy")) 
   
     def CloseRobot(self):
         if var.ROBOT_CONNECT:
             var.ROBOT_SER.close()
+            var.ROBOT_HOME = False
     
     def StopProgram(self):
         def threadStop():
@@ -303,21 +314,15 @@ class TalkWithRobotCOM():
             command = "stop\n"
             if var.ROBOT_SER:
                 var.ROBOT_SER.write(command.encode())
-            
-            if var.IO_SER:
-                var.IO_SER.write(command.encode())
                 
-            print("stop robot")
-            time.sleep(2)
+            print("Stop robot, wait 3 seconds before sending new command.")
+            time.sleep(3)
             
             var.ROBOT_BUSY = 0
             command = "play\n"
             
             if var.ROBOT_SER:
                 var.ROBOT_SER.write(command.encode())            
-            
-            if var.IO_SER:
-                var.IO_SER.write(command.encode())  
                                                 
         t_threadStop = threading.Thread(target=threadStop)  
         t_threadStop.start()   
@@ -325,24 +330,21 @@ class TalkWithRobotCOM():
     def SendLineToRobot(self, command):
         while self.pause_event.is_set():
             time.sleep(0.1)
-            print("waiting")
         
         var.ROBOT_BUSY = 1   
 
         try:
-            print(f"send to robot {command}")
             var.ROBOT_SER.write(command.encode())
         except:
             self.CloseRobot()
-            print("lost connection")
+            print(var.LANGUAGE_DATA.get("message_lost_connection_robot"))
             
-        time.sleep(0.2)
+        time.sleep(0.3)
                    
     def ReadDataRobot(self):
         while var.ROBOT_SER.is_open:
             try:
                 data = var.ROBOT_SER.readline().decode('latin-1').rstrip()  # Read a line
-                print(data)
             except:
                 break
 
@@ -355,7 +357,7 @@ class TalkWithRobotCOM():
                     var.ROBOT_CONNECT = True
                     var.ROBOT_BUSY = False
                 elif data.strip() == "IO_CONNECTED":
-                    event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA("message_robot_instead_of_io"))
+                    print(var.LANGUAGE_DATA.get("message_robot_instead_of_io"))
 
                 elif data.strip() == "home":
                     var.ROBOT_HOME = True
@@ -400,7 +402,8 @@ class TalkWithRobotCOM():
                         event_manager.publish("request_label_pos_axis", var.POS_AXIS, var.NAME_AXIS, var.UNIT_AXIS)
 
                 else:
-                    event_manager.publish("request_insert_new_log", data)  
+                    data_text = "ROBOT: " + data
+                    print(data_text) 
                     
                 data = None
 
@@ -446,6 +449,12 @@ class TalkWithRobotCOM():
                 # sent first the number of joints
                 command = f'Set_number_of_joints A{var.NUMBER_OF_JOINTS}\n'
                 self.SendLineToRobot(command)
+                time.sleep(0.2)
+                
+                if var.SETTINGS["Set_extra_joint"][0] == 1:
+                    command = f'Set_extra_joint A1\n'
+                    self.SendLineToRobot(command)
+                    time.sleep(0.2)
                            
                 for i, setting in enumerate(var.SETTINGS):
                     settings = var.SETTINGS[category_names[i]]
@@ -460,9 +469,9 @@ class TalkWithRobotCOM():
             
         else:
             if var.ROBOT_BUSY == 1:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA("message_robot_busy")) 
+                print(var.LANGUAGE_DATA.get("message_robot_busy")) 
             elif var.ROBOT_CONNECT == 0:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_robot_not_connected")) 
+                print(var.LANGUAGE_DATA.get("message_robot_not_connected")) 
                 ErrorMessage(var.LANGUAGE_DATA.get("message_robot_not_connected"))
       
 

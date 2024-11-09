@@ -9,7 +9,6 @@ from backend.file_managment.file_management import FileManagement
 
 class StartupScreen(QDialog):
     def __init__(self, screen_geometry):
-        print("start up screen")
         file_management = FileManagement()
         
         super().__init__()

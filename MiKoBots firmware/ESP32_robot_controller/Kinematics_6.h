@@ -51,18 +51,18 @@ void DH_Matrices_6() {
   
 
   for(int i = 0; i < 6; i++){
-    JointMatrix[i][0][0] = cos(radians(robot[0].PosJEnd + DHparams[0][0]));
-    JointMatrix[i][0][1] = -sin(radians(robot[0].PosJEnd + DHparams[0][0])) * cos(radians(DHparams[0][1]));
-    JointMatrix[i][0][2] = sin(radians(robot[0].PosJEnd + DHparams[0][0])) * sin(radians(DHparams[0][1]));
-    JointMatrix[i][0][3] = DHparams[0][3] * cos(radians(robot[0].PosJEnd + DHparams[0][0]));
-    JointMatrix[i][1][0] = sin(radians(robot[0].PosJEnd + DHparams[0][0]));
-    JointMatrix[i][1][1] = cos(radians(robot[0].PosJEnd + DHparams[0][0])) * cos(radians(DHparams[0][1]));
-    JointMatrix[i][1][2] = -cos(radians(robot[0].PosJEnd + DHparams[0][0])) * sin(radians(DHparams[0][1]));
-    JointMatrix[i][1][3] = DHparams[0][3] * sin(radians(robot[0].PosJEnd + DHparams[0][0]));
+    JointMatrix[i][0][0] = cos(radians(robot[i].PosJEnd + DHparams[i][0]));
+    JointMatrix[i][0][1] = -sin(radians(robot[i].PosJEnd + DHparams[i][0])) * cos(radians(DHparams[i][1]));
+    JointMatrix[i][0][2] = sin(radians(robot[i].PosJEnd + DHparams[i][0])) * sin(radians(DHparams[i][1]));
+    JointMatrix[i][0][3] = DHparams[i][3] * cos(radians(robot[i].PosJEnd + DHparams[i][0]));
+    JointMatrix[i][1][0] = sin(radians(robot[i].PosJEnd + DHparams[i][0]));
+    JointMatrix[i][1][1] = cos(radians(robot[i].PosJEnd + DHparams[i][0])) * cos(radians(DHparams[i][1]));
+    JointMatrix[i][1][2] = -cos(radians(robot[i].PosJEnd + DHparams[i][0])) * sin(radians(DHparams[i][1]));
+    JointMatrix[i][1][3] = DHparams[i][3] * sin(radians(robot[i].PosJEnd + DHparams[i][0]));
     JointMatrix[i][2][0] = 0;
-    JointMatrix[i][2][1] = sin(radians(DHparams[0][1]));
-    JointMatrix[i][2][2] = cos(radians(DHparams[0][1]));
-    JointMatrix[i][2][3] = DHparams[0][2];
+    JointMatrix[i][2][1] = sin(radians(DHparams[i][1]));
+    JointMatrix[i][2][2] = cos(radians(DHparams[i][1]));
+    JointMatrix[i][2][3] = DHparams[i][2];
     JointMatrix[i][3][0] = 0;
     JointMatrix[i][3][1] = 0;
     JointMatrix[i][3][2] = 0;

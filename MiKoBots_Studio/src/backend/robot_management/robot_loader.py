@@ -29,13 +29,11 @@ class RobotLoader(QObject):
         self.ForwardKinematics_6 = ForwardKinematics_6()
         self.ForwardKinematics_3 = ForwardKinematics_3()
         self.file_management = FileManagement()
-                 
-        var.SELECTED_ROBOT = 0
         
-         #a list with all the robots that exsist
+        #a list with all the robots that exsist
         self.robotFile = []    
              
-    def SetupRobot(self):
+    def SetupRobot(self, selected_robot):
         # Platform for file path
         folder_path = self.file_management.GetFilePath("/Robot_library") 
         folders = []
@@ -48,9 +46,7 @@ class RobotLoader(QObject):
             for folder in folder_path.iterdir():
                 if folder.is_dir():  # Check if the item is a directory
                     folders.append(folder.name)
-
             folders = sorted(folders)
-            print(f"folders... {folders}")
         else:
             os.makedirs(folder_path, exist_ok=True)
 
@@ -63,32 +59,43 @@ class RobotLoader(QObject):
 
         if len(folders) > 0:
             try:
-                event_manager.publish("request_set_robot_radio", var.SELECTED_ROBOT)
-                event_manager.publish("request_set_robot_combo", var.SELECTED_ROBOT)
-                self.ChangeRobot(var.SELECTED_ROBOT)
+                event_manager.publish("request_set_robot_radio", selected_robot)
+                event_manager.publish("request_set_robot_combo", selected_robot)
             except:
                 event_manager.publish("request_set_robot_radio", 0)
                 event_manager.publish("request_set_robot_combo", 0)
-                self.ChangeRobot(0)
-                var.SELECTED_ROBOT = 0
+                selected_robot = 0
         else:
-            print("NO robots found")
- 
-    def ChangeRobot(self, robot):  
-        if type(robot) == int:
-            pass
-        else:
-            for i in range(len(var.ROBOTS)):
-                if robot == var.ROBOTS[i][0]:
-                    robot = i
-                    return
-        
-        
+            print(var.LANGUAGE_DATA.get("message_no_robot_found"))
+            
+        return selected_robot
+            
+    def CloseCurrentRobot(self):
         event_manager.publish("request_delete_robot_plotter")
         event_manager.publish("request_delete_buttons_joint")
         event_manager.publish("request_delete_buttons_axis")
         event_manager.publish("request_delete_buttons_move")
         event_manager.publish("request_delete_settings_fields")
+ 
+    def CreateNewButtons(self):
+        event_manager.publish("request_create_buttons_joint", var.NUMBER_OF_JOINTS)
+        event_manager.publish("request_create_buttons_axis", var.NUMBER_OF_JOINTS)  
+        event_manager.publish("request_create_buttons_move", var.NUMBER_OF_JOINTS, var.NAME_JOINTS, var.NAME_AXIS)    
+ 
+    def ChangeRobot(self, robot):  
+        if type(robot) == int:
+            pass
+        else:
+            robot_found = False
+            for i in range(len(var.ROBOTS)):
+                if robot == var.ROBOTS[i][0]:
+                    robot = i
+                    robot_found = True
+            
+            if not robot_found:
+                robot = 0
+                
+  
         
         event_manager.publish("request_set_robot_combo", robot)
         event_manager.publish("request_set_robot_radio", robot)
@@ -97,8 +104,6 @@ class RobotLoader(QObject):
         
         var.POS_AXIS_SIM = [0,0,0,0,0,0]
         var.POS_JOINT_SIM = [0,0,0,0,0,0]
-        
-        print(var.ROBOTS)
 
         # Platform for file path
         file = self.file_management.GetFilePath("/Robot_library/" + var.ROBOTS[var.SELECTED_ROBOT][0] + "/settings.json") 
@@ -107,69 +112,60 @@ class RobotLoader(QObject):
         try:
             with open(file, 'r') as file:
                 settings_file = json.load(file)
-
-                var.SETTINGS = settings_file['Settings']
-                var.ROBOT3D = settings_file['3Dfiles']
-                var.TOOLS3D = settings_file['Tools']    
-                var.ROBOT_NAME = settings_file['Name']   
-                
-                var.NUMBER_OF_JOINTS = int(var.SETTINGS['Set_number_of_joints'][0])
-                var.EXTRA_JOINT = int(var.SETTINGS['Set_extra_joint'][0])
-                
-                print(f"Number of joints: {var.NUMBER_OF_JOINTS}")
-                print(f"Extra joint: {var.EXTRA_JOINT}")
-                event_manager.publish("request_create_settings_fields", var.NUMBER_OF_JOINTS)
-                    
-                # set all the settings
-                event_manager.publish("request_set_robot_settings", var.SETTINGS)
-                
-                settings_DH = var.SETTINGS['Set_dh_par']
-                var.DH_PARAM = settings_DH[0]
-                
-                settings_max_pos = var.SETTINGS['Set_max_pos']
-                var.ROBOT_JOINT_MOVE = settings_max_pos[0] 
-                
-                var.JOINT_SPEED = var.SETTINGS['Set_speed'][0]
-                
-                if var.NUMBER_OF_JOINTS == 3:
-                    matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0])
-                    XYZ = MatrixToXYZ(matrix[var.NAME_JOINTS[3]])
-                    var.POS_AXIS_SIM = XYZ
-                elif var.NUMBER_OF_JOINTS == 6:
-                    matrix = self.ForwardKinematics_6.ForwardKinematics([0,0,0,0,0,0])
-                    XYZ = MatrixToXYZ(matrix[var.NAME_JOINTS[5]])
-                    var.POS_AXIS_SIM = XYZ
-                
-                # create the buttons
-                event_manager.publish("request_create_buttons_joint", var.NUMBER_OF_JOINTS)
-                event_manager.publish("request_create_buttons_axis", var.NUMBER_OF_JOINTS)  
-                event_manager.publish("request_create_buttons_move", var.NUMBER_OF_JOINTS, var.NAME_JOINTS, var.NAME_AXIS)        
-                
-                # delete the old robot and load the new robot buttons
-                event_manager.publish("setup_3d_model")
-                
-                for i in range(len(var.ROBOT3D)):
-                    file_path = self.file_management.GetFilePath(var.ROBOT3D[i][2])   
-                    data = [file_path, var.ROBOT3D[i][3], np.eye(4), np.eye(4), var.ROBOT3D[i][5]]
-                    event_manager.publish("request_add_robot_to_plotter", data)
-                  
-                if var.NUMBER_OF_JOINTS == 6:
-                    matrix = self.ForwardKinematics_6.ForwardKinematics([0,0,0,0,0,0])
-                    event_manager.publish("request_move_robot", matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
-                elif var.NUMBER_OF_JOINTS == 3:
-                    matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0])
-                    event_manager.publish("request_move_robot", matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
-                else:
-                    print("no kinematics yet for this type of robot")
-                
-                                
-                event_manager.publish("set_camera_pos_plotter", 3)
-
-
         except FileNotFoundError:
-            print("No File Found")
+            print(var.LANGUAGE_DATA.get("message_not_open_robot"))
+                
+            
+        var.SETTINGS = settings_file['Settings']
+        var.ROBOT3D = settings_file['3Dfiles']
+        var.TOOLS3D = settings_file['Tools']    
+        var.ROBOT_NAME = settings_file['Name']   
         
-      
+        var.NUMBER_OF_JOINTS = int(var.SETTINGS['Set_number_of_joints'][0])
+        var.EXTRA_JOINT = int(var.SETTINGS['Set_extra_joint'][0])
+        
+        event_manager.publish("request_create_settings_fields", var.NUMBER_OF_JOINTS)
+            
+        # set all the settings
+        event_manager.publish("request_set_robot_settings", var.SETTINGS)
+        
+        settings_DH = var.SETTINGS['Set_dh_par']
+        var.DH_PARAM = settings_DH[0]
+        
+        settings_max_pos = var.SETTINGS['Set_max_pos']
+        var.ROBOT_JOINT_MOVE = settings_max_pos[0] 
+        
+        var.JOINT_SPEED = var.SETTINGS['Set_speed'][0]
+        
+        if var.NUMBER_OF_JOINTS == 3:
+            matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0])
+            XYZ = MatrixToXYZ(matrix[var.NAME_JOINTS[3]])
+            var.POS_AXIS_SIM = XYZ
+        elif var.NUMBER_OF_JOINTS == 6:
+            matrix = self.ForwardKinematics_6.ForwardKinematics([0,0,0,0,0,0])
+            XYZ = MatrixToXYZ(matrix[var.NAME_JOINTS[5]])
+            var.POS_AXIS_SIM = XYZ
+
+
+        
+    def AddRobotToPlotter(self):
+        for i in range(len(var.ROBOT3D)):
+            file_path = self.file_management.GetFilePath(var.ROBOT3D[i][2])   
+            data = [file_path, var.ROBOT3D[i][3], np.eye(4), np.eye(4), var.ROBOT3D[i][5]]
+            event_manager.publish("request_add_robot_to_plotter", data)
+            
+        if var.NUMBER_OF_JOINTS == 6:
+            matrix = self.ForwardKinematics_6.ForwardKinematics([0,0,0,0,0,0])
+            event_manager.publish("request_move_robot", matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+        elif var.NUMBER_OF_JOINTS == 3:
+            matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0])
+            event_manager.publish("request_move_robot", matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+        else:
+            print(var.LANGUAGE_DATA.get("message_no_kinematics"))
+        
+                        
+        event_manager.publish("set_camera_pos_plotter", 3)        
+    
     # send position robot
     def SendPosRobot(self, SIM):
         if SIM:
@@ -236,7 +232,9 @@ class RobotLoader(QObject):
         
         event_manager.publish("request_set_robot_radio", var.SELECTED_ROBOT)
         event_manager.publish("request_set_robot_combo", var.SELECTED_ROBOT)
-        self.ChangeRobot(var.SELECTED_ROBOT)
+        
+        return var.SELECTED_ROBOT
+
 
     def SaveRobot(self, Info = None):
         # Change the name of the folder, if the name of the robot is changed
@@ -265,8 +263,6 @@ class RobotLoader(QObject):
         var.ROBOTS[var.SELECTED_ROBOT][2] = var.ROBOT3D
         var.ROBOTS[var.SELECTED_ROBOT][3] = var.TOOLS3D
         
-        print(var.ROBOT3D)
-        
         # Save all the information of this robot in a files
         settings_file = {}
         
@@ -286,10 +282,10 @@ class RobotLoader(QObject):
         for i in range(len(var.ROBOTS)):
             settings_file[i] = var.ROBOTS[i][0]
             
-        self.ChangeRobot(var.SELECTED_ROBOT)
+        return var.SELECTED_ROBOT
         
-        if Info:
-            InfoMessage(var.LANGUAGE_DATA.get("title_Settings_saved"), var.LANGUAGE_DATA.get("changes_been_saved"))
+        # if Info:
+        #     InfoMessage(var.LANGUAGE_DATA.get("title_Settings_saved"), var.LANGUAGE_DATA.get("changes_been_saved"))
             
     def DeleteRobot(self):
         response = WarningMessageRe(var.LANGUAGE_DATA.get("message_sure_delete_robot"))
@@ -351,8 +347,6 @@ class RobotLoader(QObject):
             robot_name = var.ROBOTS[i][0]
             event_manager.publish("request_robot_buttons", i, robot_name)
             
-            
-
     def ImportRobot(self):
         # select the zip that you want to import
         file_path_zip, _ = QFileDialog.getOpenFileName(None, "Select a File", "", "All Files (*)")

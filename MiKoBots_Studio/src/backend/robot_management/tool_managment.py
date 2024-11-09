@@ -52,7 +52,6 @@ class ToolManagment(QObject):
             
         event_manager.publish("request_add_tool_combo", "No tool")
             
-        self.changeTool(0)
 
     def AddNewTool(self):
         # Select a new file with Qfiledialog
@@ -109,10 +108,7 @@ class ToolManagment(QObject):
             
         event_manager.publish("request_add_tool_combo", "No tool")
         event_manager.publish("request_save_robot_tool")
-        
-       
-       
-            
+                
     def changeTool(self, tool):
         event_manager.publish("request_delete_tool_plotter")
     
@@ -146,10 +142,6 @@ class ToolManagment(QObject):
             var.TOOL_OFFSET_CAM = var.TOOLS3D[tool][9]
             var.TOOL_TURN_CAM = var.TOOLS3D[tool][10]
             var.TOOL_SETTINGS_CAM = var.TOOLS3D[tool][11] 
-            
-            print(var.TOOLS3D[tool][0])
-            event_manager.publish("request_send_settings_tool", var.TOOLS3D[tool][0])  
-            
                     
         var.SELECTED_TOOL = tool
         

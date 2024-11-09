@@ -2,7 +2,7 @@ import threading
 import sys
 from threading import Event
 
-
+import io
 
 import ctypes  # Import ctypes module for thread manipulation
 from PyQt5.QtCore import pyqtSignal,  QObject, QTimer
@@ -10,6 +10,7 @@ import backend.core.variables as var
 from backend.core.event_manager import event_manager
 
 from gui.windows.message_boxes import ErrorMessage
+from backend.simulation import simulation_not_busy
 
 import gc
 
@@ -21,6 +22,7 @@ class RunProgram():
 
         self.output_stream = OutputStream()
         self.output_stream.textWritten.connect(self.update_output)
+        sys.stdout = self.output_stream
 
         
 
@@ -41,17 +43,16 @@ class RunProgram():
                 self.script_thread.start()            
         else:
             if not var.PROGRAM_RUN and not sim:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_robot_not_connected"))
+                print(var.LANGUAGE_DATA.get("message_robot_not_connected"))
                 ErrorMessage(var.LANGUAGE_DATA.get("message_robot_not_connected"))
             else:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_program_running"))
+                print(var.LANGUAGE_DATA.get("message_program_running"))
                 ErrorMessage(var.LANGUAGE_DATA.get("message_program_running"))
 
     def RunBlocklyCode(self, code):
         try:
             program = "from robot_library import Move, Tool, Vision, IO\nrobot = Move()\nvision = Vision()\ntool = Tool()\nIO = IO()\n"
             program += code
-            print(f"Blockly program\n {program}")
             self.script_thread = threading.Thread(target=self.execute_script, args=(program,))
             self.script_thread.start() 
         except Exception as e:
@@ -62,19 +63,17 @@ class RunProgram():
             program = "from robot_library import Move, Tool, Vision, IO\nrobot = Move()\nvision = Vision()\ntool = Tool()\nIO = IO()\n"
             program += line
             
+                
             self.script_thread = threading.Thread(target=self.execute_script, args=(program,))
             self.script_thread.start() 
             
     
-    def execute_script(self, script):
-        original_stdout = sys.stdout  # Save the original stdout
-        sys.stdout = self.output_stream
+    def execute_script(self, script):       
+        
         
         try:
             var.PROGRAM_RUN = True
             event_manager.publish("request_enable_tool_combo", False)
-            event_manager.publish("request_program_field_read_only", True)
-            print("start program")
             exec(script, globals(), locals())
 
             # Identify and print global variables to be cleared related to Tool, Move, and Vision
@@ -84,10 +83,7 @@ class RunProgram():
             for name, value in globals().items():
                 # If the variable name is in `related_classes` or the value is an instance of those classes
                 if name in related_classes or any(cls in str(type(value)) for cls in related_classes):
-                    print(f"{name}: {value}")
                     self.globals_delete.append(name)            
-                                  
-            print("end program")
             
             for name in self.globals_delete:
                 del globals()[name]
@@ -96,20 +92,12 @@ class RunProgram():
             
             var.PROGRAM_RUN = False
             event_manager.publish("request_enable_tool_combo", True)
-            event_manager.publish("request_program_field_read_only", False)
         except Exception as e:
             print("An error occurred:", e)
             var.PROGRAM_RUN = False
             event_manager.publish("request_enable_tool_combo", True)
-            event_manager.publish("request_program_field_read_only", False)
         finally:
-            sys.stdout = original_stdout
-            gc.collect()
-            
-            for name in {"tool", "robot", "vision"}:
-                if name in globals():
-                    print(f"Remaining references to {name}: {len(gc.get_referrers(globals()[name]))}")
-            
+            pass
 
             
 
@@ -132,9 +120,8 @@ class RunProgram():
             var.SIM_SHOW_LINE = 0      
             
             event_manager.publish("request_enable_tool_combo", True)
-            event_manager.publish("request_set_sim_not_busy")  
+            simulation_not_busy()
             
-            print("Program ended.")   
             
             ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, ctypes.py_object(SystemExit))
                 
@@ -143,7 +130,15 @@ class RunProgram():
               
 class OutputStream(QObject):
     textWritten = pyqtSignal(str)
-    
-    def write(self, text):
-        self.textWritten.emit(str(text))
+    def __init__(self):
+        super().__init__()
+        self._in_write = False  # Flag to prevent recursion
         
+    def write(self, text):
+        if self._in_write:
+            return  # Prevent recursion if we're already inside a write
+        
+        # Prevent emitting the signal while inside the write method
+        self._in_write = True
+        self.textWritten.emit(str(text))  # Emit the text
+        self._in_write = False  # Reset the flag after emitting the signal

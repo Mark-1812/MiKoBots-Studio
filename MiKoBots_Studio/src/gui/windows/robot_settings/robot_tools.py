@@ -9,11 +9,11 @@ from backend.core.event_manager import event_manager
 
 import backend.core.variables as var
 
-from backend.core.api import add_new_tool
-from backend.core.api import delete_tool
-from backend.core.api import show_tool_settings
-from backend.core.api import update_tool_settings
-from backend.core.api import save_robot
+from backend.robot_management  import add_new_tool
+from backend.robot_management  import delete_tool
+from backend.robot_management  import show_tool_settings
+from backend.robot_management  import update_tool_settings
+from backend.robot_management  import save_robot
 
 from gui.style import *
 
@@ -329,10 +329,8 @@ class RobotTools(QWidget):
 
     def show_square(self, state):
         if state == 2:  # Checked (Qt.Checked)
-            print("Checkbox is checked")
             var.CAM_SQUARE = True
         else:  # Unchecked (Qt.Unchecked)
-            print("Checkbox is unchecked")
             var.CAM_SQUARE = False
 
     def open_plotter(self):
@@ -516,8 +514,6 @@ class RobotTools(QWidget):
         self.vtk_renderer.AddActor(self.z_axis_actor)
       
     def ShowSettings(self, tool_settings): 
-        print("show settings")
-
         if self.stl_actor == None:
             self.vtk_renderer.RemoveActor(self.stl_actor)
             self.stl_actor = None  # Clear the reference
@@ -564,6 +560,7 @@ class RobotTools(QWidget):
             self.plotter.Render()  # Update the render window
 
     def ClosePlotter(self):
+        if self.plotter:
             self.plotter.close()
             self.plotter = None
             self.vtk_renderer = None

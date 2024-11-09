@@ -14,25 +14,35 @@ import webbrowser
 
 from gui.style import *
 
-from backend.file_managment.save_open import SaveOpen
+
 
 from backend.core.event_manager import event_manager
 import backend.core.variables as var
 
+from backend.file_manager import save_file
+from backend.file_manager import save_as_file
+from backend.file_manager import open_file
+from backend.file_manager import new_file
 
-from backend.core.api import connect_robot_com
-from backend.core.api import connect_io_com
-from backend.core.api import connect_cam
-from backend.core.api import run_script
-from backend.core.api import stop_script
-from backend.core.api import enable_simulation
-from backend.core.api import connect_robot_bt
-from backend.core.api import connect_io_bt
+from backend.robot_management import connect_robot_com
+from backend.robot_management import connect_io_com
+from backend.robot_management import connect_robot_bt
+from backend.robot_management import connect_io_bt
+
+from backend.robot_management import stop_robot
+
+from backend.simulation import enable_simulation
+
+from backend.run_program import run_script
+from backend.run_program import stop_script
+from backend.run_program import run_single_line
+
+from backend.vision import connect_cam
 
 
-class MenuField():
+
+class MenuField(QWidget):
     def __init__(self, frame):
-        self.SaveOpen = SaveOpen()
         
         frame_layout = QGridLayout()
         frame.setLayout(frame_layout)
@@ -75,21 +85,22 @@ class MenuField():
         
         self.image_label = QLabel()      
         self.image_label.setPixmap(pixmap) 
+        self.image_label.setFixedSize(140,140)
         self.image_label.mousePressEvent = self.openLink
 
         layout.addWidget(self.image_label, 0, 0)
               
         row_index = layout.rowCount()
         buttons = {
-            "New file": lambda: self.SaveOpen.NewFile(),
-            "Save": lambda: self.SaveOpen.SaveFile(),
-            "Save as": lambda: self.SaveOpen.SaveAsFile(),
-            "Open": lambda: self.SaveOpen.OpenFile(),
+            "New file": lambda: new_file(),
+            "Save": lambda: save_file(),
+            "Save as": lambda: save_as_file(),
+            "Open": lambda: open_file(),
         }
 
         for label, action in buttons.items():
             button = QPushButton(label)
-            button.setStyleSheet(style_button)
+            button.setStyleSheet(style_button_menu)
             button.pressed.connect(action)
             layout.addWidget(button, row_index, 0)
             row_index += 1
@@ -159,17 +170,17 @@ class MenuField():
         self.BUTTON_CONNECT_ROBOT = QPushButton("Connect robot")
         self.BUTTON_CONNECT_ROBOT.setStyleSheet(style_button_menu)
         layout.addWidget(self.BUTTON_CONNECT_ROBOT, row + 1, 0)
-        self.BUTTON_CONNECT_ROBOT.pressed.connect(self.connect_robot)
+        self.BUTTON_CONNECT_ROBOT.pressed.connect(lambda: self.connect_robot())
 
         self.BUTTON_CONNECT_IO = QPushButton("Connect IO robot")
         self.BUTTON_CONNECT_IO.setStyleSheet(style_button_menu)
         layout.addWidget(self.BUTTON_CONNECT_IO, row + 2, 0)
-        self.BUTTON_CONNECT_IO.pressed.connect(self.connect_io)
+        self.BUTTON_CONNECT_IO.pressed.connect(lambda: self.connect_io())
         
         self.BUTTON_CONNECT_CAM = QPushButton("Connect camera")
         self.BUTTON_CONNECT_CAM.setStyleSheet(style_button_menu)
         layout.addWidget(self.BUTTON_CONNECT_CAM, row + 3, 0)
-        self.BUTTON_CONNECT_CAM.pressed.connect(self.connect_camera)
+        self.BUTTON_CONNECT_CAM.pressed.connect(lambda: self.connect_camera())
 
         button_send = QPushButton("Send to robot")
         button_send.setStyleSheet(style_button_menu)
@@ -178,22 +189,27 @@ class MenuField():
         
         self.BUTTON_HOME_ROBOT = QPushButton("Home")
         self.BUTTON_HOME_ROBOT.setStyleSheet(style_button_menu)
-        self.BUTTON_HOME_ROBOT.pressed.connect(lambda: event_manager.publish("request_robot_home"))
+        self.BUTTON_HOME_ROBOT.pressed.connect(lambda: run_single_line("robot.Home()"))
         layout.addWidget(self.BUTTON_HOME_ROBOT, row + 5, 0)
         
         button_stop = QPushButton("Stop")
         button_stop.setFixedHeight(40)
         button_stop.setStyleSheet(style_button_red)     
-        button_stop.pressed.connect(stop_script)
+        button_stop.pressed.connect(lambda: self.stop_robot())
         
         
         layout.addWidget(button_stop, row + 7, 0)
+
+    def stop_robot(self):
+        stop_script()
+        stop_robot()
+        
 
     def connect_camera(self):
         if var.CAM_CONNECT:
             connect_cam()
         else:
-            self.connect_cam_window.hide_connect()
+            self.connect_cam_window.empty_list()
             self.connect_cam_window.show()
             self.connect_cam_window.raise_()
 
@@ -203,7 +219,7 @@ class MenuField():
         elif var.ROBOT_CONNECT and not var.ROBOT_BLUETOOTH:
             connect_robot_com()
         else:
-            self.connect_robot_window.hide_connect()
+            self.connect_robot_window.empty_list()
             self.connect_robot_window.show()
             self.connect_robot_window.raise_()
 
@@ -213,13 +229,12 @@ class MenuField():
         elif var.IO_CONNECT and not var.IO_BLUETOOTH:
             connect_io_com()
         else:
-            self.connect_io_window.hide_connect()
+            self.connect_io_window.empty_list()
             self.connect_io_window.show()
             self.connect_io_window.raise_()
 
 # disable buttons
     def ButtonConnectRobotDisable(self, state):
-        print("disable button")
         if state:
             self.BUTTON_CONNECT_ROBOT.setDisabled(True)
         else:
@@ -242,14 +257,14 @@ class MenuField():
     def ButtonConnectRobotColor(self, connect):
         if connect:
             self.BUTTON_CONNECT_ROBOT.setStyleSheet(style_button_pressed)
-            self.connect_robot_window.close()
+            #self.connect_robot_window.close()
         else:
             self.BUTTON_CONNECT_ROBOT.setStyleSheet(style_button_menu)
 
     def ButtonConnectIOColor(self, connect):
         if connect:
             self.BUTTON_CONNECT_IO.setStyleSheet(style_button_pressed)
-            self.connect_io_window.close()
+            #self.connect_io_window.close()
         else:
             self.BUTTON_CONNECT_IO.setStyleSheet(style_button_menu)
             
@@ -262,7 +277,7 @@ class MenuField():
     def ButtonConnectCamColor(self, connect):
         if connect:
             self.BUTTON_CONNECT_CAM.setStyleSheet(style_button_pressed)
-            self.connect_cam_window.close()
+            #self.connect_cam_window.close()
         else:
             self.BUTTON_CONNECT_CAM.setStyleSheet(style_button_menu)
       

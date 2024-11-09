@@ -7,10 +7,8 @@ import platform
 
 def FolderCheck(file_mangement):
     file_path = file_mangement.GetFilePath("")
-    print(f" file path date {file_path}")
 
     if not os.path.isdir(file_path):
-        print(" not a file path")
         # get the file path of the zip file with the data
         try:
             # When running as a PyInstaller bundle, _MEIPASS is created
@@ -29,9 +27,6 @@ def FolderCheck(file_mangement):
             current_directory = os.path.dirname(__file__)
             zip_file_path = os.path.join(current_directory, '..', 'assets', 'MiKoBots_data', 'MiKoBots.zip')
             zip_file_path = os.path.normpath(zip_file_path)
-
-
-        print(f"zip_file_path {zip_file_path}")
 
         file_path = file_mangement.GetPathFolder()
         os.makedirs(file_path, exist_ok=True)
@@ -54,7 +49,6 @@ def FolderCheck(file_mangement):
     file_path = file_mangement.GetFilePath("/settings/settings.json")
     if not (os.path.exists(file_path) and os.path.isfile(file_path)):
         setting_file = ["0", "0", "0", "0", "0"]
-        print("test iets vwerkefvdsc")
         with open(file_path, 'w') as file:
             json.dump(setting_file, file, indent=4)
                     

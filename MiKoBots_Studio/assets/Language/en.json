@@ -12,28 +12,55 @@
     "message_sure_delete_model": "Are you sure you want to delete this file? This action is permanent, and the model will no longer be available in any other files.",
 
     "title_error": "Error",
-    "message_delete_last_robot": "You cannot delete the last robot.",
-    "message_not_open_3dmodel": "Could not open the 3d models",
-    "message_not_open_robot": "Could not open the robot",
-    "message_not_open_blockly": "Could not open blockly program",
-    "message_wrong_device": "Error, You try to connect to a wrong device.",
-    "message_faild_connect_bt": "Error: could not connect, try again.",
-    "message_io_instead_of_robot": "Error: This is the IO module not the robot! Check if you have the right com port",
+    "message_wrong_device": "Error: You try to connect to a wrong device.",
+
+    "message_delete_last_robot": "Error: You cannot delete the last robot.",
+    "message_not_open_robot": "Error: Could not open the robot",
     "message_robot_busy": "Error: Robot is busy performing a task",
-    "message_io_busy": "Error: IO is busy performing a task",
     "message_robot_not_connected": "Error: The robot is not connected",
-    "message_io_not_connected": "Error: The IO module is not connected",
-    "message_failed_connection_com": "Error: could not connect, check if you are using the right COM port",
-    "message_lost_connection_robot": "Error: Lost connection with the robot, try to connect again.",
-    "message_lost_connection_io": "Error: Lost connection with the I/O module, try to connect again.",
-    "message_robot_instead_of_io": "Error: This is the robot not the I/O module! Check if you have the right com port",
-    "message_program_running": "Error: Program is already running",
-    "message_not_find_cam": "Cannot find the camera, check if you have the right COM port or URL",
-    "message_cam_not_connect": "Camera is not connected",
-    "message_not_found_xbox": "Xbox controller not found. Make sure it's connected.",
+    "message_no_robot_found": "Error: No robots found.",
     "message_not_delete_folder": "Could not delete the robot folder try manually.",
+    "message_no_kinematics": "Error: No kinematics yet for this type of robot.",
+    "message_more_values_than_joints": "Error: this command has more input axis than that are joints",
+    "message_lost_connection_robot": "Error: Lost connection with the robot, try to connect again.",
+
+    "message_io_instead_of_robot": "Error: This is the IO module not the robot! Check if you have the right com port",
+    "message_io_not_connected": "Error: The IO module is not connected",
+    "message_io_busy": "Error: IO is busy performing a task",
+    "message_robot_instead_of_io": "Error: This is the robot not the I/O module! Check if you have the right com port",
+    "message_lost_connection_io": "Error: Lost connection with the I/O module, try to connect again.",
+    
     "message_not_state_tool": "Error: With this tool you cannot do this command, State",
     "message_not_move_tool": "Error: With this tool you cannot do this command, MoveTo",
+
+    "message_not_find_cam": "Cannot find the camera, check if you have the right COM port or URL",
+    "message_cam_not_connect": "Camera is not connected",
+    "message_error_releasing_cam": "Error: Releasing cam.",
+    "message_failed_grab_frame": "Error: Failed to grab frame camera",
+
+    "message_not_open_3dmodel": "Error: Could not open the 3d models",
+    "message_not_open_blockly": "Error: Could not open blockly program",
+    "message_faild_connect_bt": "Error: could not connect, try again.",
+    "message_failed_connection_com": "Error: could not connect, check if you are using the right COM port",
+    "message_program_running": "Error: Program is already running",
+
+    "message_not_found_xbox": "Xbox controller not found. Make sure it's connected.",
+    "message_cannot_reach_pos": "Error: Cannot reach this position",
+    "message_settings_file_not_found": "Error: Could not open the settings file",
+    "message_no_3d_model": "Error: No settiongs file of 3d models found.",
+    "message_error_saving_settings": "Error: saving settings files failed.",
+    "message_no_blockly_workspace": "Error: No saved workspace blockly found.",
+    "message_tool_not_regonized": "Error: Do not regonize this tool",
+    "message_fill_in_rounf_number": "Error: fill in only round numbers.",
+
+    
+
+
+    "title_info": "info",
+    "message_program_stopped": "Program is ended",
+    "message_camera_connected": "Camera disconnected",
+    "message_no_colors" : "Color not found",
+
 
 
     "title_save": "Save",

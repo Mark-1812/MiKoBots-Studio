@@ -4,9 +4,9 @@ from PyQt5 import  QtGui
 
 from backend.core.event_manager import event_manager
 
-from backend.core.api import add_origin
-from backend.core.api import delete_origin
-from backend.core.api import save_origin
+from backend.simulation import add_origin
+from backend.simulation import delete_origin
+from backend.simulation import save_origin
 
 class SimulationOriginGUI(QWidget):
     def __init__(self, parent=None):
@@ -55,8 +55,6 @@ class SimulationOriginGUI(QWidget):
         frame_origins = QFrame()
         self.layout_origins = QGridLayout(frame_origins)
         scroll_area.setWidget(frame_origins)
-        
-        print(self.layout)
 
     def GetData(self, item):
         data = [0,0,0,0]

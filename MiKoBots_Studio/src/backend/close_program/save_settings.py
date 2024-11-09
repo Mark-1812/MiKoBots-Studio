@@ -10,8 +10,7 @@ def SaveSettings(file_management):
         
     file_path = file_management.GetFilePath("/settings/settings.json")  
                 
-    print(setting_file)
+    #print(setting_file)
                 
     with open(file_path, 'w') as file:
         json.dump(setting_file, file, indent=4)
-        print("saved")

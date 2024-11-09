@@ -4,28 +4,19 @@ import ctypes
 import os
 import sys
 
-from backend.core.event_manager import event_manager
-
-import backend.core.variables as var
 import locale
 
 class FileManagement:
     def __init__(self):
         os_system = platform.system()
         self.platform = os_system
-        
-                # Get the default locale
-        lang, _ = locale.getdefaultlocale()
 
         # Set the documents folder name based on the language
         documents_folder = "Documents"  # Default to English
 
-        print(lang)
-
         if os_system == "Darwin":
             # macOS-specific code
             self.file_path = Path.home() / documents_folder / "MyAppData" / "MiKoBots"
-            print(self.file_path)
         elif os_system == "Windows":
             # Windows-specific code
             dll = ctypes.windll.shell32
@@ -33,24 +24,18 @@ class FileManagement:
             if dll.SHGetSpecialFolderPathW(None, buf, 0x0005, False):
                 self.file_path = Path(buf.value) / "MyAppData" / "MiKoBots"
             else:
-                print("Failure!")
                 self.file_path = None
         elif os_system == "Linux":
             # Linux and other platforms
             self.file_path = Path.home() / "Documents" / "MyAppData" / "MiKoBots"
         
-        print(f"file path {self.file_path}")
-        
     def GetPathFolder(self):
         os_system = platform.system()
         self.platform = os_system
-
-        print(os_system)
         
         if os_system == "Darwin":
             # macOS-specific code
             file_path = Path.home() / "Documents" / "MyAppData"
-            print(file_path)
         elif os_system == "Windows":
             # Windows-specific code
             dll = ctypes.windll.shell32
@@ -58,15 +43,12 @@ class FileManagement:
             if dll.SHGetSpecialFolderPathW(None, buf, 0x0005, False):
                 file_path = Path(buf.value) / "MyAppData"
             else:
-                print("Failure!")
                 file_path = None
         elif os_system == "Linux":
             # Linux and other platforms
             file_path = Path.home() / "Documents" / "MyAppData"   
             
-        return file_path    
-            
-            
+        return file_path               
         
     def GetFilePath(self, file):
         # Get the name of the folder of the current robot
@@ -75,7 +57,6 @@ class FileManagement:
         elif self.platform == "Darwin" or self.platform == "Linux":
             file_path = Path(str(self.file_path) + file).as_posix() 
         return file_path
-    
     
     def LanguagePath(self, language):
         try:

@@ -12,7 +12,7 @@ import numpy as np
 
 import backend.core.variables as var
 
-from backend.core.api import get_image_frame
+from backend.vision import get_image_frame
 
 from gui.windows.message_boxes import ErrorMessage
 

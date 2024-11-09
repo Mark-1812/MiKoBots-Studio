@@ -17,9 +17,13 @@ from gui.style import *
 import re
 import os
 
-from backend.core.api import run_blockly_code
+from backend.run_program import run_blockly_code
+
+from backend.file_manager import blockly_save
 
 import backend.core.variables as var
+
+import json
 
 class ProgramField(QWidget):
     def __init__(self, frame):
@@ -39,52 +43,44 @@ class ProgramField(QWidget):
         event_manager.subscribe("request_program_field_clear", self.ProgramFieldClear)
         event_manager.subscribe("request_program_field_insert", self.ProgramFieldInsert)
         event_manager.subscribe("request_program_field_get", self.ProgramFieldGet)
-        event_manager.subscribe("request_program_field_read_only", self.ReadOnlyText)
         event_manager.subscribe("request_get_program_type", self.GetProgramTpe)
         event_manager.subscribe("request_get_blockly_code", self.GetBlocklyCode)
         event_manager.subscribe("request_save_blockly_file", self.save_workspace)
         event_manager.subscribe("request_load_blockly_file", self.load_workspace)
         event_manager.subscribe("request_clear_blockly_file", self.clear_workspace)
-    
-    
-    def ReadOnlyText(self, state):
-        self.PROGRAM_TEXT_WIDGET.setReadOnly(state)
 
     def GetProgramTpe(self):
         if self.CHECKBOX_BLOCKLY.isChecked():
-            print("blockly coding")
             return True
         else:
-            print("not blockly coding")
             return False 
         
     def GetBlocklyCode(self):
-        print("get blockl code")
         self.web_view.page().runJavaScript("python.pythonGenerator.workspaceToCode(workspace);", run_blockly_code)
         
     @pyqtSlot()
     def save_workspace(self):
         # Call the saveWorkspace function in JavaScript and handle the result
-        print("save_workspace")
         self.web_view.page().runJavaScript("saveWorkspace();", self.BlocklyConverting)
 
     def BlocklyConverting(self, xmlString):
-        event_manager.publish("request_program_xmlString", xmlString)
+        blockly_save(xmlString)
+        
         
 
 
     @pyqtSlot()
     def load_workspace(self, xmlString):
         try:
-            self.web_view.page().runJavaScript(f'loadWorkspace(`{xmlString}`);')
-            print("Workspace loaded.")
+            # Escape xmlString and pass to JavaScript
+            escaped_xmlString = json.dumps(xmlString)
+            self.web_view.page().runJavaScript(f'loadWorkspace({escaped_xmlString});')
         except FileNotFoundError:
-            print("No saved workspace found.")
+            print(var.LANGUAGE_DATA.get("message_no_blockly_workspace"))
             
             
     @pyqtSlot()
     def clear_workspace(self):
-        print("Clearing workspace")
         # Run JavaScript to clear the Blockly workspace
         self.web_view.page().runJavaScript("workspace.clear();")  
         
@@ -96,13 +92,6 @@ class ProgramField(QWidget):
         self.PROGRAM_NAME.setFixedHeight(24)
         layout.addWidget(self.PROGRAM_NAME, 0, 0)
         
-        # button_help = QPushButton("i")
-        # button_help.setStyleSheet(style_button_help)
-        # button_help.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        # button_help.clicked.connect(lambda: webbrowser.open('https://www.mikobots.com'))
-        # layout.addWidget(button_help,0,0)
-        
-
         self.CHECKBOX_BLOCKLY = QCheckBox("Blockly")
         self.CHECKBOX_BLOCKLY.setStyleSheet(style_checkbox)
         layout.addWidget(self.CHECKBOX_BLOCKLY,1,0)
@@ -230,9 +219,7 @@ class ProgramField(QWidget):
  
     def SwitchProgramStle(self, state):
         current_directory = os.path.dirname(__file__)
-        print(current_directory)
         blockly_path = os.path.abspath(os.path.join(current_directory, '../..', 'blockly', 'blockly.html'))
-        print(blockly_path)
         if state:
             self.frame.hide()
             self.button_min.hide()
@@ -469,8 +456,6 @@ class CustomTextEdit(QTextEdit):
             # Join the lines back together with newlines
             indented_text = '\n'.join(indented_lines)
             
-            print(f"indented_text {indented_text}")
-
             # Replace the selected text with the indented text
             cursor.insertText(indented_text)
     
@@ -513,133 +498,126 @@ class CustomTextEdit(QTextEdit):
         return madeChange    
                
     def keyPressEvent(self, event):  
+        try:
         
-        if self.keyHelpThings(event):
-            return
+            if self.keyHelpThings(event):
+                return
 
-        if event.key() == Qt.Key_Tab:
-            self.keyTab()
-            
-        self.countNumberTabs()
-        
-        
-        hide = False
-        
-        if self.GetItemLeftOfCursor(0) in ('\t') and event.key() in (Qt.Key_Tab, Qt.Key_Enter, Qt.Key_Return):
-            hide = True
-         
-        super(CustomTextEdit, self).keyPressEvent(event)
-        
-        if self.GetItemLeftOfCursor(0) == ('\t') and self.GetItemLeftOfCursor(1) == '\n':
-            hide = True
-           
-        if event.text() in ('"', "'", ";", "(", ")", ":", ",", "+", "-", "*", "/", " "):
-            self.completer.popup().hide()
-            return
-        
-        if event.key() in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down, Qt.Key_Backspace, Qt.Key_Shift):
-            self.completer.popup().hide()
-            return
-
-        if event.key() in (Qt.Key_Enter, Qt.Key_Return):
-            cursor = self.textCursor()
-            for i in range(self.tabs_nr):
-                text = '\t'
-                cursor.insertText(text) 
-        
-        
-        if hide == True:
-            self.completer.popup().hide()
-            return
-        
-        if self.completer and self.completer.popup().isVisible():
-            # Ignore specific keys that interfere with the completer
-            if event.key() in (Qt.Key_Enter, Qt.Key_Return, Qt.Key_Escape, Qt.Key_Tab, Qt.Key_Backtab):
-                print("oke")
+            if event.key() == Qt.Key_Tab:
+                self.keyTab()
                 
+            self.countNumberTabs()
+            
+            
+            hide = False
+            
+            if self.GetItemLeftOfCursor(0) in ('\t') and event.key() in (Qt.Key_Tab, Qt.Key_Enter, Qt.Key_Return):
+                hide = True
+            
+            super(CustomTextEdit, self).keyPressEvent(event)
+            
+            if self.GetItemLeftOfCursor(0) == ('\t') and self.GetItemLeftOfCursor(1) == '\n':
+                hide = True
+            
+            if event.text() in ('"', "'", ";", "(", ")", ":", ",", "+", "-", "*", "/", " "):
+                self.completer.popup().hide()
+                return
+            
+            if event.key() in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down, Qt.Key_Backspace, Qt.Key_Shift):
+                self.completer.popup().hide()
+                return
+
+            if event.key() in (Qt.Key_Enter, Qt.Key_Return):
                 cursor = self.textCursor()
-                cursor_position = cursor.position()
-                text_before_cursor = cursor.document().toPlainText()[:cursor_position]
-                
-                print(text_before_cursor)
-                print(self.GetItemLeftOfCursor(1))
+                for i in range(self.tabs_nr):
+                    text = '\t'
+                    cursor.insertText(text) 
+            
+            
+            if hide == True:
+                self.completer.popup().hide()
+                return
+            
+            if self.completer and self.completer.popup().isVisible():
+                # Ignore specific keys that interfere with the completer
+                if event.key() in (Qt.Key_Enter, Qt.Key_Return, Qt.Key_Escape, Qt.Key_Tab, Qt.Key_Backtab):
+                    cursor = self.textCursor()
+                    cursor_position = cursor.position()
+                    text_before_cursor = cursor.document().toPlainText()[:cursor_position]
 
 
-                prefix = self.completer.completionPrefix()
-                num_chars_to_delete = len(prefix)    
-                
-                if self.GetItemLeftOfCursor(1) == '.':
-                   print("delete one more")
-                   num_chars_to_delete += 1 
-
-                print(num_chars_to_delete)
-                
-                if len(text_before_cursor) >= num_chars_to_delete:
-                    cursor.setPosition(cursor_position - num_chars_to_delete, QTextCursor.KeepAnchor)
-                    cursor.removeSelectedText()  # Remove the selected text
+                    prefix = self.completer.completionPrefix()
+                    num_chars_to_delete = len(prefix)    
                     
-                event.ignore()
-                self.completer.popup().hide()  # Hide on Escape
-                return
+                    if self.GetItemLeftOfCursor(1) == '.':
+                        num_chars_to_delete += 1 
 
-        completion_prefix = self.textUnderCursor()
-        cursor_position = self.textCursor().position()
-        full_text = self.toPlainText()        
+                    if len(text_before_cursor) >= num_chars_to_delete:
+                        cursor.setPosition(cursor_position - num_chars_to_delete, QTextCursor.KeepAnchor)
+                        cursor.removeSelectedText()  # Remove the selected text
+                        
+                    event.ignore()
+                    self.completer.popup().hide()  # Hide on Escape
+                    return
+
+            completion_prefix = self.textUnderCursor()
+            cursor_position = self.textCursor().position()
+            full_text = self.toPlainText()        
+            
+            cursor_position = self.textCursor().position()
+            full_text = self.toPlainText()
+
+            # Find the last newline character before the cursor
+            last_newline_pos = full_text.rfind('\n', 0, cursor_position)
+            if last_newline_pos == -1:
+                last_newline_pos = 0  # No newline found, start from the beginning
+
+            # Get the text from the last newline to the cursor position       
+            current_line = full_text[last_newline_pos:cursor_position]
+            current_line = current_line.lstrip('\n')
         
-        cursor_position = self.textCursor().position()
-        full_text = self.toPlainText()
-
-        # Find the last newline character before the cursor
-        last_newline_pos = full_text.rfind('\n', 0, cursor_position)
-        if last_newline_pos == -1:
-            last_newline_pos = 0  # No newline found, start from the beginning
-
-        # Get the text from the last newline to the cursor position       
-        current_line = full_text[last_newline_pos:cursor_position]
-        current_line = current_line.lstrip('\n')
-     
-        if current_line in ("", "\n"):
-            self.completer.popup().hide()
-            return 
-        
-   
-        if '.' in current_line:
-            #base = current_line.split('.')[0].strip()  # Get the base (the variable name)
-            # Attempt to retrieve the corresponding Move instance from the console locals
-            pattern = r"[\(\,\n\s]*(\w+)\."
-            match = re.search(pattern, current_line)
-            if match:
-                base = match.group(1)   
+            if current_line in ("", "\n"):
+                self.completer.popup().hide()
+                return 
+            
+    
+            if '.' in current_line:
+                #base = current_line.split('.')[0].strip()  # Get the base (the variable name)
+                # Attempt to retrieve the corresponding Move instance from the console locals
+                pattern = r"[\(\,\n\s]*(\w+)\."
+                match = re.search(pattern, current_line)
+                if match:
+                    base = match.group(1)   
+                else:
+                    return
+                
+                pattern = fr'{base}\s*=\s*(\w+)\(.*\)'
+                code = self.toPlainText()
+                
+                matches = re.findall(pattern, code)
+                # find if there is robot be
+                
+                if matches:
+                    for match in matches:
+                        instance = match
+                        ClassRef = globals()[instance]
+                        methods = self.get_methods(ClassRef)  # Get methods of the Move class
+                        if methods:
+                            self.completer.setModel(QStringListModel(methods))
+                            self.showCompleter()
             else:
-                return
-
-            print(base)
-            
-            pattern = fr'{base}\s*=\s*(\w+)\(.*\)'
-            code = self.toPlainText()
-            
-            matches = re.findall(pattern, code)
-            # find if there is robot be
-            
-            if matches:
-                for match in matches:
-                    instance = match
-                    ClassRef = globals()[instance]
-                    methods = self.get_methods(ClassRef)  # Get methods of the Move class
-                    if methods:
-                        self.completer.setModel(QStringListModel(methods))
-                        self.showCompleter()
-        else:
-            self.completer.setModel(QStringListModel(self.python_keywords))
-    
-        if completion_prefix != self.completer.completionPrefix():
-            self.completer.setCompletionPrefix(completion_prefix)
-            self.completer.popup().setCurrentIndex(self.completer.completionModel().index(0, 0))
-
+                self.completer.setModel(QStringListModel(self.python_keywords))
         
-        rect = self.cursorRect()
-        rect.setWidth(self.completer.popup().sizeHintForColumn(0) + self.completer.popup().verticalScrollBar().sizeHint().width())
-        self.completer.complete(rect)  # Show the completer popup
-    
+            if completion_prefix != self.completer.completionPrefix():
+                self.completer.setCompletionPrefix(completion_prefix)
+                self.completer.popup().setCurrentIndex(self.completer.completionModel().index(0, 0))
 
+            
+            rect = self.cursorRect()
+            rect.setWidth(self.completer.popup().sizeHintForColumn(0) + self.completer.popup().verticalScrollBar().sizeHint().width())
+            self.completer.complete(rect)  # Show the completer popup
         
+
+        except:
+            pass
+            # print("error program field")

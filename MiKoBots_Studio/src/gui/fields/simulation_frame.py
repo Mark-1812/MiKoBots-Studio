@@ -12,7 +12,7 @@ import numpy as np
 
 from backend.core.event_manager import event_manager
 
-from backend.core.api import simulation_move_gui
+from backend.simulation import simulation_move_gui
 
 from vtkmodules.vtkRenderingCore import vtkRenderer
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -183,17 +183,15 @@ class SimulationGUI(QWidget):
         action1.triggered.connect(lambda: self.move_to(click_pos))
         context_menu.addAction(action1)
 
-        action2 = QAction("Action 2", self)
+        #action2 = QAction("Action 2", self)
         #action2.triggered.connect(self.action2_triggered)
-        context_menu.addAction(action2)
+        #context_menu.addAction(action2)
 
         # Show the context menu at the mouse position
         context_menu.exec_(QCursor.pos())
 
     def move_to(self, position):
         # Here you can implement the logic for moving the object
-        print(f"Move to position: {position}")
-
         # Convert click position to 3D coordinates
         x = position[0]
         y = position[1]
@@ -203,9 +201,7 @@ class SimulationGUI(QWidget):
         picker.Pick(x, y, 0, self.renderer)
 
         picked_position = picker.GetPickPosition()
-        print(f"Picked 3D position: {picked_position}")
 
-        print(picked_position[0])
         posJoint = [picked_position[0], picked_position[1], picked_position[2], 180, 0 ,180]
 
         simulation_move_gui(posJoint, "MoveJ")
@@ -214,7 +210,6 @@ class SimulationGUI(QWidget):
 ## floor
     def HideShowFloor(self):
         # Add the plane and axes to the scene
-        print("show hide floor")
         if self.ShowFloor:
             self.grid_actor.SetVisibility(False)  # Set to True to show
             self.plane_actor.SetVisibility(False)  # Set to True to show
@@ -329,7 +324,6 @@ class SimulationGUI(QWidget):
 
     def HideShowAxis(self):
         # Add the plane and axes to the scene
-        print("show hide axis")
         if self.ShowAxis:
             self.x_axis_actor.SetVisibility(False)  # Set to True to show
             self.y_axis_actor.SetVisibility(False)  # Set to True to show

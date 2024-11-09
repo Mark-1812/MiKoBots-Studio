@@ -31,9 +31,8 @@ class CheckUpdate():
             description = description_tag.find_next().get_text(strip=True)
             var.UPDATE_DESCRIPTION = description
         
-        print(f"var.UPDATE_VERSION {var.UPDATE_VERSION}")
-        print(f"var.UPDATE_DESCRIPTION {var.UPDATE_DESCRIPTION}")
-        
+        # print(f"var.UPDATE_VERSION {var.UPDATE_VERSION}")
+        # print(f"var.UPDATE_DESCRIPTION {var.UPDATE_DESCRIPTION}")     
         
         if float(var.UPDATE_VERSION ) > var.CURRENT_VERSION:
             return True

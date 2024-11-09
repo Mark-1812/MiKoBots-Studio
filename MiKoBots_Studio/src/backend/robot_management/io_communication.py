@@ -18,20 +18,16 @@ SERVICE_UUID_IO = "30a96603-6e34-49d8-9d64-a13f68fefab6"
 
 
 class TalkWithIOBT(QThread):
-    
     pause_event = threading.Event()
     busy_event = threading.Event()
 
     def __init__(self):
         super().__init__() 
-        self.pause_event.clear()
-        self.busy_event.clear()
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
+        self.pause_event.clear()
+        self.busy_event.clear()
         self.start()
-
-    def subscribeToEvents(self):
-       event_manager.subscribe("request_close_io_bt", self.CloseIO)
        
 
     async def ScanForDevicesBT(self):
@@ -48,15 +44,14 @@ class TalkWithIOBT(QThread):
 
     async def validate_characteristic_uuid(self):
         # check if it is the right device you try to connect
-        characteristics = var.IO_BT_CLIENT.services
-        
+        characteristics = var.IO_BT_CLIENT.services  
         characteristic_uuids = []
         for char in characteristics:
             characteristic_uuids.append(char.uuid)
 
         if SERVICE_UUID_IO not in characteristic_uuids:
             await var.IO_BT_CLIENT.disconnect()
-            event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_wrong_device")) 
+            print(var.LANGUAGE_DATA.get("message_wrong_device")) 
 
     async def ConnectIOBT(self, device_name = None):
         # if the IO is already connected disconnect
@@ -64,6 +59,7 @@ class TalkWithIOBT(QThread):
             await var.IO_BT_CLIENT.disconnect()
             var.IO_CONNECT = False
             event_manager.publish("request_io_connect_button_color", False) 
+            var.IO_BLUETOOTH = False
             
         # if the IO is not connected
         else:
@@ -76,10 +72,10 @@ class TalkWithIOBT(QThread):
                 asyncio.run_coroutine_threadsafe(self.SendLineToIO("CONNECT"), self.loop)
                 await var.IO_BT_CLIENT.start_notify(CHARACTERISTIC_UUID_IO, self.ReadDataIO)
             else:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_faild_connect_bt"))  
+                print(var.LANGUAGE_DATA.get("message_faild_connect_bt"))  
             
     async def CloseIO(self):
-        # close the robot if it is connected
+        # close the io if it is connected
         if var.IO_CONNECT:
             await var.IO_BT_CLIENT.disconnect()    
 
@@ -87,23 +83,20 @@ class TalkWithIOBT(QThread):
         data_text = ""
         try:
             data_text = data.decode('utf-8')
-            print(f"data from esp32: '{data_text}' end")
         except UnicodeDecodeError:
             data_text = ""
-            print("Received non-UTF-8 encoded data:", data)
 
     
         if data_text.strip() == "END":
             var.IO_BUSY = False
         elif data_text.strip() == "IO_CONNECTED":
-            print("test connection read")
             var.IO_BLUETOOTH = True
             var.IO_CONNECT = True
             var.IO_BUSY = False
             event_manager.publish("request_io_connect_button_color", True)
             self.SendSettingsIO()
         elif data_text.strip() == "ROBOT_CONNECTED":
-            event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("error_robot_instead_of_io"))
+            print(var.LANGUAGE_DATA.get("error_robot_instead_of_io"))
         elif data_text.startswith("Input "):
             parts = data.split()
             
@@ -131,20 +124,23 @@ class TalkWithIOBT(QThread):
                 event_manager.publish("request_set_tool_pos", var.POS_GRIPPER)
 
         else:
-            event_manager.publish("request_insert_new_log", data_text) 
+            data_text = "ESP32: " + data_text
+            print(data_text) 
         
     async def SendLineToIO(self, message):
-        print("send line or dead")
-        
         while self.pause_event.is_set():
             time.sleep(0.1)
-            print("waiting")
             
         var.IO_BUSY = True
             
-        print(f"Message send {message}")
         if var.IO_BT_CLIENT.is_connected:
             await var.IO_BT_CLIENT.write_gatt_char(CHARACTERISTIC_UUID_IO, message.encode())
+        else:
+            await var.IO_BT_CLIENT.disconnect()
+            print(var.LANGUAGE_DATA.get("message_lost_connection_io"))
+            var.IO_CONNECT = False
+            var.IO_BUSY = False
+            event_manager.publish("request_robot_connect_button_color", False)       
             
     def run(self):
         self.loop.run_forever()
@@ -181,8 +177,6 @@ class TalkWithIOBT(QThread):
                 for i, setting in enumerate(var.SETTINGS):
                     settings = var.SETTINGS[category_names[i]]
                     if settings[1] == "IO":
-                        print("settings...." + category_names[i])
-                        print(settings[0])
                         command = make_line_ABC(settings[0], category_names[i])
                         asyncio.run_coroutine_threadsafe(self.SendLineToIO(command), self.loop)
                         time.sleep(0.2)
@@ -193,51 +187,17 @@ class TalkWithIOBT(QThread):
             
         else:
             if var.IO_BUSY == 1:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_io_busy"))
+                print(var.LANGUAGE_DATA.get("message_io_busy"))
 
             elif var.ROBOT_CONNECT == 0:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_io_not_connected"))
+                print(var.LANGUAGE_DATA.get("message_io_not_connected"))
 
-    # if a tool change than send again the settings related to the tool
-    def send_tool_settings(self, TOOL):
-        if var.ROBOT_BUSY == 0 and var.ROBOT_CONNECT == 1:
-            def make_line_ABC(settings_values, command_name):
-                letters = [chr(i) for i in range(65, 91)]  # A-Z letters
-                formatted_settings = f"{command_name} "
-
-
-                for i, value in enumerate(settings_values):
-                    formatted_settings += letters[i] + str(value)
-
-                formatted_settings += "\n"
-                return formatted_settings
-        
-            try:
-                with open(f"settings/settings_tool{TOOL}.json", 'r') as file:
-                    settings_file = json.load(file)
-                    settings = []
-                    for i in range (1, len(settings_file)):
-                        settings.append(settings_file[i])
-                        
-                    command = make_line_ABC(settings, "Set_tool")
-                    asyncio.run_coroutine_threadsafe(self.SendLineToIO(command), self.loop)
-            except:
-                pass       
-        else:
-            if var.IO_BUSY == 1:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_io_busy"))
-            elif var.IO_CONNECT == 0:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_io_not_connected"))
 
 
 
 class TalkWithIOCOM:
     def __init__ (self):
         self.data = ""
-        self.subscribeToEvents()
-    
-    def subscribeToEvents(self):
-        event_manager.subscribe("request_close_io", self.CloseIO)
        
     def CloseIO(self):
         if var.IO_CONNECT:
@@ -252,7 +212,6 @@ class TalkWithIOCOM:
             
             
         elif not var.IO_CONNECT and var.IO_COM:
-            print("try to connect")
             try:    
                 var.IO_COM = com_port
                 var.IO_SER = serial.Serial(var.IO_COM, baudrate=115200, timeout=1)
@@ -262,9 +221,9 @@ class TalkWithIOCOM:
                 var.IO_SER .setRTS(True)  # Reactivate RTS to reset
                 time.sleep(0.5)
                 var.IO_SER .dtr = True    # Enable DTR
-                time.sleep(2)     # Wait for ESP32 to reboot and set up serial
                 
-                self.ReadDataIO()
+                t_threadRead = threading.Thread(target=self.ReadDataIO)  
+                t_threadRead.start()
                 
                 start_time = time.time()
                 while var.IO_CONNECT == 0:
@@ -276,18 +235,19 @@ class TalkWithIOCOM:
                     event_manager.publish("request_io_connect_button_color", True)
                     self.SendSettingsIO()
                 else:
-                    event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_failed_connection_com"))
-                    ErrorMessage(var.LANGUAGE_DATA.get("message_failed_connection_com"))
+                    print(var.LANGUAGE_DATA.get("message_failed_connection_com"))
                     var.IO_SER.close()
                 
             except serial.SerialException:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_failed_connection_com"))
-                ErrorMessage(var.LANGUAGE_DATA.get("message_failed_connection_com"))
+                print(var.LANGUAGE_DATA.get("message_failed_connection_com"))
                        
         else:
             if var.IO_BUSY == 1:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_io_busy"))
-                ErrorMessage(var.LANGUAGE_DATA.get("message_io_busy"))
+                print(var.LANGUAGE_DATA.get("message_io_busy"))
+
+    def CloseIO(self):
+        if var.IO_CONNECT:
+            var.IO_SER.close()
 
     def SendSettingsIO(self):
         if not var.IO_BUSY and var.IO_CONNECT:
@@ -334,71 +294,73 @@ class TalkWithIOCOM:
             
         else:
             if var.IO_BUSY == 1:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_io_busy"))
+                print(var.LANGUAGE_DATA.get("message_io_busy"))
                 ErrorMessage(var.LANGUAGE_DATA.get("message_io_busy"))
             elif var.IO_CONNECT == 0:
-                event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_io_not_connected"))
+                print(var.LANGUAGE_DATA.get("message_io_not_connected"))
                 ErrorMessage(var.LANGUAGE_DATA.get("message_io_not_connected"))
 
-    
-    def SendLineToIO(self, command):   
-        print(f"send to io {command}")
+    def SendLineToIO(self, command):          
         var.IO_BUSY = True
-        var.IO_SER.write(command.encode())
-        time.sleep(0.15)
+        try:
+            var.IO_SER.write(command.encode())
+        except:
+            self.CloseIO()
+            print(var.LANGUAGE_DATA.get("message_lost_connection_io"))
+            
+        time.sleep(0.2)
                                       
     def ReadDataIO(self):
-        def threadRead():
-            while var.IO_SER.is_open:
-                try:
-                    if var.IO_SER.in_waiting > 0:
-                        data = var.IO_SER.readline().decode('utf-8').rstrip()  # Read a line
-                        print(data)
-
-                        if data.strip() == "END":
-                            var.IO_BUSY = False
-                        elif data.strip() == "IO_CONNECTED":
-                            var.IO_CONNECT = True
-                            var.IO_BUSY = False
-                        elif data.strip() == "ROBOT_CONNECTED":
-                            event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_io_instead_of_robot"))
-                            ErrorMessage(var.LANGUAGE_DATA.get("message_io_instead_of_robot"))
-                        elif data.startswith("Input "):
-                            parts = data.split()
-                            
-                            io_number = int(parts[1])
-                            io_state = int(parts[2])
-                            
-                            if io_state == 1:
-                                event_manager.publish("request_set_io_state_input", io_number, True)
-                            else:
-                                event_manager.publish("request_set_io_state_input", io_number, False)
-                        elif data.startswith("Tool state"):
-                            state = data.split()[-1]
-                            if state == "HIGH":
-                                event_manager.publish("request_set_tool_state", True)
-                            elif state == "LOW":
-                                event_manager.publish("request_set_tool_state", False)
-                    
-                        elif data.startswith("POS:"):
-                            words = data.split()
-
-                            for i in range(len(words)):
-                                if words[i] == 'G':
-                                    var.POS_GRIPPER = float(words[i + 1])
-                                
-                                event_manager.publish("request_set_tool_pos", var.POS_GRIPPER)
-                                
-                except:
-                    event_manager.publish("request_insert_new_log", var.LANGUAGE_DATA.get("message_lost_connection_io"))
-                    ErrorMessage(var.LANGUAGE_DATA.get("message_lost_connection_io"))
-
-                time.sleep(0.01)    
-                
-            var.IO_CONNECT = 0
-            var.IO_BUSY = 0            
-            event_manager.publish("request_io_connect_button_color", False)
+        while var.IO_SER.is_open:
+            try:
+                if var.IO_SER.in_waiting > 0:
+                    data = var.IO_SER.readline().decode('utf-8').rstrip()  # Read a line
+            except:
+                break
             
-        t_threadRead = threading.Thread(target=threadRead)  
-        t_threadRead.start()
+            if data:
+                if data.strip() == "END":
+                    var.IO_BUSY = False
+                elif data.strip() == "IO_CONNECTED":
+                    var.IO_CONNECT = True
+                    var.IO_BUSY = False
+                elif data.strip() == "ROBOT_CONNECTED":
+                    print(var.LANGUAGE_DATA.get("message_io_instead_of_robot"))
+                    ErrorMessage(var.LANGUAGE_DATA.get("message_io_instead_of_robot"))
+                elif data.startswith("Input "):
+                    parts = data.split()
+                    
+                    io_number = int(parts[1])
+                    io_state = int(parts[2])
+                    
+                    if io_state == 1:
+                        event_manager.publish("request_set_io_state_input", io_number, True)
+                    else:
+                        event_manager.publish("request_set_io_state_input", io_number, False)
+                elif data.startswith("Tool state"):
+                    state = data.split()[-1]
+                    if state == "HIGH":
+                        event_manager.publish("request_set_tool_state", True)
+                    elif state == "LOW":
+                        event_manager.publish("request_set_tool_state", False)
+            
+                elif data.startswith("POS:"):
+                    words = data.split()
+
+                    for i in range(len(words)):
+                        if words[i] == 'G':
+                            var.POS_GRIPPER = float(words[i + 1])
+                        
+                        event_manager.publish("request_set_tool_pos", var.POS_GRIPPER)
+                            
+                else:
+                    print(data)
+
+            time.sleep(0.01)    
+            
+        var.IO_CONNECT = 0
+        var.IO_BUSY = 0            
+        event_manager.publish("request_io_connect_button_color", False)
+            
+
 

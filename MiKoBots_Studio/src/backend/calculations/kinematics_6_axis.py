@@ -374,8 +374,6 @@ class InverseKinmatics_6:
         else:
             J2 = -(Theta_B + Theta_C)
 
-        #print(f"J2 {J2}")
-
         # Calculate robot[2].PosJEnd
         J3 = -(Theta_D + Theta_E) + 90
 
@@ -408,13 +406,7 @@ class InverseKinmatics_6:
             for i in range(4):
                 for j in range(4):
                     R03_6matrix[k][i] += InvR03matrix_rev[k][j] * R06_rev_matrix[j][i]
-
-        ### calculating J5
-        #print(f"WristCon {WristCon}")
-        #print("1111111111111111111111111111111111")
-        #print(1-R03_6matrix[2][2]**2)
-        #print(math.sqrt(1-R03_6matrix[2][2]**2))
-        #print(R03_6matrix[2][2])
+        
         try:
             if WristCon == "F":
                 J5 = math.degrees(math.atan2(math.sqrt(1 - R03_6matrix[2][2]**2), R03_6matrix[2][2]))
@@ -423,8 +415,7 @@ class InverseKinmatics_6:
         except:
             if 1-R03_6matrix[2][2]**2 < 0:
                 J5 = 0
-        #print(f"J5 {J5}")
-        # Calculate Joint 5 angle based on PosJEnd of robot[4]
+
         if J5 < 0:
             test = math.degrees(math.atan2(R03_6matrix[1][2], R03_6matrix[0][2]))
             J4 = -test
@@ -436,11 +427,9 @@ class InverseKinmatics_6:
 
         if J5 < 0:
             test = math.degrees(math.atan2(R03_6matrix[2][1], R03_6matrix[2][0]))
-            #print(f"option J5 < 0: joint4) {test}")
             J6 = -test
         else:
             test = math.degrees(math.atan2(-R03_6matrix[2][1], -R03_6matrix[2][0]))
-            #print(f"option J5 > 0: joint4) {test}")
             J6 = -test
             
 

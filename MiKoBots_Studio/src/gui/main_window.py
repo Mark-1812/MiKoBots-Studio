@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QPushButton, QSplitter, QMessageBox, QMainWindow, QL
 
 from gui.style import *
 import webbrowser
+import sys
 
 from gui.fields.field_settings import SettingsField
 from gui.fields.field_control import ControlField
@@ -14,11 +15,15 @@ from gui.fields.simulation_frame import SimulationGUI
 from backend.file_managment.file_management import FileManagement
 from backend.core.event_manager import event_manager
 
-from backend.core.api import setup_robot
-from backend.core.api import close_robot
-from backend.core.api import close_io
-from backend.core.api import close_cam
-from backend.core.api import stop_script
+from backend.robot_management import setup_robot
+from backend.robot_management import close_robot
+from backend.robot_management import close_io
+
+from backend.vision import close_cam
+
+from backend.run_program import stop_script
+
+from backend.file_manager import open_file_from_path
 
 import backend.core.variables as var
 from gui.windows.update_window import UpdateChecker
@@ -26,16 +31,14 @@ from gui.windows.message_boxes import CloseProgramMessage
 
 from  backend import close_program
 
-from backend.file_managment.save_open import SaveOpen
+from backend.file_manager import save_file
 
 class MainWindow(QWidget):   
     def __init__(self,  screen_geometry):  
         super().__init__()
         
         file_management = FileManagement()
-        self.SaveOpen = SaveOpen()
         image_path = file_management.resource_path('mikobot.ico')
-              
         
         width_window = 1200 
         height_window = 855
@@ -423,7 +426,7 @@ class MainWindow(QWidget):
             self.main_splitter.setSizes([1000, width_splitter_middle, 1500])
             self.MainSplitterSize()
             
-    def show_main(self, startup_screen):
+    def show_main(self, startup_screen, file_path):
         startup_screen.accept()  # Close the startup screen
         self.showMaximized()  # Show the main window
         self.CreateFrames(self.layout)
@@ -442,25 +445,27 @@ class MainWindow(QWidget):
         self.update_window = UpdateChecker(var.UPDATE_DESCRIPTION, var.UPDATE_VERSION, var.CURRENT_VERSION,  self.screen_geometry)  # Create an instance of UpdateChecker as a dialog
         
         if var.UPDATE:
-            print("show update screen")
             self.update_window.setModal(True)  # Make it modal
             self.update_window.exec_()  # Show it as a modal dialog
+            
+        if file_path:
+            open_file_from_path(file_path)
       
     def closeEvent(self, event):  
         answer = CloseProgramMessage(var.LANGUAGE_DATA.get("title_save") , var.LANGUAGE_DATA.get("message_ask_save_program"))
         
         if answer == 1:
-            print("Program closed with saving")
-            self.SaveOpen.SaveFile()
+            save_file()
             event.accept()
         elif answer == 0:
-            print("Program closed without saving")
             event.accept() 
         elif answer -1:
             event.ignore()
             return
             
-            
+        sys.stdout = sys.__stdout__
+        super().closeEvent(event)
+        
         close_robot()
         close_io()
         self.SimulationGUI.ClosePlotter()

@@ -1,3 +1,5 @@
+void sent_message(String message);
+
 void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
   // ACC:       acceleration in     ->  (steps/seconds)2
   // VEL:       maximum velocity    ->  steps/seconds
@@ -151,7 +153,15 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
   // for loop
   long steps_to_do = maxSteps;
 
-  Serial.println(curDelay);
+  // Serial.println(curDelay);
+
+  if (curDelay > 500000){
+    curDelay = 3000;
+  }
+
+  // for (int k = 0; k < NUMBER_OF_JOINTS; k++){
+  //   Serial.println(motors[k].step_pin);
+  // }
 
   for (int i = 0; i < maxSteps; i++){
     if(stop == 1){    // when the stop button is pressed go out of this for loop
@@ -180,11 +190,16 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
     }
     delayMicroseconds(curDelay / 2);
     steps_to_do--;
+
+    if (deviceDisconnected){
+      break;
+    }
+
   }
 
   // calculate the current position when the stop button is pressed
   if(stop == 1){
-    Serial.println("move j program stopped");
+    // Serial.println("Program stopped");
 
     float pos_done;
     for (int i = 0; i < NUMBER_OF_JOINTS; i++){

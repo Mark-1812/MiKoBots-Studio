@@ -8,16 +8,15 @@ from serial.tools import list_ports
 from backend.core.event_manager import event_manager
 
 
+from backend.robot_management  import scan_for_io
+from backend.robot_management import connect_io_com
+from backend.robot_management import connect_io_bt
 
-from backend.core.api import scan_for_io
-from backend.core.api import connect_io_com
-from backend.core.api import connect_io_bt
+from backend.robot_management import scan_for_robots
+from backend.robot_management import connect_robot_bt
+from backend.robot_management import connect_robot_com
 
-from backend.core.api import scan_for_robots
-from backend.core.api import connect_robot_bt
-from backend.core.api import connect_robot_com
-
-from backend.core.api import connect_cam
+from backend.vision import connect_cam
 
 from gui.style import *
 
@@ -92,10 +91,6 @@ class ConnectDevice(QWidget):
             layout.addWidget(label3)
             layout.addWidget(self.entry)
             layout.addWidget(button_ip)
-        
-        self.label_connected = QLabel("")
-        self.label_connected.setStyleSheet(style_label_bold)
-        layout.addWidget(self.label_connected)
 
         #self.label_connected.hide()
         self.selected_port = None
@@ -103,19 +98,21 @@ class ConnectDevice(QWidget):
 
     def subscribeToEvents(self):
         event_manager.subscribe("request_bt_channels", self.update_device_list)
-        if self.type == "ROBOT":
-            event_manager.subscribe("request_show_connection_robot", self.show_connect)
-
-    def show_connect(self):
-        self.label_connected.setText("Device is connected")
-    
-    def hide_connect(self):
-        self.label_connected.setText("")
+        
+    def empty_list(self):
+        # com 
+        self.list_com.clear()
+        self.com_port_entry.setText("")
+        
+        # bluetooth
+        self.device_list.clear()
+        self.BT_device_list.clear()
+        
+        
 
     #### IP adress
     def connect_ip_device(self):
         addres = self.entry.text()
-        print(addres)
         connect_cam(addres)
 
     #### COM porst
@@ -159,7 +156,6 @@ class ConnectDevice(QWidget):
         elif self.type == "IO":
             scan_for_io()
         
-
     def connect_bt_device(self):
         item = self.device_list.currentItem()
         position = self.device_list.row(item)

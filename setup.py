@@ -27,10 +27,17 @@ for root, dirs, files in os.walk(assets_folder):
         destination = os.path.join('assets/MiKoBots_data', relative_path)  # Specify the destination inside the app
         DATA_FILES.append((destination, [os.path.join(root, file)]))
 
+assets_folder = '/Users/markkleinjan/Library/CloudStorage/OneDrive-MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/Language'
+for root, dirs, files in os.walk(assets_folder):
+    for file in files:
+        # Create the destination path for the bundled app
+        relative_path = os.path.relpath(root, assets_folder)  # Get the relative path
+        destination = os.path.join('assets/Language', relative_path)  # Specify the destination inside the app
+        DATA_FILES.append((destination, [os.path.join(root, file)]))
 
 OPTIONS = {
     'argv_emulation': False,
-    'iconfile': '/Users/markkleinjan/Library/CloudStorage/OneDrive-MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/images/logo 2.icns',
+    'iconfile': '/Users/markkleinjan/Library/CloudStorage/OneDrive-MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/images/mikobot.icns',
 }
 
 setup(

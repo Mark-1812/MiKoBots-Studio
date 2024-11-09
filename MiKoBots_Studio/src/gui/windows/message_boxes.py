@@ -52,10 +52,8 @@ def SaveProgramMessage(text, text_info = None):
     reply = msg.exec_()
     
     if reply == QMessageBox.Yes:
-        print("Program closed with saving")
         return True
     elif reply == QMessageBox.No:
-        print("Program closed without saving")
         return False
 
 
@@ -70,10 +68,8 @@ def CloseProgramMessage(title, text, text_info = None):
     reply = msg_box.exec_()
 
     if reply == QMessageBox.Yes:
-        print("Program closed with saving")
         return 1
     elif reply == QMessageBox.No:
-        print("Program closed without saving")
         return 0
     elif reply == QMessageBox.Cancel:
         return -1

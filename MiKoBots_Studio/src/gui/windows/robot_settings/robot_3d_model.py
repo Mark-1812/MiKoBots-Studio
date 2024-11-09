@@ -9,11 +9,11 @@ import vtk
 
 from backend.core.event_manager import event_manager
 
-from backend.core.api import show_3d_model_settings
-from backend.core.api import delete_robot_model
-from backend.core.api import change_origin_3d_model
-from backend.core.api import add_new_3d_model
-from backend.core.api import save_robot 
+from backend.robot_management  import show_3d_model_settings
+from backend.robot_management  import delete_robot_model
+from backend.robot_management  import change_origin_3d_model
+from backend.robot_management  import add_new_3d_model
+from backend.robot_management  import save_robot 
 
 
 class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
@@ -266,7 +266,6 @@ class Robot3DModel(QWidget):
                         
         def on_linkage_change(nr):
             robot_3d_data[nr][5] = combo.currentText()
-            print(combo.currentText()) 
         
         linkages = ['Link 1', 'Link 2', 'Link 3', 'Link 4', 'Link 5', 'Link 6', 'Base']
         combo_nr = 0

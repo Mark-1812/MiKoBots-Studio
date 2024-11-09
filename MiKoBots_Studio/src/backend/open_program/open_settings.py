@@ -4,23 +4,26 @@ import json
 def OpenSettings(file_mangement):
     ## open the file with settings
     file_path = file_mangement.GetFilePath("/settings/settings.json")   
+    
     try:           
         with open(file_path, 'r') as file:
             settings_file = json.load(file)
     except:
-        print("could not open the settings file")
         settings_file = ["0", "0", "0", "0", "0"]
         var.SELECTED_ROBOT = 0
-        return
-        
-    ## get the selected robot  
-    var.SELECTED_ROBOT = settings_file[4] 
     
+    
+    ## get the selected robot  
+    try:
+        var.SELECTED_ROBOT = settings_file[4] 
+    except:
+        var.SELECTED_ROBOT = 0
+        
+        
     ## get color settings
     try: 
         var.COLOR_RANGE = settings_file[5] 
     except:
-        print("setting was not found")
         var.COLOR_RANGE = {
             "RED": [[0, 50, 100], [25, 255, 255]],  #0, 10, 100, 255, 100, 255
             "GREEN": [[35, 100, 100], [85, 255, 255]],

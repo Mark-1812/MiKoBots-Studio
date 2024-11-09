@@ -6,14 +6,14 @@ from backend.core.event_manager import event_manager
 
 from gui.style import *
 
-from backend.core.api import change_robot
-from backend.core.api import send_settings_io
-from backend.core.api import send_settings_robot
-from backend.core.api import save_robot
-from backend.core.api import export_robot
-from backend.core.api import import_robot
-from backend.core.api import delete_robot
-from backend.core.api import create_new_robot
+from backend.robot_management  import change_robot
+from backend.robot_management  import send_settings_io
+from backend.robot_management  import send_settings_robot
+from backend.robot_management  import save_robot
+from backend.robot_management  import export_robot
+from backend.robot_management  import import_robot
+from backend.robot_management  import delete_robot
+from backend.robot_management  import create_new_robot
 
 class RobotOverview(QWidget):   
     def __init__(self, frame):

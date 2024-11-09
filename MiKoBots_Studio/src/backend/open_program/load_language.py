@@ -8,13 +8,10 @@ def LoadLanguage(file_mangement):
     # print(path)
 
     # path = '/Users/markkleinjan/Library/CloudStorage/OneDrive-MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/Language'
-    path = 'C:/Users/MarkKleinJan/OneDrive - MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/Language/en'
+    # path = 'C:/Users/MarkKleinJan/OneDrive - MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/Language/en'
     lan_path = Path(path+".json")
-    
-    print(f"lanmgouge path {lan_path}")
-
     try:
         with open(lan_path, "r", encoding="utf-8") as f:
             var.LANGUAGE_DATA = json.load(f)
     except:
-        print("could not find the language file")
+        print("Error: Could not find the language file")

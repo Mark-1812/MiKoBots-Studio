@@ -10,7 +10,7 @@ from gui.windows.message_boxes import ErrorMessage, SaveProgramMessage
 
 from backend.core.event_manager import event_manager
 
-from backend.core.api import change_robot
+from backend.robot_management import change_robot
 
 import threading
 import time
@@ -27,12 +27,11 @@ class SaveOpen:
                     "Program blockly"
                     
         ]
-        self.file_dialog = QFileDialog()
+        #self.file_dialog = QFileDialog()
         
         self.program_path = ""
         self.program_folder = ""
-           
-        event_manager.subscribe("request_program_xmlString", self.BlocklyConverting)
+
            
     def NewFile(self):
         if  var.PROGRAM_RUN:    
@@ -97,6 +96,7 @@ class SaveOpen:
         self.MikoFile[5] = var.SELECTED_TOOL
         event_manager.publish("request_save_blockly_file")
         
+        
         options = QFileDialog.Options()
         
         self.program_path, _  = QFileDialog.getSaveFileName(None, "Save .miko File", str(self.program_folder), "MiKo Files (*.miko);;All Files (*)", options=options)
@@ -107,6 +107,25 @@ class SaveOpen:
             event_manager.publish("request_set_program_title", os.path.basename(self.program_path))
             with open(self.program_path, "w") as file:
                 file.write(str(self.MikoFile))          
+                
+    def OpenFileFromPath(self, file_path):
+
+        self.program_path = file_path
+
+        
+        self.CloseFile()
+        
+        self.program_folder = os.path.dirname(self.program_path)
+            
+        event_manager.publish("request_set_program_title", os.path.basename(self.program_path))
+        with open(self.program_path, "r") as file:
+            program = file.read()
+            self.MikoFile = ast.literal_eval(program)      
+            self.SetProgram()
+            
+            if len(self.MikoFile) == 6:
+                self.MikoFile.append("Blockly")      
+      
                 
     def OpenFile(self):
         if var.PROGRAM_RUN:  
@@ -135,9 +154,8 @@ class SaveOpen:
             self.SetProgram()
             
             if len(self.MikoFile) == 6:
-                print("Old file")
                 self.MikoFile.append("Blockly")
-                print(self.MikoFile)
+        
             
     
     def SetProgram(self):
@@ -147,16 +165,11 @@ class SaveOpen:
         
         # Blockly program
         try:
-            print(self.MikoFile[6])
             event_manager.publish("request_load_blockly_file", self.MikoFile[6])
         except:
             pass
-            
-        # Gcode
-        #event_manager.publish("request_gcode_text_insert", self.MikoFile[1])
         
         # 3d models
-        print(self.MikoFile[2])
         try:
             event_manager.publish("request_open_doc_objects", self.MikoFile[2])
         except:
@@ -164,6 +177,7 @@ class SaveOpen:
 
         # Origin
         event_manager.publish("request_open_doc_origins", self.MikoFile[3])
+        
         
         # Robot
         try:           

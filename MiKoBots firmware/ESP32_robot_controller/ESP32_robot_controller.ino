@@ -15,6 +15,7 @@
 // Define robot variables 
 
 int NUMBER_OF_JOINTS = 6;
+int EXTRA_JOINT = 0;
 
 float DHparams[6][4];
 float TOOL_FRAME[6];
@@ -91,8 +92,11 @@ TaskHandle_t Task2;
 SemaphoreHandle_t mutex;
 SemaphoreHandle_t stopSemaphore;
 
-int stop = 0;
+int stop = false;
 int pauze = 0;
+
+bool deviceConnected = false;
+bool deviceDisconnected = false;
 
 //#include <Servo.h>
 #include "Variables.h"
@@ -105,11 +109,6 @@ int pauze = 0;
 #include "error.h"
 #include <Arduino.h>
 #include <TaskScheduler.h>
-
-
-
-
-
 
 
 
@@ -131,10 +130,18 @@ int pauze = 0;
     #error "DEVICE must be defined as ROBOT or IO"
 #endif
 
+const int BUFFER_SIZE = 5;
+String lines[BUFFER_SIZE];
+volatile int lineIndex = 0;
+
+const int MAX_BUFFER_SIZE = 256; // Adjust size according to your requirements
+char buffer[MAX_BUFFER_SIZE]; // Character array to hold serial input
+
+
 // Create a BLE server and characteristic
 BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristic = NULL;
-bool deviceConnected = false;
+
 
 void sent_message(String message){
   if (deviceConnected){
@@ -162,16 +169,24 @@ void sent_message_task1(String message){
 
 // Callback class to handle connection events
 class MyServerCallbacks : public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) override {
-        deviceConnected = true;
-        Serial.println("Device connected");
-    }
+  void onConnect(BLEServer* pServer) override {
+    deviceConnected = true;
+    Serial.println("Device connected");
+    deviceDisconnected = false;
+  }
 
-    void onDisconnect(BLEServer* pServer) override {
-        deviceConnected = false;
-        Serial.println("Device disconnected");
-        pServer->startAdvertising();
+  void onDisconnect(BLEServer* pServer) override {
+    deviceConnected = false;
+    Serial.println("Device disconnected");
+    pServer->startAdvertising();
+
+    for(int i = 0; i < BUFFER_SIZE; i++){
+      lines[i] = "";
     }
+    lineIndex = 0;
+
+    deviceDisconnected = true;
+  }
 };
 
 
@@ -265,19 +280,11 @@ void loop() {
   //taskScheduler.execute();
 }
 
-
-const int BUFFER_SIZE = 5;
-String lines[BUFFER_SIZE];
-
-volatile int lineIndex = 0;
-
-const int MAX_BUFFER_SIZE = 256; // Adjust size according to your requirements
-char buffer[MAX_BUFFER_SIZE]; // Character array to hold serial input
-
 void Task1code(void * pvParameters) {
   while (true) {
     // Process Serial Input
     while (Serial.available() > 0) {
+      deviceDisconnected = false;
         char c = Serial.read();
         if (c == '\n') {
             String str(buffer);
@@ -306,12 +313,12 @@ void Task1code(void * pvParameters) {
 
 void processCommand(const String& command) {
     if (command == "stop") {
-        stop = 1;  
+        stop = true;  
     } else if (command == "pauze") {
         sent_message_task1("pauze");
         pauze = 1;
     } else if (command == "play") {
-        stop = 0;
+        stop = false;
         pauze = 0;
         sent_message_task1("END");
     } else if (command == "CONNECT") {
@@ -361,7 +368,7 @@ String coordinates;
 void Task2code(void * pvParameters) {
   String command;
   while (true) {
-    while (stop == 0){
+    while (stop == false){
       if (xSemaphoreTake(mutex, portMAX_DELAY) == pdTRUE){
         if (lines[0] == ""){
           xSemaphoreGive(mutex);
@@ -405,6 +412,8 @@ void Task2code(void * pvParameters) {
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_dh_par")) set_dh_par(command);
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_speed")) set_speed(command);
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_home_settings")) set_homing(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_extra_joint")) set_extra_joint(command);
+      
 
       // Settings Tool
       else if (typeOfCommand.equals("Set_tools")) set_TOOL(command);
@@ -414,11 +423,11 @@ void Task2code(void * pvParameters) {
       else if (typeOfCommand.equals("Set_io_pin")) set_IO_pin(command);
 
       //If the command does not match send END
-      else{
-        String message = "Error: do not regonize this command: " + typeOfCommand;
-        sent_message(message);
-        sent_message("END");
-      }
+      // else{
+      //   String message = "Error: do not regonize this command: " + typeOfCommand;
+      //   sent_message(message);
+      //   sent_message("END");
+      // }
     
 
       if ((xSemaphoreTake(mutex, portMAX_DELAY) == pdTRUE) and (command != "")){
@@ -436,7 +445,7 @@ void Task2code(void * pvParameters) {
       }
 
     }
-    if (stop == 1){
+    if (stop){
 
       if (xSemaphoreTake(mutex, portMAX_DELAY) == pdTRUE){
         for (int i = 0; i < BUFFER_SIZE; i++) {

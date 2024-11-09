@@ -33,6 +33,15 @@ void set_number_of_joints(String command){
   sent_message("END");
 }
 
+void set_extra_joint(String command){
+  int pos = command.indexOf('A');
+
+  EXTRA_JOINT = command.substring(pos + 1).toInt();
+
+  sent_message("Extra joint is set");
+  sent_message("END");
+}
+
 void set_motor_pin(String command){
   int pos_setting[12];
 
@@ -188,22 +197,23 @@ void set_homing(String command){
 }
 
 void set_dh_par(String command){
+
   int pos_setting[24];
 
   int posA = command.indexOf('A');
   String NEWcommand = command.substring(posA);
 
-  for(int i = 0; i < NUMBER_OF_JOINTS * 4; i++){
+  for(int i = 0; i < (NUMBER_OF_JOINTS + EXTRA_JOINT) * 4; i++){
     pos_setting[i] = NEWcommand.indexOf(alphabet[i]);
   }
 
   int j = 0;
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+  for(int i = 0; i < (NUMBER_OF_JOINTS + EXTRA_JOINT); i++){
     DHparams[i][0] = NEWcommand.substring(pos_setting[j] + 1, pos_setting[j + 1]).toFloat();
     DHparams[i][1] = NEWcommand.substring(pos_setting[j + 1] + 1, pos_setting[j + 2]).toFloat();
     DHparams[i][2] = NEWcommand.substring(pos_setting[j + 2] + 1, pos_setting[j + 3]).toFloat();
 
-    if (i < NUMBER_OF_JOINTS - 1){
+    if (i < (NUMBER_OF_JOINTS + EXTRA_JOINT) - 1){
       DHparams[i][3] = NEWcommand.substring(pos_setting[j + 3] + 1, pos_setting[j + 4]).toFloat();
     } else{
       DHparams[i][3] = NEWcommand.substring(pos_setting[j + 3] + 1).toFloat();
@@ -213,6 +223,13 @@ void set_dh_par(String command){
 
   //DECLARE R06 NEG FRAME
   R06_neg_matrix[2][3] = -DHparams[5][2];
+
+  if (NUMBER_OF_JOINTS == 3){
+    ForwardKinematic_3_PosStart();
+  }
+  if (NUMBER_OF_JOINTS == 6){
+    ForwardKinematic_6_PosStart();
+  }
 
   sent_message("DH parameters settings are updated");
   sent_message("END");
@@ -266,21 +283,15 @@ void moveToLimit(int joint){
   }
   
 
-  Serial.println("move back");
-
   // if the endswitch is already detected first move away from the endswitch
   unsigned long switchStartTime = 0;
   float speed_del = 1000000 / ((20.0 / 100.0) * JointsInfo[joint].MaxSpeed * JointsInfo[joint].StepPerDeg);
-  Serial.println(float((40 / 100)) * JointsInfo[joint].MaxSpeed * JointsInfo[joint].StepPerDeg);
-  Serial.println((40.0 / 100.0) * JointsInfo[joint].MaxSpeed * JointsInfo[joint].StepPerDeg);
-  Serial.println(speed_del);
   digitalWrite(motors[joint].dir_pin, ((direction == 0) ? HIGH : LOW));
   while(true)
   {
     // Start the timer if the switch signal is just detected
     if (digitalRead(motors[joint].limit_switch_pin) == 0) {
         switchStartTime = switchStartTime;
-        Serial.println("do not touch the limit switch");
     }
     else{
       switchStartTime = millis();
@@ -291,13 +302,17 @@ void moveToLimit(int joint){
     }
 
     digitalWrite(motors[joint].step_pin, HIGH);
-    delayMicroseconds(5);
+    delayMicroseconds(speed_del / 2);
     digitalWrite(motors[joint].step_pin, LOW);
     delayMicroseconds(speed_del);
+
+    if (deviceDisconnected || stop){
+      break;
+    }
   }
 
 
-  Serial.println("move till switch is touched");
+  //  Serial.println("move till switch is touched");
   delay(500);
   // move to the limit switch until the switch is activated
   switchStartTime = 0;
@@ -318,16 +333,20 @@ void moveToLimit(int joint){
     }
 
     digitalWrite(motors[joint].step_pin, HIGH);
-    delayMicroseconds(5);
+    delayMicroseconds(speed_del / 2);
     digitalWrite(motors[joint].step_pin, LOW);
-    delayMicroseconds(speed_del);
+    delayMicroseconds(speed_del / 2);
+
+    if (deviceDisconnected || stop){
+      break;
+    }
   }
   switchStartTime = 0;
 
 
 
 
-  Serial.println("move 5 degrees back");
+  // Serial.println("move 5 degrees back");
   delay(500);
   // move away from the limit switch
   speed_del = 1000000/((40.0 / 100.0) * JointsInfo[joint].MaxSpeed * JointsInfo[joint].StepPerDeg);
@@ -342,7 +361,8 @@ void moveToLimit(int joint){
 
 
 
-  Serial.println("move till switch is touched");
+
+  // Serial.println("move till switch is touched");
   delay(500);
   // move slowly back to the limit switch
   switchStartTime = 0;
@@ -350,6 +370,10 @@ void moveToLimit(int joint){
   digitalWrite(motors[joint].dir_pin, ((direction == 0) ? LOW : HIGH));
   while(true)
   {
+    if (deviceDisconnected || stop){
+      break;
+    }
+
     // Start the timer if the switch signal is just detected
     if (digitalRead(motors[joint].limit_switch_pin) == 1) {
         switchStartTime = switchStartTime;
@@ -363,9 +387,12 @@ void moveToLimit(int joint){
     }
 
     digitalWrite(motors[joint].step_pin, HIGH);
-    delayMicroseconds(5);
+    delayMicroseconds(speed_del / 2);
     digitalWrite(motors[joint].step_pin, LOW);
-    delayMicroseconds(speed_del);
+    delayMicroseconds(speed_del / 2);
+
+
+
   }
   switchStartTime = 0;
 
@@ -373,46 +400,51 @@ void moveToLimit(int joint){
 }
 
 void home_Joints(String command){
-    for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-      robot[i].PosJStart = 0.01;
-    }
-
-    for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-      Serial.print(i + 1);
-      Serial.print(" out of ");
-      Serial.println(NUMBER_OF_JOINTS);
-
-      // look for the joint that has to be homed first
-      for(int j = 0; j < NUMBER_OF_JOINTS; j++){
-        // See if the joint order is the same 
-        if(JointsInfo[j].HomingOrder == i + 1){
-
-          Serial.print("Home joint: ");
-          Serial.println(JointsInfo[j].HomingOrder);
-          Serial.print("number joint: ");
-          Serial.println(j);
-
-          moveToLimit(j);
-          robot[j].PosJEnd = JointsInfo[j].HomingPos;
-          MotorMoveJ(50, 80, 0, 0);
-        }
-      }
+  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+    robot[i].PosJStart = 0.01;
   }
 
-    for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-      robot[i].PosJEnd = 0;
+  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+    if (deviceDisconnected || stop){
+      break;
     }
 
-    if(NUMBER_OF_JOINTS == 6){
-      ForwardKinematic_6_PosEnd();
+    Serial.print(i + 1);
+    Serial.print(" out of ");
+    Serial.println(NUMBER_OF_JOINTS);
+
+    // look for the joint that has to be homed first
+    for(int j = 0; j < NUMBER_OF_JOINTS; j++){
+      if (deviceDisconnected || stop){
+        break;
+      }
+
+      // See if the joint order is the same 
+      if(JointsInfo[j].HomingOrder == i + 1){
+        moveToLimit(j);
+        robot[j].PosJEnd = JointsInfo[j].HomingPos;
+        MotorMoveJ(50, 80, 0, 0);
+      }
     }
-    if(NUMBER_OF_JOINTS == 3){
-      ForwardKinematic_3_PosEnd();
-    }
+  }
+
+  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+    robot[i].PosJEnd = 0;
+  }
+
+  if(NUMBER_OF_JOINTS == 6){
+    ForwardKinematic_6_PosEnd();
+  }
+
+  if(NUMBER_OF_JOINTS == 3){
+    ForwardKinematic_3_PosEnd();
+  }
     
+  if (!deviceDisconnected || !stop){
+    sent_message("home");
+    sent_message("END");
+  }
 
-  sent_message("home");
-  sent_message("END");
   
 }
 
@@ -433,6 +465,9 @@ void offsetJ(String command){
 
   if (NUMBER_OF_JOINTS == 6){
     InverseKinematic_6();
+  }
+  if (NUMBER_OF_JOINTS == 3){
+    InverseKinematic_3();
   }
 
   MotorMoveJ(accel, speed, 0, 0);
@@ -462,9 +497,6 @@ void offsetL(String command){
 
   //error = check_for_error();
 
-  if(error){
-    Serial.println("f\n");
-  }
   else{
     int direction[NUMBER_OF_JOINTS];
     int maxDelta = 0;
@@ -486,7 +518,7 @@ void offsetL(String command){
     }
 
     for (int i = 0; i < totalPoints; i++){
-      if (stop == 1) break;
+      if (stop) break;
       for (int L = 0; L < NUMBER_OF_JOINTS; L++){
         if (direction[L] == 1) robot[L].PosEnd = robot[L].PosStart + incremants[L];
         if (direction[L] == 0) robot[L].PosEnd = robot[L].PosStart - incremants[L];
@@ -495,7 +527,9 @@ void offsetL(String command){
       if(NUMBER_OF_JOINTS == 6){
         InverseKinematic_6();
       }
-      
+      if(NUMBER_OF_JOINTS == 3){
+        InverseKinematic_3();
+      }
 
       //error = check_for_error();
       if (error != 1){
@@ -602,6 +636,9 @@ void jogL(String command){
   if(NUMBER_OF_JOINTS == 6){
     InverseKinematic_6();
   }
+  if(NUMBER_OF_JOINTS == 3){
+    InverseKinematic_3();
+  }
   
   error = check_for_error();
 
@@ -609,7 +646,7 @@ void jogL(String command){
     int direction[NUMBER_OF_JOINTS];
     float maxDelta = 0;
     for (int i = 0; i < NUMBER_OF_JOINTS; i++){
-      if (stop == 1) break;
+      if (stop) break;
 
       if(robot[i].PosEnd > robot[i].PosStart) direction[i] = 1;
       else direction[i] = 0;
@@ -670,6 +707,9 @@ void MoveJ(String command){
   if(NUMBER_OF_JOINTS == 6){
     InverseKinematic_6();
   }
+  if(NUMBER_OF_JOINTS == 3){
+    InverseKinematic_3();
+  }
 
 
   //error = check_for_error();
@@ -698,9 +738,7 @@ void MoveL(String command){
   int speed = command.substring(pos_command[NUMBER_OF_JOINTS] + 1, pos_command[NUMBER_OF_JOINTS + 1]).toInt();
   int accel = command.substring(pos_command[NUMBER_OF_JOINTS + 1] + 1).toInt();
 
-  if(error){
-    Serial.println("f\n");
-  }
+
   else{
     int direction[NUMBER_OF_JOINTS];
     int maxDelta = 0;
@@ -725,7 +763,7 @@ void MoveL(String command){
     }
 
     for (int i = 0; i < totalPoints; i++){
-      if (stop == 1) break;
+      if (stop) break;
       for (int L = 0; L < NUMBER_OF_JOINTS; L++){
         if (direction[L] == 1) robot[L].PosEnd = robot[L].PosStart + incremants[L];
         if (direction[L] == 0) robot[L].PosEnd = robot[L].PosStart - incremants[L];
@@ -733,6 +771,9 @@ void MoveL(String command){
 
       if(NUMBER_OF_JOINTS == 6){
         InverseKinematic_6();
+      }
+      if(NUMBER_OF_JOINTS == 3){
+        InverseKinematic_3();
       }
       
       //error = check_for_error();
