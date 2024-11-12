@@ -7,8 +7,8 @@ from backend.core.event_manager import event_manager
 from gui.style import *
 
 from backend.robot_management  import change_robot
-from backend.robot_management  import send_settings_io
-from backend.robot_management  import send_settings_robot
+from backend.robot_management.communication  import send_settings_io
+from backend.robot_management.communication  import send_settings_robot
 from backend.robot_management  import save_robot
 from backend.robot_management  import export_robot
 from backend.robot_management  import import_robot

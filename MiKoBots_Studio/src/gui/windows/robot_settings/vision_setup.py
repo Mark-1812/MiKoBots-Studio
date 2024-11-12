@@ -12,7 +12,7 @@ import numpy as np
 
 import backend.core.variables as var
 
-from backend.vision import get_image_frame
+from backend.vision import get_image_frame, cam_connected
 
 from gui.windows.message_boxes import ErrorMessage
 
@@ -156,7 +156,7 @@ class VisionSetup(QWidget):
         
     
     def ShowImage(self):
-        if not var.CAM_CONNECT:
+        if cam_connected():
             ErrorMessage(var.LANGUAGE_DATA.get("message_cam_not_connect"))
             return
         

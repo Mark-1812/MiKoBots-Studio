@@ -8,7 +8,7 @@ from gui.style import *
 from backend.file_managment.file_management import FileManagement
 
 class UpdateChecker(QDialog):
-    def __init__(self, update_des, update_version, cur_version, screen_geometry, parent = None):
+    def __init__(self, update_des, update_version, cur_version, parent = None):
         super(UpdateChecker, self).__init__(parent)
         
         
@@ -18,7 +18,7 @@ class UpdateChecker(QDialog):
         self.setStyleSheet("background-color: lightgray;")
         
         self.setWindowTitle("Update Checker")
-        self.move_to_center(screen_geometry)
+        #self.move_to_center(screen_geometry)
 
         label = QLabel("New Version Available!")
         label.setStyleSheet(style_label_bold)

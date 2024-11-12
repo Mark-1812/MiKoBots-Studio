@@ -12,6 +12,8 @@ from backend.core.event_manager import event_manager
 
 from backend.robot_management import change_robot
 
+from backend.run_program import check_program_run
+
 import threading
 import time
          
@@ -34,7 +36,7 @@ class SaveOpen:
 
            
     def NewFile(self):
-        if  var.PROGRAM_RUN:    
+        if  check_program_run():    
             return
             
         answer = SaveProgramMessage(var.LANGUAGE_DATA.get("message_ask_save_program"))
@@ -85,7 +87,7 @@ class SaveOpen:
         t_threadRead.start()
 
     def SaveAsFile(self):
-        if var.PROGRAM_RUN:    
+        if check_program_run():    
             return
 
         self.MikoFile[0] = event_manager.publish("request_program_field_get")[0]
@@ -128,7 +130,7 @@ class SaveOpen:
       
                 
     def OpenFile(self):
-        if var.PROGRAM_RUN:  
+        if check_program_run():  
             return
         
         answer = SaveProgramMessage(var.LANGUAGE_DATA.get("title_save"), var.LANGUAGE_DATA.get("message_ask_save_program"))

@@ -8,7 +8,7 @@ import backend.core.variables as var
 from backend.file_managment.file_management import FileManagement
 
 class StartupScreen(QDialog):
-    def __init__(self, screen_geometry):
+    def __init__(self, screen_geometry, current_version):
         file_management = FileManagement()
         
         super().__init__()
@@ -30,7 +30,7 @@ class StartupScreen(QDialog):
         image_label.setAlignment(Qt.AlignCenter)
 
         # Add a text label
-        text_label = QLabel(f"Version V{var.CURRENT_VERSION}", self)
+        text_label = QLabel(f"Version V{current_version}", self)
         text_label.setAlignment(Qt.AlignCenter)
 
         # Add a text label

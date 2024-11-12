@@ -10,6 +10,11 @@ class CheckUpdate():
         # URL of the webpage to check
         self.url = "https://mikobots.com/mikobots-studio/downloads-mikobots-studio/"  # Replace with the target webpage URL
         self.search_phrase = "Version"  # The phrase you want to search for
+        self.current_version = None
+        
+        self.update_version = 0
+        self.update_description = "none"
+        
 
     def fetch_and_parse(self, url):
         response = requests.get(url)
@@ -20,37 +25,34 @@ class CheckUpdate():
         content = soup.find(tag)  # Replace 'body' with the specific tag or class you want to search in
         version_match = re.search(r'Mikobots Stuido version</strong> V(\d+\.\d+)', str(content))
         
-        var.UPDATE_VERSION  = version_match.group(1) if version_match else None
+        self.update_version  = version_match.group(1) if version_match else None
         
         description_match = re.search(r'<strong>Description:\s*</strong>\s*([^<]+)', str(content), re.DOTALL)
-        var.UPDATE_DESCRIPTION = description_match.group(1).strip() if description_match else None
+        self.update_description = description_match.group(1).strip() if description_match else None
         
         description_tag = soup.find(string="Description: ")  # Find the string "Description:"
         if description_tag:
             # Get the next sibling, which should be the text after 'Description'
             description = description_tag.find_next().get_text(strip=True)
-            var.UPDATE_DESCRIPTION = description
+            self.update_description = description   
         
-        # print(f"var.UPDATE_VERSION {var.UPDATE_VERSION}")
-        # print(f"var.UPDATE_DESCRIPTION {var.UPDATE_DESCRIPTION}")     
+        self.update_version = float(self.update_version)
         
-        if float(var.UPDATE_VERSION ) > var.CURRENT_VERSION:
-            return True
-        else:
-            return False
+
 
     def CheckUpdateSoftware(self):
         # Fetch and parse the current content of the website 
         try:
             soup = self.fetch_and_parse(self.url)
-            # Check if the specific phrase exists in the specified section
-            if self.check_for_phrase_in_specific_section(soup):
-                var.UPDATE = True
-            else:
-               var.UPDATE = False
-            var.UPDATE = False 
+            self.check_for_phrase_in_specific_section(soup)
+            
+            print(self.update_version)
+            print(self.update_description)
+            
+            return self.update_version, self.update_description
+            
 
         except:
-            var.UPDATE = False
+            return self.update_version, self.update_description
             
 

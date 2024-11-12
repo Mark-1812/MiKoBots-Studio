@@ -21,11 +21,11 @@ class VisionManagement():
         
         self.cap = None
         self.stop = False   
-        
+        self.connect = False
         self.image_HSV = None
        
     def CloseCam(self):
-        if var.CAM_CONNECT:
+        if self.connect:
             self._stop_event.set()
             time.sleep(0.1)
             #self.cap.release()
@@ -40,38 +40,37 @@ class VisionManagement():
         except requests.RequestException:
             return False
 
-    def ConnectCam(self, addres = None):
-        if var.CAM_CONNECT == 0:
-            com_port_adress = addres
-            if self.is_valid_url(com_port_adress):    
-                self.cap = cv2.VideoCapture(com_port_adress)
-            else:
-                self.cap = cv2.VideoCapture(addres)
+    def DisconnectCam(self):
+        self.connect = False
+        try:
+            time.sleep(0.1)
+            self._stop_event.set()
+            self.cap.release()
             
-            
-            if self.cap.isOpened():
-                event_manager.publish("request_cam_connect_button_color", True)
-                var.CAM_CONNECT = 1
-                self._stop_event.clear()
-                self.video()  
-                # Proceed with connecting to the camera stream
-            else:
-                event_manager.publish("request_cam_connect_button_color", False)
-                ErrorMessage(var.LANGUAGE_DATA.get("message_not_find_cam"))
+            event_manager.publish("request_cam_connect_button_color", False)
+            print(var.LANGUAGE_DATA.get("message_camera_connected"))
+        except: 
+            print(var.LANGUAGE_DATA.get("message_error_releasing_cam"))
 
-                
-                
+    def ConnectCam(self, addres = None):
+        com_port_adress = addres
+        if self.is_valid_url(com_port_adress):    
+            self.cap = cv2.VideoCapture(com_port_adress)
         else:
-            var.CAM_CONNECT = 0
-            try:
-                time.sleep(0.1)
-                self._stop_event.set()
-                self.cap.release()
-                
-                event_manager.publish("request_cam_connect_button_color", False)
-                print(var.LANGUAGE_DATA.get("message_camera_connected"))
-            except: 
-                print(var.LANGUAGE_DATA.get("message_error_releasing_cam"))
+            self.cap = cv2.VideoCapture(addres)
+        
+        
+        if self.cap.isOpened():
+            event_manager.publish("request_cam_connect_button_color", True)
+            self.connect = True
+            self._stop_event.clear()
+            self.video()  
+            # Proceed with connecting to the camera stream
+        else:
+            event_manager.publish("request_cam_connect_button_color", False)
+            ErrorMessage(var.LANGUAGE_DATA.get("message_not_find_cam"))
+
+
  
     def threadCAM(self):
         while not self._stop_event.is_set() and self.cap.isOpened():

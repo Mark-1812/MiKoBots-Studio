@@ -19,6 +19,9 @@ from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from backend.file_managment.file_management import FileManagement
 import vtk
 
+from backend.simulation.floor import Floor
+from backend.simulation.axis import Axis
+
 
 class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
     def __init__(self, parent=None):
@@ -42,6 +45,8 @@ class SimulationGUI(QWidget):
         super().__init__()      
         self.file_management = FileManagement()  
         
+        
+        
         self.views = [
             [(1, 0, 0), (0, 0, 0), (0, 0, 1)], 
             [(0, 1, 0), (0, 0, 0), (0, 0, 1)],
@@ -54,19 +59,15 @@ class SimulationGUI(QWidget):
         self.plotter_robot = []
         self.plotter_tool = [None, None, None, None]
         
-        
+        self.CreatePlotter(frame)
+        self.floor = Floor(self.renderer)
+        self.axis = Axis(self.renderer)
         
         self.GUI(frame)
         
         self.subscribeToEvents()
-        self.CreateFloor()
-        self.CreateAxis()
-        
-        self.ShowFloor = False
-        self.HideShowFloor()
-        
-        self.ShowAxis = None
-        self.HideShowAxis()
+        self.floor.HideShowFloor()
+        self.axis.HideShowAxis()
         
 
     def subscribeToEvents(self):
@@ -91,7 +92,7 @@ class SimulationGUI(QWidget):
 
         event_manager.subscribe("request_close_plotter", self.ClosePlotter)
 
-    def GUI(self, frame):     
+    def CreatePlotter(self, frame):
         self.layout = QGridLayout(frame)
         self.layout.setContentsMargins(0, 0, 0, 0)
         
@@ -117,8 +118,9 @@ class SimulationGUI(QWidget):
 
         self.camera = vtk.vtkCamera()
         # Set up mouse interaction
+        
+    def GUI(self, frame):     
 
-       
         button_menu = QHBoxLayout()
         button_menu.setContentsMargins(10,10,10,10)
         
@@ -139,7 +141,7 @@ class SimulationGUI(QWidget):
         self.button_axis.setIcon(QIcon(image_path))
         self.button_axis.setToolTip('Show/hide axis')
         self.button_axis.setStyleSheet(style_button_3d)
-        self.button_axis.clicked.connect(self.HideShowAxis)
+        self.button_axis.clicked.connect(self.ShowAxis)
         self.button_axis.setFixedSize(40,20)
         
         image_path = self.file_management.resource_path('floor.png')
@@ -149,7 +151,7 @@ class SimulationGUI(QWidget):
         self.button_floor.setIcon(QIcon(image_path))
         self.button_floor.setToolTip('Show/hide floor')
         self.button_floor.setStyleSheet(style_button_3d)
-        self.button_floor.clicked.connect(self.HideShowFloor)
+        self.button_floor.clicked.connect(self.ShowFloor)
         self.button_floor.setFixedSize(40,20)
         
         
@@ -170,7 +172,13 @@ class SimulationGUI(QWidget):
         # Set the main layout for the frame
         frame.setLayout(self.layout)  # Ensure the frame's layout is set
 
-
+    def ShowFloor(self):
+        self.floor.HideShowFloor()
+        self.rendering()
+        
+    def ShowAxis(self):
+        self.axis.HideShowAxis()
+        self.rendering()
         
     def show_context_menu(self, obj, event):
         click_pos = self.interactor.GetEventPosition()
@@ -207,135 +215,8 @@ class SimulationGUI(QWidget):
         simulation_move_gui(posJoint, "MoveJ")
 
 
-## floor
-    def HideShowFloor(self):
-        # Add the plane and axes to the scene
-        if self.ShowFloor:
-            self.grid_actor.SetVisibility(False)  # Set to True to show
-            self.plane_actor.SetVisibility(False)  # Set to True to show
-            self.ShowFloor = False
-        else:
-            self.grid_actor.SetVisibility(True)  
-            self.plane_actor.SetVisibility(True) 
-            self.ShowFloor = True
-
-        self.rendering()
-
-    def CreateFloor(self): 
-        size_plane = 750
-        
-        def create_grid_plane(distance, size):
-            lines = vtk.vtkCellArray()
-            points = vtk.vtkPoints()
-
-            # Generate points and lines
-            for i in range(-size, size + 1, distance):
-                # Horizontal lines
-                p1_id = points.InsertNextPoint(-size, i, 0)
-                p2_id = points.InsertNextPoint(size, i, 0)
-                lines.InsertNextCell(2)
-                lines.InsertCellPoint(p1_id)
-                lines.InsertCellPoint(p2_id)
-
-                # Vertical lines
-                p1_id = points.InsertNextPoint(i, -size, 0)
-                p2_id = points.InsertNextPoint(i, size, 0)
-                lines.InsertNextCell(2)
-                lines.InsertCellPoint(p1_id)
-                lines.InsertCellPoint(p2_id)
-
-            # Create a polydata object for the grid
-            grid_polydata = vtk.vtkPolyData()
-            grid_polydata.SetPoints(points)
-            grid_polydata.SetLines(lines)
-            
-            return grid_polydata
-        
-        grid_distance = 50  # 50 mm
-        grid_polydata = create_grid_plane(grid_distance, size_plane)
-        
-        # Mapper and Actor for the grid
-        grid_mapper = vtk.vtkPolyDataMapper()
-        grid_mapper.SetInputData(grid_polydata)
-        self.grid_actor = vtk.vtkActor()
-        self.grid_actor.SetMapper(grid_mapper)
-        
-        self.grid_actor.GetProperty().SetColor(0, 0, 0)  # RGB color
-        
-        # Create a plane on the XY axis
-        plane_source = vtk.vtkPlaneSource()
-        plane_source.SetOrigin(-size_plane, -size_plane, 0)  # Bottom left corner
-        plane_source.SetPoint1(size_plane, -size_plane, 00)   # Bottom right corner
-        plane_source.SetPoint2(-size_plane, size_plane, 0)   # Top left corner
-        plane_source.SetResolution(10, 10)    # Number of points along the plane
-
-        # Mapper and Actor for the plane
-        plane_mapper = vtk.vtkPolyDataMapper()
-        plane_mapper.SetInputConnection(plane_source.GetOutputPort())
-        self.plane_actor = vtk.vtkActor()
-        self.plane_actor.SetMapper(plane_mapper)
-
-        # Set the color of the plane (e.g., light gray)
-        self.plane_actor.GetProperty().SetColor(0.8, 0.8, 0.8)  # RGB color
-        self.plane_actor.GetProperty().SetOpacity(0.5)
-
-
-        self.renderer.AddActor(self.grid_actor)  # Add the grid actor
-        self.renderer.AddActor(self.plane_actor)
 
 ## axis
-
-    def CreateAxis(self):
-        def create_arrow_actor(direction, color):
-            # Create an arrow source
-            arrow_source = vtk.vtkArrowSource()
-            
-            # Transform to orient the arrow in the desired direction
-            transform = vtk.vtkTransform()
-            transform.RotateWXYZ(direction[0], direction[1], direction[2], direction[3])
-            transform.Scale(500, 150, 150)
-            
-            # Apply transformation
-            transform_filter = vtk.vtkTransformPolyDataFilter()
-            transform_filter.SetTransform(transform)
-            transform_filter.SetInputConnection(arrow_source.GetOutputPort())
-            
-            # Mapper
-            mapper = vtk.vtkPolyDataMapper()
-            mapper.SetInputConnection(transform_filter.GetOutputPort())
-            
-            # Actor
-            actor = vtk.vtkActor()
-            actor.SetMapper(mapper)
-            actor.GetProperty().SetColor(color)
-            
-            return actor
-
-        # Create axis arrows
-        self.x_axis_actor = create_arrow_actor([90, 1000, 0, 0], (1, 0, 0))  # Red for X-axis
-        self.y_axis_actor = create_arrow_actor([90, 0, 0, 1000], (0, 1, 0))  # Green for Y-axis
-        self.z_axis_actor = create_arrow_actor([90, 0, -1000, 0], (0, 0, 1))   # Blue for Z-axis
-        
-        # Add the axis actors to the scene
-        self.renderer.AddActor(self.x_axis_actor)
-        self.renderer.AddActor(self.y_axis_actor)
-        self.renderer.AddActor(self.z_axis_actor)
-        
-
-    def HideShowAxis(self):
-        # Add the plane and axes to the scene
-        if self.ShowAxis:
-            self.x_axis_actor.SetVisibility(False)  # Set to True to show
-            self.y_axis_actor.SetVisibility(False)  # Set to True to show
-            self.z_axis_actor.SetVisibility(False)  # Set to True to show
-            self.ShowAxis = False
-        else:
-            self.x_axis_actor.SetVisibility(True)  # Set to True to show
-            self.y_axis_actor.SetVisibility(True)  # Set to True to show
-            self.z_axis_actor.SetVisibility(True)  # Set to True to show
-            self.ShowAxis = True
-
-        self.rendering()
 
     def ClosePlotter(self):
     # Remove observers to avoid any lingering callbacks
@@ -423,7 +304,7 @@ class SimulationGUI(QWidget):
         self.rendering() 
 
 
-    # add xis to plotter
+    # add axis to plotter
     
     def AddAxisToPlotter(self, item):
         pass

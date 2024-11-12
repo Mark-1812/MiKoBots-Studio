@@ -15,6 +15,9 @@ from backend.robot_management  import show_tool_settings
 from backend.robot_management  import update_tool_settings
 from backend.robot_management  import save_robot
 
+from backend.simulation.axis import Axis
+from backend.simulation.planes import Planes
+
 from gui.style import *
 
 class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
@@ -44,7 +47,7 @@ class RobotTools(QWidget):
         
         self.spacer_widget = None
         self.plotter = None
-        self.vtk_renderer = None
+        self.renderer = None
   
         self.GUI()
         self.subscribeToEvents()
@@ -345,9 +348,9 @@ class RobotTools(QWidget):
             self.interactor.SetInteractorStyle(self.interactor_style)
             
             # Set up a VTK renderer and add it to the interactor
-            self.vtk_renderer = vtk.vtkRenderer()
-            self.vtk_renderer.SetBackground(1.0, 1.0, 1.0)
-            self.plotter.GetRenderWindow().AddRenderer(self.vtk_renderer)
+            self.renderer = vtk.vtkRenderer()
+            self.renderer.SetBackground(1.0, 1.0, 1.0)
+            self.plotter.GetRenderWindow().AddRenderer(self.renderer)
             
             # Optional: Add axes
             axes = vtk.vtkAxesActor()
@@ -361,14 +364,8 @@ class RobotTools(QWidget):
             self.plotter.Initialize()
             self.plotter.Start()
             
-            origin = [0, 0, 0]
-            size = 100  # Example size; set as needed
-            
-            self.CreateAxis()
-            
-            self.add_vtk_plane(self.vtk_renderer, origin, [0, 0, 1], size, "blue")  # XY plane
-            self.add_vtk_plane(self.vtk_renderer, origin, [0, 1, 0], size, "red")   # XZ plane
-            self.add_vtk_plane(self.vtk_renderer, origin, [1, 0, 0], size, "green") # ZY plane
+            Axis(self.renderer)
+            Planes(self.renderer)
             
             self.layout_plotter.addWidget(self.plotter,0,0)
             
@@ -440,82 +437,9 @@ class RobotTools(QWidget):
             self.spacer_widget.setParent(None)
             self.spacer_widget = None
 
-    def add_vtk_plane(self, renderer, origin, normal, size, color):
-        # Create a plane source
-        plane_source = vtk.vtkPlaneSource()
-        plane_source.SetCenter(origin)
-
-        # Set the normal vector for the plane
-        plane_source.SetNormal(normal)
-
-        # Set the size of the plane by defining two points in the plane
-        if normal == [0, 0, 1]:  # XY plane
-            plane_source.SetOrigin(-size / 2, -size / 2, 0)
-            plane_source.SetPoint1(size / 2, -size / 2, 0)
-            plane_source.SetPoint2(-size / 2, size / 2, 0)
-
-        elif normal == [0, 1, 0]:  # XZ plane
-            plane_source.SetOrigin(-size / 2, 0, -size / 2)
-            plane_source.SetPoint1(size / 2, 0, -size / 2)
-            plane_source.SetPoint2(-size / 2, 0, size / 2)
-
-        elif normal == [1, 0, 0]:  # ZY plane
-            plane_source.SetOrigin(0, -size / 2, -size / 2)
-            plane_source.SetPoint1(0, size / 2, -size / 2)
-            plane_source.SetPoint2(0, -size / 2, size / 2)
-
-        # Mapper for the plane
-        plane_mapper = vtk.vtkPolyDataMapper()
-        plane_mapper.SetInputConnection(plane_source.GetOutputPort())
-
-        # Actor for the plane
-        plane_actor = vtk.vtkActor()
-        plane_actor.SetMapper(plane_mapper)
-        plane_actor.GetProperty().SetColor(vtk.vtkNamedColors().GetColor3d(color))
-        plane_actor.GetProperty().SetOpacity(0.5)
-
-        # Add the actor to the renderer
-        renderer.AddActor(plane_actor)
-
-    def CreateAxis(self):
-        def create_arrow_actor(direction, color):
-            # Create an arrow source
-            arrow_source = vtk.vtkArrowSource()
-            
-            # Transform to orient the arrow in the desired direction
-            transform = vtk.vtkTransform()
-            transform.RotateWXYZ(direction[0], direction[1], direction[2], direction[3])
-            transform.Scale(200, 50, 50)
-            
-            # Apply transformation
-            transform_filter = vtk.vtkTransformPolyDataFilter()
-            transform_filter.SetTransform(transform)
-            transform_filter.SetInputConnection(arrow_source.GetOutputPort())
-            
-            # Mapper
-            mapper = vtk.vtkPolyDataMapper()
-            mapper.SetInputConnection(transform_filter.GetOutputPort())
-            
-            # Actor
-            actor = vtk.vtkActor()
-            actor.SetMapper(mapper)
-            actor.GetProperty().SetColor(color)
-            
-            return actor
-
-        # Create axis arrows
-        self.x_axis_actor = create_arrow_actor([90, 1000, 0, 0], (1, 0, 0))  # Red for X-axis
-        self.y_axis_actor = create_arrow_actor([90, 0, 0, 1000], (0, 1, 0))  # Green for Y-axis
-        self.z_axis_actor = create_arrow_actor([90, 0, -1000, 0], (0, 0, 1))   # Blue for Z-axis
-        
-        # Add the axis actors to the scene
-        self.vtk_renderer.AddActor(self.x_axis_actor)
-        self.vtk_renderer.AddActor(self.y_axis_actor)
-        self.vtk_renderer.AddActor(self.z_axis_actor)
-      
     def ShowSettings(self, tool_settings): 
         if self.stl_actor == None:
-            self.vtk_renderer.RemoveActor(self.stl_actor)
+            self.renderer.RemoveActor(self.stl_actor)
             self.stl_actor = None  # Clear the reference
             self.plotter.Render()  # Update the render window
         
@@ -555,7 +479,7 @@ class RobotTools(QWidget):
         
     def ClearPlotter(self):
         if self.stl_actor and self.plotter:
-            self.vtk_renderer.RemoveActor(self.stl_actor)
+            self.renderer.RemoveActor(self.stl_actor)
             self.stl_actor = None  # Clear the reference
             self.plotter.Render()  # Update the render window
 
@@ -563,7 +487,7 @@ class RobotTools(QWidget):
         if self.plotter:
             self.plotter.close()
             self.plotter = None
-            self.vtk_renderer = None
+            self.renderer = None
 
     def ShowModel(self, path):
         stl_reader = vtk.vtkSTLReader()
@@ -579,7 +503,7 @@ class RobotTools(QWidget):
         self.stl_actor.GetProperty().SetColor(vtk.vtkNamedColors().GetColor3d("red"))
         self.stl_actor.GetProperty().EdgeVisibilityOff()  # Equivalent to show_edges=False
         
-        self.vtk_renderer.AddActor(self.stl_actor)        
+        self.renderer.AddActor(self.stl_actor)        
    
     def GetToolData(self, data_tool):
         if self.stl_actor == None:
@@ -652,8 +576,8 @@ class RobotTools(QWidget):
 
         self.camera.ParallelProjectionOn()
 
-        self.vtk_renderer.SetActiveCamera(self.camera)
-        self.vtk_renderer.ResetCamera()
+        self.renderer.SetActiveCamera(self.camera)
+        self.renderer.ResetCamera()
         #self.renderer.Render()
         self.plotter.Render() 
         

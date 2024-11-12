@@ -1,8 +1,8 @@
 import backend.core.variables as var
 from backend.core.event_manager import event_manager
 
-from backend.robot_management  import send_line_to_io
-from backend.robot_management  import send_line_to_robot
+from backend.robot_management.communication  import send_line_to_io, send_line_to_robot, connect_robot_check, connect_io_check
+
 
 class IO():
     def __init__(self):
@@ -21,10 +21,10 @@ class IO():
             settings_io = f"Set_io_pin A{pin_number}B{IO_pin}C{self.type}\n"
             
             # send the settings to the IO box or the robot
-            if var.SETTINGS["Set_io_pin"][1] == "IO" and var.IO_CONNECT:
+            if var.SETTINGS["Set_io_pin"][1] == "IO" and connect_io_check():
                 send_line_to_io(settings_io)
                 self.IO_BOX = True
-            elif var.SETTINGS["Set_io_pin"][1] != "IO" and var.ROBOT_CONNECT:
+            elif var.SETTINGS["Set_io_pin"][1] != "IO" and connect_robot_check():
                 send_line_to_robot(settings_io)
                 self.IO_BOX = False
         else:
@@ -47,7 +47,7 @@ class IO():
             elif state == "LOW":
                 event_manager.publish("request_set_io_state", pin_number, False)
            
-        if (not var.SIM and self.IO_BOX and var.IO_CONNECT) or (not var.SIM and not self.IO_BOX and var.ROBOT_CONNECT):       
+        if (not var.SIM and self.IO_BOX and connect_io_check()) or (not var.SIM and not self.IO_BOX and connect_robot_check()):       
             if self.type != "OUTPUT":   
                 return
                      

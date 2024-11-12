@@ -1,20 +1,9 @@
 import backend.core.variables as var
-import asyncio
 
 from backend.robot_management.robot_loader import RobotLoader
 from backend.robot_management.tool_managment import ToolManagment
-from backend.robot_management.robot_communication import TalkWithRobotCOM
-from backend.robot_management.robot_communication import TalkWithRobotBT
-from backend.robot_management.io_communication import TalkWithIOBT
-from backend.robot_management.io_communication import TalkWithIOCOM
 from backend.robot_management.robot_3d_model import Robot3dModel
 
-
-talk_with_robot_com = TalkWithRobotCOM()
-talk_with_robot_bt = TalkWithRobotBT()
-
-talk_with_io_com = TalkWithIOCOM()
-talk_with_io_bt = TalkWithIOBT()
 
 
 robot_loader = RobotLoader()
@@ -85,81 +74,7 @@ def import_robot():
     robot_loader.ImportRobot()
     change_robot(var.SELECTED_ROBOT)
     
-#########################################
-## Communication robot
-#########################################
-    
-def send_line_to_robot(command):
-    if var.ROBOT_BLUETOOTH:
-        asyncio.run_coroutine_threadsafe(talk_with_robot_bt.SendLineToRobot(command), talk_with_robot_bt.loop)
-    else:
-        talk_with_robot_com.SendLineToRobot(command)
-    
-def send_settings_robot():
-    if var.ROBOT_BLUETOOTH:
-        talk_with_robot_bt.SendSettingsRobot()
-    else:
-        talk_with_robot_com.SendSettingsRobot()
-        
-def close_robot():
-    if var.ROBOT_BLUETOOTH:
-        asyncio.run_coroutine_threadsafe(talk_with_robot_bt.CloseRobot(), talk_with_robot_bt.loop)
-    else:
-        talk_with_robot_com.CloseRobot()    
 
-def scan_for_robots():
-    asyncio.run_coroutine_threadsafe(talk_with_robot_bt.ScanForDevicesBT(), talk_with_robot_bt.loop)
-
-def connect_robot_bt(device = None):
-    asyncio.run_coroutine_threadsafe(talk_with_robot_bt.ConnectRobotBT(device), talk_with_robot_bt.loop)
-
-
-def connect_robot_com(com_port = None):
-    talk_with_robot_com.ConnectRobot(com_port)
-    
-def stop_robot():
-    if var.ROBOT_BLUETOOTH:
-        talk_with_robot_bt.StopProgram()
-    else:
-        talk_with_robot_com.StopProgram()  
-    
-#########################################
-## Communication IO
-#########################################
-
-
-
-def send_line_to_io(command):
-    if var.IO_BLUETOOTH:
-        asyncio.run_coroutine_threadsafe(talk_with_io_bt.SendLineToIO(command), talk_with_io_bt.loop)
-    else:
-        talk_with_io_com.SendLineToIO(command)
-        
-def send_settings_io():
-    if var.ROBOT_BLUETOOTH:
-        talk_with_io_bt.SendSettingsIO()
-    else:
-        talk_with_io_com.SendSettingsIO()
- 
-def close_io():
-    if var.IO_BLUETOOTH:
-        asyncio.run_coroutine_threadsafe(talk_with_io_bt.CloseIO(), talk_with_io_bt.loop)
-    else:
-        talk_with_io_com.CloseIO()  
-                
-## bluetooth
-
-def scan_for_io():
-    asyncio.run_coroutine_threadsafe(talk_with_io_bt.ScanForDevicesBT(), talk_with_robot_bt.loop)
-
-def connect_io_bt(device = None):
-    asyncio.run_coroutine_threadsafe(talk_with_io_bt.ConnectIOBT(device), talk_with_robot_bt.loop)
-    
-
-
-## com
-def connect_io_com(com_port = None):
-    talk_with_io_com.ConnectIO(com_port)
     
 
     

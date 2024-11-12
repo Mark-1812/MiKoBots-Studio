@@ -1,6 +1,6 @@
 import time        
 from PyQt5.QtWidgets import  QFileDialog, QMessageBox
-import pygame
+
 import threading
 
 import backend.core.variables as var
@@ -28,6 +28,7 @@ class XBox:
             
     def xbox(self):
         def threadXbox():
+            import pygame
             pygame.init()
 
             # Find the Xbox controller

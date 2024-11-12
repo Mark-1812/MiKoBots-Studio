@@ -99,7 +99,7 @@ class Vision():
         
         return self.Objects
     
-    def MoveToObject(self, list_objects = list, number = int, Zdistance = float):
+    def MoveToObject(self, list_objects = list, number = 0, Zdistance = float):
         self.RobotCommand = Move()
 
         POSXYZ = [0]*6

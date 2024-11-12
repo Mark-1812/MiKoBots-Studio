@@ -1,8 +1,10 @@
 import backend.core.variables as var
 from backend.core.event_manager import event_manager
 
-from backend.robot_management  import send_line_to_robot
+from backend.robot_management.communication  import send_line_to_robot, connect_robot_check
 from backend.simulation import simulate_program
+
+
 
 
 class Move():
@@ -16,9 +18,6 @@ class Move():
         self.letters = [chr(i) for i in range(65, 91)]  # A-Z letters
     
     def MoveJ(self, pos, v = None, a = None, Origin = None):
-        if not var.ROBOT_HOME and not var.SIM:
-            return
-        
         if len(pos) > var.NUMBER_OF_JOINTS:
             print(var.LANGUAGE_DATA.get("message_more_values_than_joints"))
             event_manager.publish("request_stop_sim")
@@ -37,16 +36,13 @@ class Move():
                 command += f"{var.NAME_AXIS[i]}{pos[i]} "
             command += f"s{v} a{a}\n"            
             simulate_program(command)
-        elif var.ROBOT_CONNECT == 1 and var.ROBOT_HOME:
+        else:
             for i in range(var.NUMBER_OF_JOINTS):
                 command += str(self.letters[i]) + str(pos[i])
             command += f"{self.letters[i+1]}{v}{self.letters[i+2]}{a}\n"
-            send_line_to_robot(command)
+            send_line_to_robot(command, Home=True)
                 
-    def OffsetJ(self, pos, v = 50, a = 50):
-        if not var.ROBOT_HOME and not var.SIM:
-            return     
-        
+    def OffsetJ(self, pos, v = 50, a = 50):       
         if len(pos) > var.NUMBER_OF_JOINTS:
             print(var.LANGUAGE_DATA.get("message_more_values_than_joints"))
             event_manager.publish("request_stop_sim")
@@ -62,20 +58,17 @@ class Move():
             command += f"s{v} a{a}\n"     
                    
             simulate_program(command)
-        elif var.ROBOT_CONNECT == 1 and var.ROBOT_HOME:
+        else:
             for i in range(var.NUMBER_OF_JOINTS):
                 command += str(self.letters[i]) + str(pos[i])
             command += f"{self.letters[i+1]}{v}{self.letters[i+2]}{a}\n"
             
-            send_line_to_robot(command)  
+            send_line_to_robot(command, True)  
         
     def JogJoint(self, pos, v = None, a = None):
         if len(pos) > var.NUMBER_OF_JOINTS:
             print(var.LANGUAGE_DATA.get("message_more_values_than_joints"))
             event_manager.publish("request_stop_sim")
-            return
-        
-        if var.ROBOT_BUSY:
             return
         
         if v == None:
@@ -93,16 +86,13 @@ class Move():
             command += f"s{v} a{a}\n"
             simulate_program(command)
             
-        elif var.ROBOT_CONNECT == 1:    
+        else:    
             for i in range(var.NUMBER_OF_JOINTS):
                 command += str(self.letters[i]) + str(pos[i])
             command += f"{self.letters[i+1]}{v}{self.letters[i+2]}{a}\n"
             send_line_to_robot(command)
         
     def MoveL(self, pos, v = 50, a = 50):
-        if not var.ROBOT_HOME and not var.SIM:
-            return
-        
         if len(pos) > var.NUMBER_OF_JOINTS:
             print(var.LANGUAGE_DATA.get("message_more_values_than_joints"))
             event_manager.publish("request_stop_sim")
@@ -123,16 +113,13 @@ class Move():
             command += f"s{v} a{a}\n"                 
             simulate_program(command)
             
-        elif var.ROBOT_CONNECT == 1 and var.ROBOT_HOME:
+        else:
             for i in range(var.NUMBER_OF_JOINTS):
                 command += str(self.letters[i]) + str(pos[i])
             command += f"{self.letters[i+1]}{v}{self.letters[i+2]}{a}\n"
-            send_line_to_robot(command)
+            send_line_to_robot(command, Home=True)
                 
     def OffsetL(self, pos, v = 50, a = 50):
-        if not var.ROBOT_HOME and not var.SIM:
-            return    
-        
         if len(pos) > var.NUMBER_OF_JOINTS:
             print(var.LANGUAGE_DATA.get("message_more_values_than_joints"))
             event_manager.publish("request_stop_sim")
@@ -146,16 +133,13 @@ class Move():
             command += f"s{v} a{a}\n"                 
             simulate_program(command)
             
-        elif var.ROBOT_CONNECT == 1 and var.ROBOT_HOME:
+        else:
             for i in range(var.NUMBER_OF_JOINTS):
                 command += str(self.letters[i]) + str(pos[i])
             command += f"{self.letters[i+1]}{v}{self.letters[i+2]}{a}\n"
-            send_line_to_robot(command)
+            send_line_to_robot(command, True)
 
     def MoveJointPos(self, pos, v = 50, a = 50):
-        if not var.ROBOT_HOME and not var.SIM:
-            return
-        
         if len(pos) > var.NUMBER_OF_JOINTS:
             print(var.LANGUAGE_DATA.get("message_more_values_than_joints"))
             event_manager.publish("request_stop_sim")
@@ -173,13 +157,12 @@ class Move():
             print(command)
             simulate_program(command)
             
-        elif var.ROBOT_CONNECT == 1:
+        else:
             for i in range(var.NUMBER_OF_JOINTS):
                 command += str(self.letters[i]) + str(pos[i])
             command += f"{self.letters[i+1]}{v}{self.letters[i+2]}{a}\n"
             send_line_to_robot(command)
             
     def Home(self):    
-        if var.ROBOT_CONNECT == 1:
-            command = "Home\n"
-            send_line_to_robot(command)
+        command = "Home\n"
+        send_line_to_robot(command)

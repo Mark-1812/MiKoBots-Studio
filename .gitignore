@@ -4,6 +4,7 @@ __pycache__/
 
 main.spec
 
+
 dist/
 Output/
 build/
@@ -17,3 +18,5 @@ venvlaptop/
 .venvlaptop/
 venv/
 .venv/
+
+stepup.py

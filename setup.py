@@ -9,7 +9,9 @@ from setuptools import setup
 import os
 APP = ['mikobots_studio/src/main.py']
 
-DATA_FILES = []
+DATA_FILES = [
+    ('blockly', [os.path.join(root, file) for root, _, files in os.walk('blockly') for file in files])
+              ]
 assets_folder = '/Users/markkleinjan/Library/CloudStorage/OneDrive-MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/images'  # Update this path
 
 for root, dirs, files in os.walk(assets_folder):
@@ -39,6 +41,8 @@ OPTIONS = {
     'argv_emulation': False,
     'iconfile': '/Users/markkleinjan/Library/CloudStorage/OneDrive-MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/images/mikobot.icns',
 }
+
+
 
 setup(
     name='MiKoBots Studio',  # Set your app's name here

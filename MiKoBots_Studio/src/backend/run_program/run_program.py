@@ -12,29 +12,32 @@ from backend.core.event_manager import event_manager
 from gui.windows.message_boxes import ErrorMessage
 from backend.simulation import simulation_not_busy
 
+from backend.robot_management.communication import connect_robot_check, connect_io_check
+
 import gc
 
 class RunProgram():
     def __init__(self):
         self.script_thread = None
+        self.program_running = False
         
         self.globals_delete = []
 
         self.output_stream = OutputStream()
         self.output_stream.textWritten.connect(self.update_output)
-        sys.stdout = self.output_stream
+        #sys.stdout = self.output_stream
 
         
 
     def RunScript(self, sim):     
-        if sim and var.SIM and not var.PROGRAM_RUN:
+        if sim and var.SIM and not self.program_running:
             if event_manager.publish("request_get_program_type")[0]:
                 event_manager.publish("request_get_blockly_code")
             else:
                 script = event_manager.publish("request_program_field_get")[0]
                 self.script_thread = threading.Thread(target=self.execute_script, args=(script,))
                 self.script_thread.start()          
-        elif not sim and (var.ROBOT_CONNECT or var.IO_CONNECT) and not var.PROGRAM_RUN:
+        elif not sim and (connect_robot_check() or connect_io_check()) and not self.program_running:
             if event_manager.publish("request_get_program_type")[0]:
                 event_manager.publish("request_get_blockly_code")
             else:
@@ -42,7 +45,7 @@ class RunProgram():
                 self.script_thread = threading.Thread(target=self.execute_script, args=(script,))
                 self.script_thread.start()            
         else:
-            if not var.PROGRAM_RUN and not sim:
+            if not self.program_running and not sim:
                 print(var.LANGUAGE_DATA.get("message_robot_not_connected"))
                 ErrorMessage(var.LANGUAGE_DATA.get("message_robot_not_connected"))
             else:
@@ -59,7 +62,7 @@ class RunProgram():
             print(f"Error executing code: {e}")
             
     def RunSingleLine(self, line):
-        if not var.PROGRAM_RUN:
+        if not self.program_running:
             program = "from robot_library import Move, Tool, Vision, IO\nrobot = Move()\nvision = Vision()\ntool = Tool()\nIO = IO()\n"
             program += line
             
@@ -72,7 +75,7 @@ class RunProgram():
         
         
         try:
-            var.PROGRAM_RUN = True
+            self.program_running = True
             event_manager.publish("request_enable_tool_combo", False)
             exec(script, globals(), locals())
 
@@ -90,11 +93,11 @@ class RunProgram():
             
             locals().clear()
             
-            var.PROGRAM_RUN = False
+            self.program_running = False
             event_manager.publish("request_enable_tool_combo", True)
         except Exception as e:
             print("An error occurred:", e)
-            var.PROGRAM_RUN = False
+            self.program_running = False
             event_manager.publish("request_enable_tool_combo", True)
         finally:
             pass
@@ -105,7 +108,7 @@ class RunProgram():
         event_manager.publish("request_insert_new_log", text)
 
     def StopScript(self):                
-        if var.PROGRAM_RUN:
+        if self.program_running:
             thread_id = int(self.script_thread.ident)
             
             if thread_id == -1:
@@ -116,8 +119,7 @@ class RunProgram():
                 event_manager.publish("request_label_pos_joint", var.POS_JOINT_SIM, var.NAME_JOINTS, var.UNIT_JOINT)
                 
             
-            var.PROGRAM_RUN = False
-            var.SIM_SHOW_LINE = 0      
+            self.program_running = False
             
             event_manager.publish("request_enable_tool_combo", True)
             simulation_not_busy()

@@ -8,13 +8,11 @@ from serial.tools import list_ports
 from backend.core.event_manager import event_manager
 
 
-from backend.robot_management  import scan_for_io
-from backend.robot_management import connect_io_com
-from backend.robot_management import connect_io_bt
+from backend.robot_management.communication  import scan_for_io
+from backend.robot_management.communication import connect_io
 
-from backend.robot_management import scan_for_robots
-from backend.robot_management import connect_robot_bt
-from backend.robot_management import connect_robot_com
+from backend.robot_management.communication import scan_for_robots
+from backend.robot_management.communication import connect_robot
 
 from backend.vision import connect_cam
 
@@ -141,9 +139,9 @@ class ConnectDevice(QWidget):
         if item:
             device = self.port_list[position]
             if self.type == "ROBOT":
-                connect_robot_com(device)
+                connect_robot(device, True)
             elif self.type == "IO":
-                connect_io_com(device)
+                connect_io(device, True)
             elif self.type == "CAMERA":
                 connect_cam(device)
 
@@ -166,9 +164,9 @@ class ConnectDevice(QWidget):
         if item:
             device = self.BT_device_list[position]
             if self.type == "ROBOT":
-                connect_robot_bt(device)
+                connect_robot(device, False)
             elif self.type == "IO":
-                connect_io_bt(device)
+                connect_io(device, False)
 
     def update_device_list(self, devices):
         self.device_list.clear()

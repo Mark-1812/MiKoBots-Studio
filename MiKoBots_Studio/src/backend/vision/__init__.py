@@ -5,6 +5,11 @@ vision_management = VisionManagement()
 ###########################
 #   vision_management
 ###########################
+def cam_connected():
+    if vision_management.connect:
+        return True
+    else:
+        return False
 
 def close_cam():
     vision_management.CloseCam()

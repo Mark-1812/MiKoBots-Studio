@@ -4,8 +4,8 @@ from backend.core.event_manager import event_manager
 
 import os
 
-from backend.robot_management  import send_line_to_io
-from backend.robot_management  import send_line_to_robot
+from backend.robot_management.communication  import send_line_to_io, connect_io_check
+from backend.robot_management.communication  import send_line_to_robot, connect_robot_check
 
 
 
@@ -55,17 +55,17 @@ class Tool():
                 tool_frame += "\n"
                     
                 # send settings to IO if this is given in settings
-                if var.SETTINGS['Set_tools'][1] == "IO" and var.IO_CONNECT:
+                if var.SETTINGS['Set_tools'][1] == "IO" and connect_io_check():
                     send_line_to_io(settings_tool)
                     self.IO_BOX = True
                     
                 # send settings to ROBOT if this is given in settings    
-                elif var.SETTINGS['Set_tools'][1] != "IO" and var.ROBOT_CONNECT:
+                elif var.SETTINGS['Set_tools'][1] != "IO" and connect_robot_check():
                     send_line_to_robot(settings_tool)
                     self.IO_BOX = False   
                            
                 # send always the tool frame only to the robot
-                if var.ROBOT_CONNECT:
+                if connect_robot_check():
                     send_line_to_robot(tool_frame)
                 
         if self.tool_number is None:
@@ -81,10 +81,10 @@ class Tool():
             # command for tool to move
             command = f"Tool_move_to pos({pos})\n"
              
-            if var.IO_CONNECT and self.IO_BOX:
+            if connect_io_check() and self.IO_BOX:
                 send_line_to_io(command)
                 
-            if var.ROBOT_CONNECT and not self.IO_BOX:
+            if connect_robot_check() and not self.IO_BOX:
                 send_line_to_robot(command)
         else:
             print(var.LANGUAGE_DATA.get("message_not_move_tool")) 
@@ -100,9 +100,9 @@ class Tool():
                     
             command = f"Tool_state ({state})\n"
             
-            if var.IO_CONNECT and self.IO_BOX:
+            if connect_io_check() and self.IO_BOX:
                 send_line_to_io(command)
-            if var.ROBOT_CONNECT and not self.IO_BOX:
+            if connect_robot_check() and not self.IO_BOX:
                 send_line_to_robot(command)
         else:
             print(var.LANGUAGE_DATA.get("message_not_state_tool")) 

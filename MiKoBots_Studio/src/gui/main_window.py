@@ -6,6 +6,8 @@ from gui.style import *
 import webbrowser
 import sys
 
+#from gui.windows import close_startup_screen
+
 from gui.fields.field_settings import SettingsField
 from gui.fields.field_control import ControlField
 from gui.fields.field_program import ProgramField
@@ -15,25 +17,26 @@ from gui.fields.simulation_frame import SimulationGUI
 from backend.file_managment.file_management import FileManagement
 from backend.core.event_manager import event_manager
 
-from backend.robot_management import setup_robot
-from backend.robot_management import close_robot
-from backend.robot_management import close_io
+
+from backend.robot_management.communication import close_robot, close_io
 
 from backend.vision import close_cam
 
 from backend.run_program import stop_script
 
-from backend.file_manager import open_file_from_path
+
 
 import backend.core.variables as var
-from gui.windows.update_window import UpdateChecker
+
 from gui.windows.message_boxes import CloseProgramMessage
+
+
 
 from  backend import close_program
 
 from backend.file_manager import save_file
 
-class MainWindow(QWidget):   
+class MainWindow(QMainWindow):   
     def __init__(self,  screen_geometry):  
         super().__init__()
         
@@ -50,13 +53,14 @@ class MainWindow(QWidget):
         self.setGeometry(100, 100, width_window, height_window)
         self.move_to_center(screen_geometry)
         self.setMinimumSize(900, 700)
-        
+        self.showMaximized()  # Show the main window
         self.setStyleSheet("background-color: #E8E8E8;")
 
-        self.layout = QGridLayout()
-        self.layout.setContentsMargins(10, 10, 10, 10)
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
 
-        self.setLayout(self.layout)
+        self.layout = QGridLayout(central_widget)
+        self.layout.setContentsMargins(10, 10, 10, 10)
         
         self.min_height_2 = 120
         self.min_height_3 = 110
@@ -70,6 +74,15 @@ class MainWindow(QWidget):
         self.ProgramField = None
         self.SimulationGUI = None
         self.MenuField = None    
+        
+        self.CreateFrames(self.layout)
+        
+        self.ControlField = ControlField(self.frame_5_control)
+        self.LogField = LogField(self.frame_3_log)
+        self.SettingsField = SettingsField(self.frame_6_settings)
+        self.ProgramField = ProgramField(self.frame_2_programming)
+        self.SimulationGUI = SimulationGUI(self.frame_4_tabs)
+        self.MenuField = MenuField(self.frame1)
         
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_F1:
@@ -373,7 +386,6 @@ class MainWindow(QWidget):
             self.frame_6.show()
             self.frame_right_min.hide()
 
-
     def MiddleSplitterSize(self):
         frame_2_height = self.frame_2.height()
         frame_3_height = self.frame_3.height()
@@ -424,32 +436,7 @@ class MainWindow(QWidget):
             self.RightSplitterSize()
         if frame == 1:
             self.main_splitter.setSizes([1000, width_splitter_middle, 1500])
-            self.MainSplitterSize()
-            
-    def show_main(self, startup_screen, file_path):
-        startup_screen.accept()  # Close the startup screen
-        self.showMaximized()  # Show the main window
-        self.CreateFrames(self.layout)
-        
-        self.ControlField = ControlField(self.frame_5_control)
-        self.LogField = LogField(self.frame_3_log)
-        self.SettingsField = SettingsField(self.frame_6_settings)
-        self.ProgramField = ProgramField(self.frame_2_programming)
-        self.SimulationGUI = SimulationGUI(self.frame_4_tabs)
-        self.MenuField = MenuField(self.frame1)
-        
-        event_manager.publish("request_set_jog_distance", var.SETTINGS_FILE[3])
-             
-        setup_robot()
-
-        self.update_window = UpdateChecker(var.UPDATE_DESCRIPTION, var.UPDATE_VERSION, var.CURRENT_VERSION,  self.screen_geometry)  # Create an instance of UpdateChecker as a dialog
-        
-        if var.UPDATE:
-            self.update_window.setModal(True)  # Make it modal
-            self.update_window.exec_()  # Show it as a modal dialog
-            
-        if file_path:
-            open_file_from_path(file_path)
+            self.MainSplitterSize()         
       
     def closeEvent(self, event):  
         answer = CloseProgramMessage(var.LANGUAGE_DATA.get("title_save") , var.LANGUAGE_DATA.get("message_ask_save_program"))

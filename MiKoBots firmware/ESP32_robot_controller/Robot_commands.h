@@ -496,7 +496,9 @@ void offsetL(String command){
 
 
   //error = check_for_error();
-
+  if(error){
+    Serial.println("f\n");
+  }
   else{
     int direction[NUMBER_OF_JOINTS];
     int maxDelta = 0;
@@ -738,7 +740,9 @@ void MoveL(String command){
   int speed = command.substring(pos_command[NUMBER_OF_JOINTS] + 1, pos_command[NUMBER_OF_JOINTS + 1]).toInt();
   int accel = command.substring(pos_command[NUMBER_OF_JOINTS + 1] + 1).toInt();
 
-
+  if(error){
+    Serial.println("f\n");
+  }
   else{
     int direction[NUMBER_OF_JOINTS];
     int maxDelta = 0;
@@ -793,8 +797,8 @@ void MoveL(String command){
 
     }
     
-  }
 
+  }
   sendPos();
 }
 

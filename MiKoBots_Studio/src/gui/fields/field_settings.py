@@ -10,7 +10,7 @@ import backend.core.variables as var
 
 from backend.xbox import xbox_on
 from backend.robot_management  import change_robot
-from backend.robot_management  import send_settings_robot
+from backend.robot_management.communication  import send_settings_robot
 
 from gui.windows.robot_settings.robot_frame import RobotWindow
 from gui.windows.vision import VisionWindow

@@ -3,7 +3,7 @@ from pathlib import Path
 import ctypes
 import os
 import sys
-
+from ctypes import wintypes
 import locale
 
 class FileManagement:
@@ -20,7 +20,7 @@ class FileManagement:
         elif os_system == "Windows":
             # Windows-specific code
             dll = ctypes.windll.shell32
-            buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH + 1)
+            buf = ctypes.create_unicode_buffer(wintypes.MAX_PATH + 1)
             if dll.SHGetSpecialFolderPathW(None, buf, 0x0005, False):
                 self.file_path = Path(buf.value) / "MyAppData" / "MiKoBots"
             else:

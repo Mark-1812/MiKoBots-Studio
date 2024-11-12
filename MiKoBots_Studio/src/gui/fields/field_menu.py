@@ -24,12 +24,9 @@ from backend.file_manager import save_as_file
 from backend.file_manager import open_file
 from backend.file_manager import new_file
 
-from backend.robot_management import connect_robot_com
-from backend.robot_management import connect_io_com
-from backend.robot_management import connect_robot_bt
-from backend.robot_management import connect_io_bt
-
-from backend.robot_management import stop_robot
+from backend.robot_management.communication import connect_robot, connect_robot_check
+from backend.robot_management.communication import connect_io, connect_io_check
+from backend.robot_management.communication import stop_robot
 
 from backend.simulation import enable_simulation
 
@@ -37,7 +34,7 @@ from backend.run_program import run_script
 from backend.run_program import stop_script
 from backend.run_program import run_single_line
 
-from backend.vision import connect_cam
+from backend.vision import connect_cam, cam_connected
 
 
 
@@ -206,7 +203,7 @@ class MenuField(QWidget):
         
 
     def connect_camera(self):
-        if var.CAM_CONNECT:
+        if cam_connected():
             connect_cam()
         else:
             self.connect_cam_window.empty_list()
@@ -214,20 +211,16 @@ class MenuField(QWidget):
             self.connect_cam_window.raise_()
 
     def connect_robot(self):
-        if var.ROBOT_CONNECT and var.ROBOT_BLUETOOTH:
-            connect_robot_bt()
-        elif var.ROBOT_CONNECT and not var.ROBOT_BLUETOOTH:
-            connect_robot_com()
+        if connect_robot_check():
+            connect_robot()
         else:
             self.connect_robot_window.empty_list()
             self.connect_robot_window.show()
             self.connect_robot_window.raise_()
 
     def connect_io(self):
-        if var.IO_CONNECT and var.IO_BLUETOOTH:
-            connect_io_bt()
-        elif var.IO_CONNECT and not var.IO_BLUETOOTH:
-            connect_io_com()
+        if connect_robot_check():
+            connect_robot()
         else:
             self.connect_io_window.empty_list()
             self.connect_io_window.show()
