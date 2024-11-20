@@ -13,14 +13,14 @@ simulation_management = SimulationManagement()
 def enable_simulation(state):
     simulation_management.EnableSimulation(state)
 
-def simulation_move_gui(pos, move):
-    simulation_management.SimulationMoveGUI(pos, move)
+def check_simulation_on():
+    return simulation_management.simulation_on
     
 def simulate_program(command):
     simulation_management.SimulateProgram(command)
     
 def simulation_not_busy():
-    simulation_management.SetNotBusy()
+    simulation_management.viewer_busy = False
     
     
 

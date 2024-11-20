@@ -10,7 +10,7 @@ from gui.windows.message_boxes import ErrorMessage, SaveProgramMessage
 
 from backend.core.event_manager import event_manager
 
-from backend.robot_management import change_robot, get_selected_robot, get_selected_robot_name
+from backend.robot_management import change_robot, get_selected_robot, get_selected_robot_name, get_selected_tool
 
 from backend.run_program import check_program_run
 
@@ -54,7 +54,7 @@ class SaveOpen:
                 [],
                 [],
                 get_selected_robot(),
-                var.SELECTED_TOOL,
+                get_selected_tool(),
                 ""
         ]
         self.SetProgram()
@@ -69,7 +69,7 @@ class SaveOpen:
             self.MikoFile[2] = get_objects_sim()
             self.MikoFile[3] = get_origins_file()
             self.MikoFile[4] = get_selected_robot_name()
-            self.MikoFile[5] = var.SELECTED_TOOL
+            self.MikoFile[5] = get_selected_tool()
             event_manager.publish("request_save_blockly_file")
             
             while self.MikoFile[6] == "":
@@ -98,7 +98,7 @@ class SaveOpen:
         self.MikoFile[2] = get_objects_sim()
         self.MikoFile[3] = get_origins_file()
         self.MikoFile[4] = get_selected_robot_name()
-        self.MikoFile[5] = var.SELECTED_TOOL
+        self.MikoFile[5] = get_selected_tool()
         event_manager.publish("request_save_blockly_file")
         
         

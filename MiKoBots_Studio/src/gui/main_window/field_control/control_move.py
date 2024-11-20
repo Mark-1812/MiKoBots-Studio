@@ -12,7 +12,7 @@ from backend.core.event_manager import event_manager
 from backend.robot_management import send_pos_robot
 
 
-from backend.simulation import simulation_move_gui
+from backend.simulation import check_simulation_on
 from backend.run_program import run_single_line
 
 class ControlMove(QWidget):
@@ -113,7 +113,7 @@ class ControlMove(QWidget):
             self.CHECKBOX_MOVE.setText("Switch to axis")
             for i in range(self.nr_of_joints):
                 self.Buttons[i][0].setText(self.name_joint[i])
-                if var.SIM:
+                if check_simulation_on():
                     # get the position of the sim axis 
                     pos = send_pos_robot(True)
                     self.Buttons[i][1].setText(str(round(pos[1][i],2)))
@@ -127,7 +127,7 @@ class ControlMove(QWidget):
             self.CHECKBOX_MOVE.setText("Switch to joint")
             for i in range(self.nr_of_joints):
                 self.Buttons[i][0].setText(self.name_axis[i])
-                if var.SIM:
+                if check_simulation_on():
                     # get the position of the joint
                     pos = send_pos_robot(True)  # TRUE IS SIM
                     self.Buttons[i][1].setText(str(round(pos[0][i],2)))
@@ -142,18 +142,9 @@ class ControlMove(QWidget):
         for i in range(self.nr_of_joints):
             posJoint[i] = self.Buttons[i][1].text()
             
-        if self.simulation:
-            if self.CHECKBOX_MOVE.isChecked():
-                # joints
-                simulation_move_gui(posJoint, "MoveJoint")
-            else:
-                # axis
-                simulation_move_gui(posJoint, "MoveJ")
+        if self.CHECKBOX_MOVE.isChecked():
+            # joints
+            run_single_line(f"robot.MoveJointPos({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
         else:
-            if self.CHECKBOX_MOVE.isChecked():
-                # joints
-                run_single_line(f"robot.MoveJointPos({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
-            else:
-                # axis
-                run_single_line(f"robot.MoveJ({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
-            
+            # axis
+            run_single_line(f"robot.MoveJ({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")

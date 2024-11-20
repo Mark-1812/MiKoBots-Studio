@@ -93,7 +93,7 @@ SemaphoreHandle_t mutex;
 SemaphoreHandle_t stopSemaphore;
 
 int stop = false;
-int pauze = 0;
+int pauze = false;
 
 bool deviceConnected = false;
 bool deviceDisconnected = false;
@@ -184,6 +184,8 @@ class MyServerCallbacks : public BLEServerCallbacks {
       lines[i] = "";
     }
     lineIndex = 0;
+    stop = false;
+    pauze = false;
 
     deviceDisconnected = true;
   }
@@ -316,10 +318,10 @@ void processCommand(const String& command) {
         stop = true;  
     } else if (command == "pauze") {
         sent_message_task1("pauze");
-        pauze = 1;
+        pauze = true;
     } else if (command == "play") {
         stop = false;
-        pauze = 0;
+        pauze = false;
         sent_message_task1("END");
     } else if (command == "CONNECT") {
         String Message = String(type_device) + "_CONNECTED";

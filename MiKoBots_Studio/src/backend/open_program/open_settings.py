@@ -15,40 +15,54 @@ def OpenSettings(file_mangement):
         with open(file_path, 'r') as file:
             settings_file = json.load(file)
     except:
-        settings_file = ["0", "0", "0", "0", "0"]
-        set_selected_robot(0)
+        settings_file = [0] * 10
+        print("Error: could not open the settings file")
     
+    # 0: get robot port -> not used any more
+    # 1: get io port -> not used any more
+    # 2: get cam port -> not used any more
+
+    # 3: jog distance
+    try:
+        event_manager.publish("request_set_jog_distance", settings_file[3])
+    except:
+        event_manager.publish("request_set_jog_distance", 50)
     
-    ## get the selected robot  
+    # 4: selected robot
     try:
         set_selected_robot(settings_file[4])
     except:
         set_selected_robot(0)
-        
-        
-    ## set vision settings
-    try: 
-        print(settings_file[5])
-        event_manager.publish("request_set_vision_settings", settings_file[5])
-        var.COLOR_RANGE = settings_file[5][5] 
+
+    # 5: color settings
+    try:
+        event_manager.publish("request_set_colors", settings_file[5])
     except:
-        var.COLOR_RANGE = {
-            "RED": [[0, 50, 100], [25, 255, 255]],  #0, 10, 100, 255, 100, 255
-            "GREEN": [[35, 100, 100], [85, 255, 255]],
-            "BLUE": [[100, 100, 100], [130, 255, 255]],
-            "YELLOW": [[20, 100, 100], [30, 255, 255]],
-            "ORANGE": [[10, 100, 100], [20, 255, 255]],
-            "BLACK": [[0, 0, 0], [180, 255, 50]],
-            "GRAY": [[0, 0, 50], [180, 50, 200]],     
-            "WHITE": [[0, 0, 200], [180, 50, 255]],    
-        }
-        settings = [0, 0, 0, 160, True, var.COLOR_RANGE]
+        # when error send None so init values will show
+        event_manager.publish("request_set_colors", None)
         
+    # 6: Vision settings
+    try: 
+        event_manager.publish("request_set_vision_settings", settings_file[6])
+    except:
+        settings = [0, 0, 0, 160, True]
         event_manager.publish("request_set_vision_settings", settings)
     
+    # 7: get the sqaure size percentage, for vision settings when not connected to the robot
     try:
-        set_square_size_per(settings_file[6])
+        set_square_size_per(settings_file[7])
     except:
         set_square_size_per(0.8)
-    
-    var.SETTINGS_FILE = settings_file   
+
+    # 8: Speed setting
+    try:
+        event_manager.publish("request_set_speed", settings_file[8])
+    except:
+        event_manager.publish("request_set_speed", 50)
+
+    # 9: Acceleration settings
+    try:
+        event_manager.publish("request_set_accel", settings_file[8])
+    except:
+        event_manager.publish("request_set_accel", 50)
+

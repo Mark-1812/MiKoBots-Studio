@@ -46,6 +46,7 @@ def showMainWindow(file_path):
     
     setup_robot()
     
+    
     if file_path:
         open_file_from_path(file_path)
      

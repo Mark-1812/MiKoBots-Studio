@@ -12,6 +12,8 @@ from backend.core.event_manager import event_manager
 
 from gui.windows.message_boxes import ErrorMessage
 
+from backend.robot_management import get_selected_tool
+
 class VisionManagement():
     def __init__(self):
         super().__init__()       
@@ -81,7 +83,10 @@ class VisionManagement():
     def calculate_mm_per_pixel(self, image = None, Height = None):
         mm_per_pixel = 0
         if self.cam_tool:
-            settings_cam = var.TOOLS3D[var.SELECTED_TOOL][11]
+
+            tool = get_selected_tool
+
+            settings_cam = var.TOOLS3D[tool][11]
             
             z1 = float(settings_cam[0]) # Z distance big square
             z2 = float(settings_cam[1]) # Z distance small square
@@ -182,17 +187,19 @@ class VisionManagement():
         t_threadRead.start()
        
     def GetMask(self, color_name, image):
-        if color_name in var.VISION_COLOR_OPTIONS:
-            if len(var.VISION_COLOR_OPTIONS[color_name]) == 2:
-                lower_color = np.array(var.VISION_COLOR_OPTIONS[color_name][0])
-                upper_color = np.array(var.VISION_COLOR_OPTIONS[color_name][1])
+        color_range = event_manager.publish("request_get_colors")[0]
+
+        if color_name in color_range:
+            if len(color_range[color_name]) == 2:
+                lower_color = np.array(color_range[color_name][0])
+                upper_color = np.array(color_range[color_name][1])
                 mask = cv2.inRange(image, lower_color, upper_color)
-            elif len(var.VISION_COLOR_OPTIONS[color_name]) == 4:
-                lower_color1 = np.array(var.VISION_COLOR_OPTIONS[color_name][0])
-                upper_color1 = np.array(var.VISION_COLOR_OPTIONS[color_name][1])  
+            elif len(color_range[color_name]) == 4:
+                lower_color1 = np.array(color_range[color_name][0])
+                upper_color1 = np.array(color_range[color_name][1])  
                 mask1 = cv2.inRange(image, lower_color1, upper_color1)
-                lower_color2 = np.array(var.VISION_COLOR_OPTIONS[color_name][2])
-                upper_color2 = np.array(var.VISION_COLOR_OPTIONS[color_name][3]) 
+                lower_color2 = np.array(color_range[color_name][2])
+                upper_color2 = np.array(color_range[color_name][3]) 
                 mask2 = cv2.inRange(image, lower_color2, upper_color2)
                 
                 mask = mask1 + mask2

@@ -12,8 +12,6 @@ import numpy as np
 
 from backend.core.event_manager import event_manager
 
-from backend.simulation import simulation_move_gui
-
 from vtkmodules.vtkRenderingCore import vtkRenderer
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from backend.file_managment.file_management import FileManagement
@@ -26,6 +24,10 @@ from backend.simulation.simulation_interaction import CustomInteractorStyle
 from backend.simulation.robot import setup_renderer_robot
 from backend.simulation.object import setup_renderer_object
 from backend.simulation.origins import setup_renderer_origin
+
+from backend.run_program import run_single_line
+
+import backend.core.variables as var
 
 class SimulationGUI(QWidget):
     def __init__(self, frame):      
@@ -190,7 +192,8 @@ class SimulationGUI(QWidget):
 
         posJoint = [picked_position[0], picked_position[1], picked_position[2], 180, 0 ,180]
 
-        simulation_move_gui(posJoint, "MoveJ")
+        run_single_line(f"robot.MoveJ({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
+
 
 
 

@@ -8,7 +8,6 @@ import backend.core.variables as var
 
 from backend.core.event_manager import event_manager
 
-from backend.simulation import simulation_move_gui
 from backend.run_program import run_single_line
 
 class ControlAxis(QWidget):
@@ -66,7 +65,7 @@ class ControlAxis(QWidget):
 
             button_minus = QPushButton("-", self)
             button_minus.clicked.connect(lambda state, idx=i: self.ButtonAxisMove(idx, 0))
-            button_minus.setMaximumWidth(50)
+            button_minus.setMaximumWidth(30)
             button_minus.setMinimumWidth(20)
             button_minus.setStyleSheet(style_button)
             
@@ -77,7 +76,7 @@ class ControlAxis(QWidget):
             
             button_plus = QPushButton("+", self)
             button_plus.clicked.connect(lambda state, idx=i: self.ButtonAxisMove(idx, 1))
-            button_plus.setMaximumWidth(50)
+            button_plus.setMaximumWidth(30)
             button_plus.setMinimumWidth(20)
             button_plus.setStyleSheet(style_button)
             
@@ -103,18 +102,10 @@ class ControlAxis(QWidget):
 
     def ButtonAxisMove(self, axis, dir):
         posAxis = [0]*var.NUMBER_OF_JOINTS
-        if self.simulation:
-            if dir == 1:
-                posAxis[axis] = event_manager.publish("request_get_jog_distance")[0]
-            else:
-                posAxis[axis] = -1 * int(event_manager.publish("request_get_jog_distance")[0])
-                
-            simulation_move_gui(posAxis, "OffsetJ")
+        
+        if dir == 1:
+            posAxis[axis] = event_manager.publish("request_get_jog_distance")[0]
         else:
-            if dir == 1:
-                posAxis[axis] = event_manager.publish("request_get_jog_distance")[0]
-            else:
-                posAxis[axis] = -1 * int(event_manager.publish("request_get_jog_distance")[0])
-                
-            run_single_line(f"robot.OffsetJ({posAxis}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
-
+            posAxis[axis] = -1 * int(event_manager.publish("request_get_jog_distance")[0])
+            
+        run_single_line(f"robot.OffsetJ({posAxis}, {var.JOG_SPEED}, {var.JOG_ACCEL})")

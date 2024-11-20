@@ -26,7 +26,7 @@ from backend.file_manager import new_file
 
 from backend.robot_management.communication import connect_robot, connect_robot_check
 from backend.robot_management.communication import connect_io, connect_io_check
-from backend.robot_management.communication import stop_robot
+from backend.robot_management.communication import stop_robot, play_robot, pauze_robot
 
 from backend.simulation import enable_simulation
 
@@ -209,7 +209,7 @@ class MenuField(QWidget):
         button_pauze.pressed.connect(lambda: self.pauze_robot())
         layout.addWidget(button_pauze, 6, 0, 1, 1)
 
-        button_play = QPushButton("pauze")
+        button_play = QPushButton("play")
         button_play.setStyleSheet(style_button_menu)
         button_play.pressed.connect(lambda: self.play_robot())
         layout.addWidget(button_play, 6, 1, 1, 1)
@@ -225,10 +225,10 @@ class MenuField(QWidget):
         stop_robot()
 
     def pauze_robot(self):
-        pass
+        pauze_robot()
 
     def play_robot(self):
-        pass
+        play_robot()
         
 
     def connect_camera(self):

@@ -2,7 +2,7 @@ import backend.core.variables as var
 from backend.core.event_manager import event_manager
 
 from backend.robot_management.communication  import send_line_to_robot, connect_robot_check
-from backend.simulation import simulate_program
+from backend.simulation import simulate_program, check_simulation_on
 
 
 
@@ -31,7 +31,7 @@ class Move():
         command = "MoveJ "
         
         # check if the simulation is enabled
-        if var.SIM == 1:
+        if check_simulation_on():
             for i in range(var.NUMBER_OF_JOINTS):
                 command += f"{var.NAME_AXIS[i]}{pos[i]} "
             command += f"s{v} a{a}\n"            
@@ -52,7 +52,7 @@ class Move():
 
         
         # check if the simulation is enabled
-        if var.SIM == 1:
+        if check_simulation_on():
             for i in range(var.NUMBER_OF_JOINTS):
                 command += f"{var.NAME_AXIS[i]}{pos[i]} "
             command += f"s{v} a{a}\n"     
@@ -80,7 +80,7 @@ class Move():
         
         
         # check if the simulation is enabled
-        if var.SIM == 1:
+        if check_simulation_on():
             for i in range(var.NUMBER_OF_JOINTS):
                 command += f"{var.NAME_JOINTS[i]}{pos[i]} "
             command += f"s{v} a{a}\n"
@@ -107,7 +107,7 @@ class Move():
         
         
         # check if it is a simulation
-        if var.SIM == 1:
+        if check_simulation_on():
             for i in range(var.NUMBER_OF_JOINTS):
                 command += f"{var.NAME_AXIS[i]}{pos[i]} "
             command += f"s{v} a{a}\n"                 
@@ -126,7 +126,7 @@ class Move():
             return   
 
         
-        if var.SIM == 1:
+        if check_simulation_on():
             command = "OffsetL "
             for i in range(var.NUMBER_OF_JOINTS):
                 command += f"{var.NAME_AXIS[i]}{pos[i]} "
@@ -149,7 +149,7 @@ class Move():
         
 
         # check if the simulation is enables
-        if var.SIM == 1:
+        if check_simulation_on():
             for i in range(var.NUMBER_OF_JOINTS):
                 command += f"{var.NAME_JOINTS[i]}{pos[i]} "
             command += f"s{v} a{a}\n"

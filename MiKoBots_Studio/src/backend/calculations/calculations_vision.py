@@ -1,7 +1,10 @@
 import backend.core.variables as var
+from backend.robot_management import get_selected_tool
 
 def calculate_mm_per_pixel(image, Height = None):    
-    settings_cam = var.TOOLS3D[var.SELECTED_TOOL][11]
+    tool = get_selected_tool()
+
+    settings_cam = var.TOOLS3D[tool][11]
     
     z1 = float(settings_cam[0]) # Z distance big square
     z2 = float(settings_cam[1]) # Z distance small square

@@ -16,6 +16,9 @@ robot_3d_model = Robot3dModel()
 def get_selected_robot():
     return robot_loader.selected_robot
 
+def get_selected_tool():
+    return tool_management.selected_tool
+
 def get_selected_robot_name():
     return robot_loader.robots[robot_loader.selected_robot][0]
 

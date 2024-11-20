@@ -21,97 +21,42 @@ class SimulationManagement(QObject):
         
         self.inverse_kinematics_3 = InverseKinematics_3()
         self.forward_kinematics_3 = ForwardKinematics_3()
-
-        self.viewer_busy = 0
-        
-        self.points = []
-        
-        self.step_size_deg = 1
-        self.step_size_mm = 2
         
         self.Motion_ok = True
+        self.simulation_on = False
+        self.simulation_busy = False
           
     def EnableSimulation(self, state):
         if state ==  2:
-            var.SIM = 1
+            self.simulation_on = True
             event_manager.publish("request_change_labels_control", True)
             event_manager.publish("request_label_pos_axis", var.POS_AXIS_SIM, var.NAME_AXIS, var.UNIT_AXIS)
             event_manager.publish("request_label_pos_joint", var.POS_JOINT_SIM, var.NAME_JOINTS, var.UNIT_JOINT)
             
         else:
-            var.SIM = 0
+            self.simulation_on = False
             event_manager.publish("request_change_labels_control", False)
             event_manager.publish("request_label_pos_axis", var.POS_AXIS, var.NAME_AXIS, var.UNIT_AXIS)
             event_manager.publish("request_label_pos_joint", var.POS_JOINT, var.NAME_JOINTS, var.UNIT_JOINT)
     
     def SimulateProgram(self, program):
         self.program = program
-        self.step = 0
         self.last_position = []
 
-        self.viewer_busy = 1         
+        self.simulation_busy = True     
         words = self.program.split()
         
         if words[0] == "MoveL": self.MoveL(self.program)
         elif words[0] == "MoveJ": self.MoveJ(self.program)
         elif words[0] == "OffsetJ": self.OffsetJ(self.program)
         elif words[0] == "OffsetL" or words[0] == "jogL": self.OffsetL(self.program)
-        #elif words[0] == "Gripper": self.Gripper(self.program)
         elif words[0] == "jogJ": self.jogJ(self.program)
-        #elif words[0] == "MoveJoint": self.MoveJont(self.program, line)
+        #elif words[0] == "MoveJoint": self.MoveJont(self.program)
         
-        self.step += 1
-        self.viewer_busy = 0
-                                 
-    def SimulationMoveGUI(self, POS, Move):
-        import threading
-        def execute_program():
-            
-            
-            self.viewer_busy = 1
-            if type(POS) == list:
-                line = Move
-                
-                for i in range(var.NUMBER_OF_JOINTS):
-                    line += (f" {var.NAME_AXIS[i]}{POS[i]}")
-            else:
-                line = f"{Move} {POS}"
-                
-            words = line.split()
-            if words[0] == "MoveL": self.MoveL(line)
-            elif words[0] == "MoveJ": self.MoveJ(line)
-            elif words[0] == "OffsetJ": self.OffsetJ(line)
-            elif words[0] == "OffsetL" or words[0] == "jogL": self.OffsetL(line)
-            
-            
-            elif words[0] == "jogJ": 
-                line = Move
-                for i in range(var.NUMBER_OF_JOINTS):
-                    line += (f" {var.NAME_JOINTS[i]}{POS[i]}")   
-                self.jogJ(line)
-                
-            elif words[0] == "MoveJoint":
-                line = Move
-                for i in range(var.NUMBER_OF_JOINTS):
-                    line += (f" {var.NAME_JOINTS[i]}{POS[i]}")              
-                self.MoveJoint(line)
-                
-            elif words[0] == "Tool_MoveTo":
-                self.updateLabelTool(line)
-                
-            self.viewer_busy = 0
-                                                    
-
-        if self.viewer_busy == 0:
-            self.Motion_ok = True
-            thread = threading.Thread(target = execute_program)
-            thread.start()    
+        self.simulation_busy = False
 
     #######################
     # Movements action robot
-    
-    def SetNotBusy(self):
-        self.viewer_busy = 0
     
     def jogJ(self, line):       
         if var.NUMBER_OF_JOINTS == 3:
@@ -142,10 +87,7 @@ class SimulationManagement(QObject):
         
         # move the robot
         if self.Motion_ok:
-            number_of_steps = math.ceil(max_angle / self.step_size_deg)
-
-            Joints_increments = self.JointAxisIncrements(Joint_angles_delta, number_of_steps)
-            self.JTypeMovement(number_of_steps, Joint_angles_start, Joints_increments)
+            self.JTypeMovement(Joint_angles_start, Joint_angles_end)
 
             if var.NUMBER_OF_JOINTS == 3:
                 matrix = self.forward_kinematics_3.ForwardKinematics(var.POS_JOINT_SIM)
@@ -166,14 +108,10 @@ class SimulationManagement(QObject):
             print(var.LANGUAGE_DATA.get("message_no_kinematics")) 
             return
             
+        # find the end postion of the joint angles
         matches = re.search(pattern, line)
         Joint_angles_end = [float(matches.group(i + 1)) for i in range(var.NUMBER_OF_JOINTS)]
         
-        # calculate the max movement
-        max_angle = 0 
-        for i in range(var.NUMBER_OF_JOINTS):
-            if max_angle < abs(var.POS_JOINT_SIM[i] - Joint_angles_end[i]):
-                max_angle = abs(var.POS_JOINT_SIM[i] - Joint_angles_end[i])
                         
         # check if the robot can reach the position
         self.Motion_ok = self.checkJointPos(Joint_angles_end, True)
@@ -181,12 +119,8 @@ class SimulationManagement(QObject):
         
         # move the robot
         if self.Motion_ok:
-            Joint_angles_delta = self.JointAnglesDelta(Joint_angles_start, Joint_angles_end)
-            number_of_steps = math.ceil(max_angle / self.step_size_deg)          
-            Joints_increments = self.JointAxisIncrements(Joint_angles_delta, number_of_steps)
-            
             # move the robot to the new position
-            self.JTypeMovement(number_of_steps, Joint_angles_start, Joints_increments)
+            self.JTypeMovement(Joint_angles_start, Joint_angles_end)
             
             # Calculate the XYZ position of the robot
             if var.NUMBER_OF_JOINTS == 3:
@@ -209,64 +143,25 @@ class SimulationManagement(QObject):
             
         matches = re.search(pattern, line)
         axis_pos_end = [float(matches.group(i + 1)) for i in range(var.NUMBER_OF_JOINTS)]
-    
-        # calculate the max movement
-        max_pos_mm = 0
-        for i in range(var.NUMBER_OF_JOINTS):
-            if max_pos_mm < abs(var.POS_AXIS_SIM[i] - axis_pos_end[i]):
-                max_pos_mm = abs(var.POS_AXIS_SIM[i] - axis_pos_end[i])
 
         # Check if the robot can reach the position
         Joint_angles_start = var.POS_JOINT_SIM
         self.Motion_ok = self.checkJointPos(axis_pos_end, False)
 
                       
-        if self.Motion_ok and max_pos_mm > 0.00:
+        if self.Motion_ok:
+            # calculate the end position of the joins
             if var.NUMBER_OF_JOINTS == 6:
                 Joint_angles_end = self.inverse_kinematics_6.InverseKinematics(axis_pos_end, var.POS_JOINT_SIM)
             elif var.NUMBER_OF_JOINTS == 3:
                 Joint_angles_end = self.inverse_kinematics_3.inverseKinematics(axis_pos_end)
-                
-            Joint_angles_delta = self.JointAnglesDelta(Joint_angles_start, Joint_angles_end)
-            number_of_steps = math.ceil(max_pos_mm / self.step_size_mm)
-            Joints_increments = self.JointAxisIncrements(Joint_angles_delta, number_of_steps)
             
-            # move the robot to the new position
-            self.JTypeMovement(number_of_steps, Joint_angles_start, Joints_increments)
-                      
+            self.JTypeMovement(Joint_angles_start, Joint_angles_end)
+
             # update the position in the labels
             var.POS_AXIS_SIM = axis_pos_end
             self.updateLabels()                  
-                      
-    def MoveL(self, line):
-        if var.NUMBER_OF_JOINTS == 3:
-            pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+)'
-        elif var.NUMBER_OF_JOINTS == 6:
-            pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+).*y(-?\d+).*p(-?\d+).*r(-?\d+)'
-        else:
-            print(var.LANGUAGE_DATA.get("message_no_kinematics")) 
-            
-        matches = re.search(pattern, line)
-        axis_pos_end = [float(matches.group(i + 1)) for i in range(var.NUMBER_OF_JOINTS)]     
-            
-        max_pos_mm = 0
-        pos_xyz_delta = []
-        for i in range(var.NUMBER_OF_JOINTS): 
-            if max_pos_mm < (axis_pos_end[i] - var.POS_AXIS_SIM[i]):
-                max_pos_mm = (axis_pos_end[i] - var.POS_AXIS_SIM[i])
-            pos_xyz_delta.append(axis_pos_end[i] - var.POS_AXIS_SIM[i])  
-
-        # calculate the distance per mm
-        number_of_steps = math.ceil(max_pos_mm / self.step_size_mm)
-        
-        # Check if you can reach the end position
-        self.Motion_ok = self.checkJointPos(axis_pos_end, False)          
-            
-        # if the robot can reach the end position
-        if self.Motion_ok:
-            pos_xyz_increments = self.JointAxisIncrements(pos_xyz_delta, number_of_steps) 
-            self.LTypeMovement(number_of_steps, pos_xyz_increments)
-             
+                           
     def OffsetJ(self, line):
         if var.NUMBER_OF_JOINTS == 3:
             pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+)'
@@ -275,44 +170,56 @@ class SimulationManagement(QObject):
         else:
             print(var.LANGUAGE_DATA.get("message_no_kinematics")) 
         
+        # find the delta positions
         matches = re.search(pattern, line)
         axis_pos_delta = [float(matches.group(i + 1)) for i in range(var.NUMBER_OF_JOINTS)]
 
-        # calculate tha max movement, and the end position
-        max_pos_mm = 0
+        # calculate tha end position of the axis
         for i in range(var.NUMBER_OF_JOINTS):
-            if max_pos_mm < abs(axis_pos_delta[i]):
-                max_pos_mm = abs(axis_pos_delta[i])
             axis_pos_delta[i] += var.POS_AXIS_SIM[i]  
-        
         axis_pos_end = axis_pos_delta
         
         # Check if the robot can reach the position
         Joint_angles_start = var.POS_JOINT_SIM   
         self.Motion_ok = self.checkJointPos(axis_pos_end, False)        
 
-        
-
         if self.Motion_ok:
+            # calculate the end position of the joints
             if var.NUMBER_OF_JOINTS == 6:
                 Joint_angles_end = self.inverse_kinematics_6.InverseKinematics(axis_pos_end, var.POS_JOINT_SIM)
             elif var.NUMBER_OF_JOINTS == 3:
                 Joint_angles_end = self.inverse_kinematics_3.inverseKinematics(axis_pos_end)
-                
-            Joint_angles_delta = self.JointAnglesDelta(Joint_angles_start, Joint_angles_end)   
-            
-            
-                       
-            number_of_steps = math.ceil(abs(max_pos_mm) / self.step_size_mm)
-            Joints_increments = self.JointAxisIncrements(Joint_angles_delta, number_of_steps)
-            
+
             # move the robot to the new position
-            self.JTypeMovement(number_of_steps, Joint_angles_start, Joints_increments)
+            self.JTypeMovement(Joint_angles_start, Joint_angles_end)
                  
             # update the position in the labels      
             var.POS_AXIS_SIM = axis_pos_end
             self.updateLabels()
-               
+   
+    def MoveL(self, line):
+        if var.NUMBER_OF_JOINTS == 3:
+            pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+)'
+        elif var.NUMBER_OF_JOINTS == 6:
+            pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+).*y(-?\d+).*p(-?\d+).*r(-?\d+)'
+        else:
+            print(var.LANGUAGE_DATA.get("message_no_kinematics")) 
+            
+        # find the end position of the axis
+        matches = re.search(pattern, line)
+        axis_pos_end = [float(matches.group(i + 1)) for i in range(var.NUMBER_OF_JOINTS)]     
+
+        axis_pos_start = var.POS_AXIS_SIM 
+        
+        # Check if you can reach the end position
+        self.Motion_ok = self.checkJointPos(axis_pos_end, False)          
+            
+        # if the robot can reach the end position
+        if self.Motion_ok:
+            self.LTypeMovement(axis_pos_start, axis_pos_end)
+
+            self.updateLabels()
+                      
     def OffsetL(self, line):
         # read the line
         if var.NUMBER_OF_JOINTS == 3:
@@ -325,45 +232,187 @@ class SimulationManagement(QObject):
         matches = re.search(pattern, line)
         axis_pos_delta = [float(matches.group(i + 1)) for i in range(var.NUMBER_OF_JOINTS)]
       
-        
+        axis_pos_start = var.POS_AXIS_SIM
+
         # calculate the max movement
-        max_pos_mm = 0
         axis_pos_end = [0] * var.NUMBER_OF_JOINTS
         for i in range(var.NUMBER_OF_JOINTS):
-            if max_pos_mm < abs(axis_pos_delta[i]):
-                max_pos_mm = abs(axis_pos_delta[i])
-            axis_pos_end[i] = var.POS_AXIS_SIM[i] + axis_pos_delta[i]
+            axis_pos_end[i] = axis_pos_start[i] + axis_pos_delta[i]
         
         # check if the robot can reach the position  
         self.Motion_ok = self.checkJointPos(axis_pos_end, False)  
                                 
         # move the robot                        
         if self.Motion_ok:
-            number_of_steps =math.ceil(max_pos_mm / self.step_size_mm)
-            pos_xyz_increments = self.JointAxisIncrements(axis_pos_delta, number_of_steps)
-            
-            self.LTypeMovement(number_of_steps, pos_xyz_increments)
+            self.LTypeMovement(axis_pos_start, axis_pos_end)
+
+            self.updateLabels()
  
     #######################
     # functions for moving the robvot in the sim
     
-    def JointAxisIncrements(self, delta, number_of_steps):
+    # Move L commands
+    def AxisPosDelta(self, axis_pos_start, axis_pos_end):
+        axis_pos_delta = []
+        for i in range(var.NUMBER_OF_JOINTS): 
+            axis_pos_delta.append(axis_pos_end[i]-axis_pos_start[i])  
+        
+        return axis_pos_delta        
+   
+    def AxisIncrements(self, axis_pos_delta, max_step_size):
+        # get the max delta
+        max_delta = max(axis_pos_delta, key=abs)
+        max_delta = abs(max_delta)
+        # print(f"Max delta {max_delta}")
+
         increments = []
         for i in range(var.NUMBER_OF_JOINTS + var.EXTRA_JOINT): 
             try:
-                increments.append(delta[i] / number_of_steps)  
+                # print(f"{(abs(Joint_angles_delta[i]) / max_delta) * max_step_size} = ({abs(Joint_angles_delta[i])}) / {max_delta} * {max_step_size}")
+                step_size = (abs(axis_pos_delta[i]) / max_delta) * max_step_size
+                if axis_pos_delta[i] < 0:
+                    increments.append(-step_size)
+                else:
+                    increments.append(step_size)
             except:
                 increments.append(0)
             
         return increments
- 
+
+    def LTypeMovement(self, axis_start, axis_end):
+        axis_pos_start = axis_start
+        axis_pos_end = axis_end
+        reached_end = False
+
+        while not reached_end:
+            start_time = time.time()
+            # get the speed so we can calculate the mm per step
+            speed_percentage = float(event_manager.publish("request_get_speed")[0])
+            step_size = speed_percentage * 0.01
+
+            axis_pos_delta = self.AxisPosDelta(axis_pos_start, axis_pos_end)
+            if abs(max(axis_pos_delta, key=abs)) < step_size:
+                step_size = abs(max(axis_pos_delta, key=abs))
+                reached_end = True
+
+            # detemine the increment
+            axis_increments = self.AxisIncrements(axis_pos_delta, step_size)
+
+            # calculate the end position of this step
+            axis_pos_start = [a + b for a, b in zip(axis_pos_start, axis_increments)]
+
+            if var.NUMBER_OF_JOINTS == 6:
+                Joint_angles = self.inverse_kinematics_6.InverseKinematics(axis_pos_start, var.POS_JOINT_SIM)
+            elif var.NUMBER_OF_JOINTS == 3:
+                Joint_angles = self.inverse_kinematics_3.inverseKinematics(axis_pos_start)
+
+            # check if it can reach the position
+            self.Motion_ok = self.checkJointPos(Joint_angles, True)
+
+            # calculate the matrix for the position of the sim models
+            if var.NUMBER_OF_JOINTS == 6:
+                matrix = self.forward_kinematics_6.ForwardKinematics(Joint_angles)
+            elif var.NUMBER_OF_JOINTS == 3: 
+                matrix = self.forward_kinematics_3.ForwardKinematics(Joint_angles)
+            
+            # move the robot in the simulation
+            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+
+            # calculate the joint increments and calculate the delay between each step
+            joint_increments = [a - b for a, b in zip(Joint_angles, var.POS_JOINT_SIM)]
+            delay = self.CalculateSpeed(joint_increments)
+
+            end_time = time.time()
+            delay_calculations = end_time - start_time
+
+            time.sleep(delay - delay_calculations)
+
+            var.POS_JOINT_SIM = Joint_angles
+
+
+        var.POS_AXIS_SIM = axis_pos_start
+
+
+    # Move J commands
     def JointAnglesDelta(self, Joint_angles_start, Joint_angles_end):
         Joint_angles_delta = []
         for i in range(var.NUMBER_OF_JOINTS): 
             Joint_angles_delta.append(Joint_angles_end[i]-Joint_angles_start[i])  
         
         return Joint_angles_delta
- 
+
+    def JointIncrements(self, Joint_angles_delta, max_step_size):
+        # get the max delta
+        max_delta = max(Joint_angles_delta, key=abs)
+        max_delta = abs(max_delta)
+        # print(f"Max delta {max_delta}")
+
+        increments = []
+        for i in range(var.NUMBER_OF_JOINTS + var.EXTRA_JOINT): 
+            try:
+                # print(f"{(abs(Joint_angles_delta[i]) / max_delta) * max_step_size} = ({abs(Joint_angles_delta[i])}) / {max_delta} * {max_step_size}")
+                step_size = (abs(Joint_angles_delta[i]) / max_delta) * max_step_size
+                if Joint_angles_delta[i] < 0:
+                    increments.append(-step_size)
+                else:
+                    increments.append(step_size)
+            except:
+                increments.append(0)
+            
+        return increments
+        
+    def JTypeMovement(self, Joint_start, Joint_end):
+        Joint_angles_start = Joint_start
+        Joint_angles_end = Joint_end
+        reached_end = False
+
+        while not reached_end:
+            start_time = time.time()
+
+            # get the speed so we can calculate the deg per step
+            speed_percentage = float(event_manager.publish("request_get_speed")[0])
+
+            step_size = speed_percentage * 0.01
+
+            Joint_angles_delta = self.JointAnglesDelta(Joint_angles_start, Joint_angles_end)
+            # when the step size is greater than the maximum delta change it to the max delta
+            if abs(max(Joint_angles_delta, key=abs)) < step_size:
+                step_size = abs(max(Joint_angles_delta, key=abs))
+                reached_end = True
+
+            Joints_increments = self.JointIncrements(Joint_angles_delta, step_size)
+            # print(f"Joint increments: {Joints_increments}")
+
+            # print(f"Joint start: {Joint_angles_start}")
+            # add the increment to the start position
+            Joint_angles_start = [a + b for a, b in zip(Joint_angles_start, Joints_increments)]
+
+            # print(f"Joint start: {Joint_angles_start}")
+            # print(f"Joint end: {Joint_angles_end}")
+
+            if var.NUMBER_OF_JOINTS == 6:
+                matrix = self.forward_kinematics_6.ForwardKinematics(Joint_angles_start)
+            elif var.NUMBER_OF_JOINTS == 3: 
+                matrix = self.forward_kinematics_3.ForwardKinematics(Joint_angles_start)
+
+            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+            delay_time = self.CalculateSpeed(Joints_increments)
+            # print(f"time delay: {delay_time}")
+
+            end_time = time.time()
+            delay_calculations = end_time - start_time
+            time.sleep(delay_time - delay_calculations)
+
+            # print(f"time needed for calculation = {start_time - end_time}")
+            # print(f"delay time {delay_time}")
+
+
+
+        var.POS_JOINT_SIM = Joint_angles_start
+
+
+
+
     def CalculateSpeed(self, joint_distances):       
         # need to know the move in degrees of the maximum joint and we need to know the joint
         # we know the max speed per joint
@@ -403,69 +452,8 @@ class SimulationManagement(QObject):
         # calculate the delay
         delay = (1 / VEL) * max(joint_distances_abs) # 0.005 is the average time needed for calculation
         return delay
-         
-    def LTypeMovement(self, number_of_steps, pos_xyz_increments):
-        for i in range(int(number_of_steps)):
-            if self.Motion_ok:
-                for j in range(var.NUMBER_OF_JOINTS):
-                    var.POS_AXIS_SIM[j] += pos_xyz_increments[j]
-        
-            if var.NUMBER_OF_JOINTS == 6:
-                Joint_angles = self.inverse_kinematics_6.InverseKinematics(var.POS_AXIS_SIM, var.POS_JOINT_SIM)
-            elif var.NUMBER_OF_JOINTS == 3:
-                Joint_angles = self.inverse_kinematics_3.inverseKinematics(var.POS_AXIS_SIM)
-                
-            self.Motion_ok = self.checkJointPos(Joint_angles, True)
-            
-            if var.NUMBER_OF_JOINTS == 6:
-                matrix = self.forward_kinematics_6.ForwardKinematics(Joint_angles)
-            elif var.NUMBER_OF_JOINTS == 3: 
-                matrix = self.forward_kinematics_3.ForwardKinematics(Joint_angles)
-                                
-            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
-            joint_increments = [a - b for a, b in zip(Joint_angles, var.POS_JOINT_SIM)]
-            delay = self.CalculateSpeed(joint_increments)
-            time.sleep(delay)
-
-            if self.Motion_ok:
-                var.POS_JOINT_SIM = Joint_angles
-                self.updateLabels()
- 
-    def JTypeMovement(self, number_of_steps, Joint_angles_start, Joints_increments):
-        start_time = time.time()
-        for i in range(int(number_of_steps)):
-            
-            
-            for j in range(var.NUMBER_OF_JOINTS + var.EXTRA_JOINT):
-                Joint_angles_start[j] += Joints_increments[j]   
-                
-            if var.NUMBER_OF_JOINTS == 6:
-                matrix = self.forward_kinematics_6.ForwardKinematics(Joint_angles_start)
-            elif var.NUMBER_OF_JOINTS == 3: 
-                matrix = self.forward_kinematics_3.ForwardKinematics(Joint_angles_start)
-                
-            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
-            delay_time = self.CalculateSpeed(Joints_increments)
-            time.sleep(delay_time)
-                
-            var.POS_JOINT_SIM = Joint_angles_start
-            
-        #end_time = time.time()
-        #execution_time = end_time - start_time - delay_time
        
-       
-    def updateLabelTool(self, line):
-        
-        match = re.search(r'[-+]?\d+', line)
-        if match:
-            value = match.group()
-            var.TOOL_POS += int(value)
-            event_manager.publish("request_set_tool_pos", var.TOOL_POS)     
-        
-    def updateLabels(self):
-        event_manager.publish("request_label_pos_axis", var.POS_AXIS_SIM, var.NAME_AXIS, var.UNIT_AXIS)
-        event_manager.publish("request_label_pos_joint", var.POS_JOINT_SIM, var.NAME_JOINTS, var.UNIT_JOINT)
-     
+    # check if the robot can reach the position       
     def checkJointPos(self, end_pos, joint):
         pos = True
         try:
@@ -492,7 +480,21 @@ class SimulationManagement(QObject):
         
         return pos
     
+
+    # Update the label in the GUI
+    def updateLabelTool(self, line):
         
+        match = re.search(r'[-+]?\d+', line)
+        if match:
+            value = match.group()
+            var.TOOL_POS += int(value)
+            event_manager.publish("request_set_tool_pos", var.TOOL_POS)     
+        
+    def updateLabels(self):
+        event_manager.publish("request_label_pos_axis", var.POS_AXIS_SIM, var.NAME_AXIS, var.UNIT_AXIS)
+        event_manager.publish("request_label_pos_joint", var.POS_JOINT_SIM, var.NAME_JOINTS, var.UNIT_JOINT)
+     
+ 
 
     
     

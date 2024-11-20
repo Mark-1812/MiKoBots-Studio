@@ -21,6 +21,8 @@ from gui.windows.message_boxes import WarningMessageRe
 
 from backend.simulation.robot import change_pos_robot, add_tool_sim, delete_tool_sim
 
+from backend.run_program import run_single_line
+
 class ToolManagment(QObject):
     def __init__(self):
         super().__init__()
@@ -33,12 +35,10 @@ class ToolManagment(QObject):
         self.file_management = FileManagement()
         
         self.selected_tool = None
-        
-    def GetToolNr(self):
-        return var.SELECTED_TOOL
+        self.tool_type = None
         
     def GetToolInfo(self):
-        return var.TOOL_TYPE
+        return self.tool_type
         
     def SetupTool(self):
         event_manager.publish("request_delete_buttons_tool")
@@ -115,7 +115,8 @@ class ToolManagment(QObject):
     
         # if no tool
         if (tool + 1) > len(var.TOOLS3D):
-            var.SELECTED_TOOL = len(var.TOOLS3D)
+            self.selected_tool = len(var.TOOLS3D)
+
             var.TOOL_FRAME = [0,0,0,0,0,0] 
             if var.NUMBER_OF_JOINTS == 6:
                 joint_pos = self.InverseKinematics_6.InverseKinematics(var.POS_AXIS_SIM, var.POS_JOINT_SIM)
@@ -139,19 +140,16 @@ class ToolManagment(QObject):
             add_tool_sim(data)
  
             var.TOOL_FRAME = var.TOOLS3D[tool][5]            
-            var.TOOL_PIN_NUMBER = var.TOOLS3D[tool][6]
-            var.TOOL_TYPE = var.TOOLS3D[tool][7] # Type of tool pin (Servo or relay)
-            var.TOOL_RELAY_POS = var.TOOLS3D[tool][8]
             var.TOOL_OFFSET_CAM = var.TOOLS3D[tool][9]
-            var.TOOL_TURN_CAM = var.TOOLS3D[tool][10]
             var.TOOL_SETTINGS_CAM = var.TOOLS3D[tool][11] 
                     
-        var.SELECTED_TOOL = tool
+        self.selected_tool = tool
         
         if var.NUMBER_OF_JOINTS == 6:
             joint_pos = self.InverseKinematics_6.InverseKinematics(var.POS_AXIS_SIM, var.POS_JOINT_SIM)
             matrix = self.ForwardKinematics_6.ForwardKinematics(joint_pos)
             change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+
         elif var.NUMBER_OF_JOINTS == 3:
             matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0])
             change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)

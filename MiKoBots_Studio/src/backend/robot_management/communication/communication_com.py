@@ -2,12 +2,9 @@ import threading
 import time
 import serial
 import backend.core.variables as var
-from serial.serialutil import SerialException
 from backend.core.event_manager import event_manager
 
-
 from gui.windows.message_boxes import ErrorMessage
-
 
 class TalkThroughCOM():
     pause_event = threading.Event()
@@ -23,22 +20,13 @@ class TalkThroughCOM():
         self.com_port = None
         self.com_ser = None
 
+        self.stop = False
+        self.pauze = False
+
         self.pause_event.clear()
         self.busy_event.clear()
-    
-    def DisConnect(self):
-        self.robot_home = False  
-        self.com_ser.close()
-        self.connect = False 
 
-        if self.ROBOT:
-            event_manager.publish("request_robot_connect_button_color", False)
-            event_manager.publish("request_robot_home_button_color", False)
-            self.robot_home = False
-
-        if self.IO:
-            event_manager.publish("request_io_connect_button_color", False) 
-
+# Connect the robot
     def Connect(self, com_port = None):
         try:        
             self.com_port = com_port
@@ -77,48 +65,27 @@ class TalkThroughCOM():
         
         except serial.SerialException:
             print(var.LANGUAGE_DATA.get("message_failed_connection_com"))
-                    
+
+# disconnect the robot
+    def DisConnect(self):
+        self.robot_home = False  
+        self.com_ser.close()
+        self.connect = False 
+
+        if self.ROBOT:
+            event_manager.publish("request_robot_connect_button_color", False)
+            event_manager.publish("request_robot_home_button_color", False)
+            self.robot_home = False
+
+        if self.IO:
+            event_manager.publish("request_io_connect_button_color", False) 
+
+# Close the robot 
     def Close(self):
         if self.connect:
             self.com_ser.close()
-    
-    def StopProgram(self):
-        def threadStop():
-            # send all the settings to the robot except for the settings where the IO_box is checked
-            command = "stop\n"
-            if self.com_ser:
-                self.com_ser.write(command.encode())
-                
-            print("Stop robot, wait 3 seconds before sending new command.")
-            time.sleep(3)
-            
-            self.busy = 0
-            command = "play\n"
-            
-            if self.com_ser:
-                self.com_ser.write(command.encode())            
-                                                
-        t_threadStop = threading.Thread(target=threadStop)  
-        t_threadStop.start()   
-            
-    def SendLineCommand(self, command):
-        while self.pause_event.is_set():
-            time.sleep(0.1)
-        
-        self.busy = 1   
 
-        try:
-            self.com_ser.write(command.encode())
-        except:
-            self.CloseRobot()
-            print(var.LANGUAGE_DATA.get("message_lost_connection_robot"))
-            
-        start_time = time.time()
-        while self.busy: 
-            if time.time() - start_time >= 10:
-                break 
-            time.sleep(0.03)
-                   
+# read data
     def ReadDate(self):
         while self.com_ser.is_open:
             try:
@@ -190,7 +157,27 @@ class TalkThroughCOM():
             time.sleep(0.01)
            
         self.DisConnect()  
-                
+
+# send command   
+    def SendLineCommand(self, command):
+        while self.pause_event.is_set():
+            time.sleep(0.1)
+        
+        self.busy = 1   
+
+        try:
+            self.com_ser.write(command.encode())
+        except:
+            self.CloseRobot()
+            print(var.LANGUAGE_DATA.get("message_lost_connection_robot"))
+            
+        start_time = time.time()
+        while self.busy: 
+            if time.time() - start_time >= 10:
+                break 
+            time.sleep(0.03)
+                   
+# send settings  
     def SendSettingsRobot(self):
         if not self.busy and self.connect:
             category_names = []
@@ -249,9 +236,7 @@ class TalkThroughCOM():
             elif not self.connect:
                 print(var.LANGUAGE_DATA.get("message_robot_not_connected")) 
                 ErrorMessage(var.LANGUAGE_DATA.get("message_robot_not_connected"))
-      
-
-
+    
     def SendSettingsIO(self):
         if not self.busy and self.connect:
             category_names = []
@@ -302,3 +287,31 @@ class TalkThroughCOM():
             elif self.connect == 0:
                 print(var.LANGUAGE_DATA.get("message_io_not_connected"))
                 ErrorMessage(var.LANGUAGE_DATA.get("message_io_not_connected"))
+
+## play pauze stop the robot
+    def StopProgram(self):
+        # send all the settings to the robot except for the settings where the IO_box is checked
+        command = "stop\n"
+        if self.com_ser:
+            self.com_ser.write(command.encode())
+
+        self.busy = False
+        self.stop = True
+
+    def PlayProgram(self):
+        # send all the settings to the robot except for the settings where the IO_box is checked
+        command = "play\n"
+        if self.com_ser:
+            self.com_ser.write(command.encode())
+
+        self.stop = False
+        self.pauze = False
+
+    def PauzeProgram(self):
+        # send all the settings to the robot except for the settings where the IO_box is checked
+        command = "pauze\n"
+        if self.com_ser:
+            self.com_ser.write(command.encode())
+
+        self.pauze = True
+

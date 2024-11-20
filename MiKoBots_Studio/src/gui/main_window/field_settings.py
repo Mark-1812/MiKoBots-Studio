@@ -37,7 +37,10 @@ class SettingsField(QWidget):
         event_manager.subscribe("request_state_controller_label", self.StateControllerLabel)
         
         event_manager.subscribe("request_get_speed", self.GetSpeed)
+        event_manager.subscribe("request_set_speed", self.SetSpeed)
+
         event_manager.subscribe("request_get_accel", self.GetAccel)
+        event_manager.subscribe("request_set_speed", self.SetAccel)
         
         event_manager.subscribe("request_add_robot_combo", self.AddRobotCombo)
         event_manager.subscribe("request_delete_robot_combo", self.DeleteRobotCombo)
@@ -202,10 +205,16 @@ class SettingsField(QWidget):
         
     def GetSpeed(self):
         return self.slider_speed.current_value
+
+    def SetSpeed(self, value):
+        self.slider_speed.slider.setValue(int(value))
     
     def GetAccel(self):
         return self.slider_accel.current_value
-      
+
+    def SetAccel(self, value):
+        self.slider_accel.slider.setValue(int(value))
+
     def GetJogDistance(self):
         return self.slider_jog.current_value
     

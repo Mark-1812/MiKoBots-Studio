@@ -135,10 +135,8 @@ class VisionSetup(QWidget):
         rot = float(self.entry_rot.text())
         square_size = int(self.entry_square_size.text())
         checkbox = self.checkbox_cam_tool.isChecked()
-        colors = var.COLOR_RANGE
         
-        data = [x, y, rot, square_size, checkbox, colors]
-        print(data)
+        data = [x, y, rot, square_size, checkbox]
         return data
     
     def SetVisionSettings(self, data):

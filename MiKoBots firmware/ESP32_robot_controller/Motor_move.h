@@ -167,10 +167,12 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
     if(stop == 1){    // when the stop button is pressed go out of this for loop
       break;
     }
-    while(pauze == 1){  // when the pauze button is pressed wait until the the play button is pressed or break if the stop button is pressed
+    
+    while(pauze){  // when the pauze button is pressed wait until the the play button is pressed or break if the stop button is pressed
       delay(10);
       if(stop == 1) break;
     }  
+
     for (int k = 0; k < NUMBER_OF_JOINTS; k++){
       digitalWrite(motors[k].step_pin,HIGH);
     }

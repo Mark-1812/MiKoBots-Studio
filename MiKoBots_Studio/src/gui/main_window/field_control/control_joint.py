@@ -68,7 +68,7 @@ class ControlJoint(QWidget):
 
             button_minus = QPushButton("-", self)
             button_minus.clicked.connect(lambda state, idx=i: self.ButtonJointMove(idx, 0))
-            button_minus.setMaximumWidth(50)
+            button_minus.setMaximumWidth(30)
             button_minus.setMinimumWidth(20)
             button_minus.setStyleSheet(style_button)
 
@@ -79,7 +79,7 @@ class ControlJoint(QWidget):
 
             button_plus = QPushButton("+", self)
             button_plus.clicked.connect(lambda state, idx=i: self.ButtonJointMove(idx, 1))
-            button_plus.setMaximumWidth(50)
+            button_plus.setMaximumWidth(30)
             button_plus.setMinimumWidth(20)
             button_plus.setStyleSheet(style_button)
             
@@ -105,17 +105,11 @@ class ControlJoint(QWidget):
  
     def ButtonJointMove(self, joint, dir):
         posJoint = [0] * self.nr_of_joints
-        if self.simulation:
-            if dir == 1:
-                posJoint[joint] = int(event_manager.publish("request_get_jog_distance")[0])
-            else:
-                posJoint[joint] = -1 * int(event_manager.publish("request_get_jog_distance")[0])
-            run_single_line(f"robot.JogJoint({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
+
+        if dir == 1:
+            posJoint[joint] = int(event_manager.publish("request_get_jog_distance")[0])
         else:
-            if dir == 1:
-                posJoint[joint] = int(event_manager.publish("request_get_jog_distance")[0])
-            else:
-                posJoint[joint] = -1 * int(event_manager.publish("request_get_jog_distance")[0])
-                
-            run_single_line(f"robot.JogJoint({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
-   
+            posJoint[joint] = -1 * int(event_manager.publish("request_get_jog_distance")[0])
+            
+        run_single_line(f"robot.JogJoint({posJoint}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
+

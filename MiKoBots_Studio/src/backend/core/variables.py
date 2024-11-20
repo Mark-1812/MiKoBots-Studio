@@ -1,11 +1,5 @@
-SIM = 0
 POS_JOINT_SIM = [0,0,0,0,0,0]
 POS_AXIS_SIM = [400,0,500,0,90,0]
-
-LOG_DATA = []
-
-XBOX_USE = 0
-XBOX_STATE = 0
 
 NAME_JOINTS = ["J1","J2","J3","J4","J5","J6", "TOOL"]
 UNIT_JOINT = ["deg","deg","deg","deg","deg","deg"]
@@ -15,14 +9,8 @@ UNIT_AXIS = ["mm","mm","mm","deg","deg","deg"]
 
 POS_GRIPPER = "0"
 
-SPEED = "50"
-ACCEL = "50"
-
-JOG_DISTANCE = "10"
 JOG_SPEED = "50"
 JOG_ACCEL = "50"
-
-CAM_SQUARE = False
 
 FILE_PATH = None
 
@@ -62,7 +50,6 @@ POS_AXIS_SIM = [400,0,500,0,90,0]
 POS_AXIS = [400,0,300,0,0,0]
 POS_JOINT = [0,0,0,0,0,0]
 TOOL_POS = 0
-SELECTED_TOOL = None
 
 # variables related to the connection of the robot
 ROBOT_JOINT_MOVE = None
@@ -70,23 +57,10 @@ ROBOT_NAME = ""
 
 # variables related to the connection of the robot
 TOOL_FRAME = [0,0,0,0,0,0]
-TOOL_PIN_NUMBER = None
-TOOL_TYPE = None # relay or servo
-TOOL_RELAY_POS = None
 
 TOOL_OFFSET_CAM = None
-TOOL_TURN_CAM = None
 TOOL_SETTINGS_CAM = None
 
-# variables related to vision
-VISION_CAP = ""
-VISION_COLOR_OPTIONS = {"RED": [[0, 50, 105], [25, 255, 255], [165, 50, 10], [179, 255, 255]], "GREEN": [[30, 80, 30], [85, 255, 255]], "BLUE": [[95, 95, 100], [135, 255, 255]], "YELLOW": [[20, 100, 100], [35, 255, 255]], "ORAGNE": [[10, 100, 100], [20, 255, 255]], "PURPLE": [[130, 100, 100], [160, 255, 255]], "PINK": [[140, 100, 100], [180, 255, 255]], "CYAN": [[85, 100, 100], [100, 255, 255]], "WHITE": [[0, 0, 200], [179, 50, 255]], "BLACK": [[0, 0, 0], [179, 255, 30]]}
-
-
-COLOR_RANGE = None
 
 LANGUAGE = 'en'
 LANGUAGE_DATA =None 
-
-
-SETTINGS_FILE = None

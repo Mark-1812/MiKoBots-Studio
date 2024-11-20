@@ -7,6 +7,7 @@ import os
 from backend.robot_management.communication  import send_line_to_io, connect_io_check
 from backend.robot_management.communication  import send_line_to_robot, connect_robot_check
 
+from backend.simulation import check_simulation_on
 
 
 class Tool():
@@ -74,7 +75,7 @@ class Tool():
     def MoveTo(self, pos):
         if self.type_of_tool == "Servo":
             # if simulation is enabled only change the value
-            if var.SIM:
+            if check_simulation_on():
                 var.TOOL_POS = pos
                 event_manager.publish("request_set_tool_pos", pos)
             
@@ -92,7 +93,7 @@ class Tool():
     def State(self, state):
         if self.type_of_tool == "Relay" and (state == "HIGH" or state == "LOW"):
             
-            if var.SIM:
+            if check_simulation_on():
                 if state == "HIGH":
                     event_manager.publish("request_set_tool_state", True)
                 elif state == "LOW":

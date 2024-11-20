@@ -1,18 +1,14 @@
 import threading
 import time
-import serial
 import backend.core.variables as var
-from serial.serialutil import SerialException
-import re
 from bleak import BleakScanner, BleakClient
 import asyncio
 from backend.core.event_manager import event_manager
-from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal, QMetaObject
-import json
+from PyQt5.QtCore import QThread
 
 from gui.windows.message_boxes import ErrorMessage
 
-CHARACTERISTIC_UUID_ROBOT = "c42e42e4-8214-420c-944d-e127cc0f20ba"  # Replace with your actual characteristic UUID
+CHARACTERISTIC_UUID_ROBOT = "c42e42e4-8214-420c-944d-e127cc0f20ba" 
 SERVICE_UUID_ROBOT = "a917e658-9c1a-4901-bbb8-92d54cfa2fdd"
 
 CHARACTERISTIC_UUID_IO = "19680482-86af-4892-ab79-962e98f41045"
@@ -38,7 +34,12 @@ class TalkThroughBT(QThread):
         self.robot_home = False
         self.busy = False
         self.stop = False
+        self.pauze = False
 
+    def run(self):
+        self.loop.run_forever()
+
+# scan bluetooth devices
     def ScanForDevice(self):
         asyncio.run_coroutine_threadsafe(self._ScanForDevices(), self.loop)
     
@@ -54,23 +55,8 @@ class TalkThroughBT(QThread):
 
         event_manager.publish("request_bt_channels", device_found)
         
-    async def validate_characteristic_uuid(self):
-        # check if it is the right device you try to connect
-        characteristics = self.client_bt.services
-        characteristic_uuids = []
-        for char in characteristics:
-            characteristic_uuids.append(char.uuid)
 
-        if self.ROBOT and (SERVICE_UUID_ROBOT not in characteristic_uuids):
-            print(var.LANGUAGE_DATA.get("message_wrong_device")) 
-            return False
-
-        if self.IO and (SERVICE_UUID_IO not in characteristic_uuids):
-            #print(var.LANGUAGE_DATA.get("message_wrong_device")) 
-            return False
-
-        return True
-
+# Connect the robot
     def Connect(self, addres):
         asyncio.run_coroutine_threadsafe(self._Connect(addres), self.loop)
 
@@ -103,8 +89,26 @@ class TalkThroughBT(QThread):
             self.SendLineCommand("CONNECT")   
         else:
             print(var.LANGUAGE_DATA.get("message_faild_connect_bt")) 
-            
 
+    async def validate_characteristic_uuid(self):
+        # check if it is the right device you try to connect
+        characteristics = self.client_bt.services
+        characteristic_uuids = []
+        for char in characteristics:
+            characteristic_uuids.append(char.uuid)
+
+        if self.ROBOT and (SERVICE_UUID_ROBOT not in characteristic_uuids):
+            print(var.LANGUAGE_DATA.get("message_wrong_device")) 
+            return False
+
+        if self.IO and (SERVICE_UUID_IO not in characteristic_uuids):
+            #print(var.LANGUAGE_DATA.get("message_wrong_device")) 
+            return False
+
+        return True
+
+
+# disconnect the robot
     def Disconnect(self):
         asyncio.run_coroutine_threadsafe(self._Disconnect(), self.loop)
 
@@ -121,6 +125,7 @@ class TalkThroughBT(QThread):
         if self.ROBOT:
             event_manager.publish("request_io_connect_button_color", False)
 
+# Close the robot
     def Close(self):     
         asyncio.run_coroutine_threadsafe(self._Close(), self.loop)
                 
@@ -130,6 +135,7 @@ class TalkThroughBT(QThread):
             print("disconnect trobot try")
             await self.client_bt.disconnect()
 
+# read data
     async def ReadData(self, sender, data):
         # read the data that is send from the robot
         data_text = ""
@@ -213,6 +219,7 @@ class TalkThroughBT(QThread):
         data_text = "ROBOT: " + data_text
         print(data_text) 
 
+# send command
     def SendLineCommand(self, command):
         while self.pause_event.is_set():
             time.sleep(0.1)
@@ -237,8 +244,7 @@ class TalkThroughBT(QThread):
             print(var.LANGUAGE_DATA.get("message_lost_connection_robot"))
             self.disconnect()    
             
-
-
+# send settings
     def SendSettingsRobot(self):
         if not self.busy and self.connect:
             category_names = []
@@ -295,7 +301,6 @@ class TalkThroughBT(QThread):
             elif not self.connect: 
                 print(var.LANGUAGE_DATA.get("message_robot_not_connected")) 
                 ErrorMessage(var.LANGUAGE_DATA.get("message_robot_not_connected"))
-      
 
     def SendSettingsIO(self):
         if not self.busy and self.connect:
@@ -343,6 +348,8 @@ class TalkThroughBT(QThread):
             elif self.connect == 0:
                 print(var.LANGUAGE_DATA.get("message_io_not_connected"))
 
+
+## play pauze stop the robot
     def StopProgram(self):
         if self.client_bt.is_connected:
             asyncio.run_coroutine_threadsafe(self._SendLineCommand("stop"), self.loop)
@@ -353,8 +360,13 @@ class TalkThroughBT(QThread):
     def PlayProgram(self):
         if self.client_bt.is_connected:
             asyncio.run_coroutine_threadsafe(self._SendLineCommand("play"), self.loop)
+        
+        self.stop = False
+        self.pauze = False
 
+    def PauzeProgram(self):
+        if self.client_bt.is_connected:
+            asyncio.run_coroutine_threadsafe(self._SendLineCommand("pauze"), self.loop)
+        
+        self.pauze = True
 
-
-    def run(self):
-        self.loop.run_forever()

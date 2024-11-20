@@ -10,7 +10,7 @@ import backend.core.variables as var
 from backend.core.event_manager import event_manager
 
 from gui.windows.message_boxes import ErrorMessage
-from backend.simulation import simulation_not_busy
+from backend.simulation import simulation_not_busy, check_simulation_on
 
 from backend.robot_management.communication import connect_robot_check, connect_io_check
 
@@ -30,7 +30,7 @@ class RunProgram():
         
 
     def RunScript(self, sim):     
-        if sim and var.SIM and not self.program_running:
+        if sim and check_simulation_on() and not self.program_running:
             if event_manager.publish("request_get_program_type")[0]:
                 event_manager.publish("request_get_blockly_code")
             else:
@@ -114,7 +114,7 @@ class RunProgram():
             if thread_id == -1:
                 return
             
-            if var.SIM:
+            if check_simulation_on():
                 event_manager.publish("request_label_pos_axis", var.POS_AXIS_SIM, var.NAME_AXIS, var.UNIT_AXIS)
                 event_manager.publish("request_label_pos_joint", var.POS_JOINT_SIM, var.NAME_JOINTS, var.UNIT_JOINT)
                 

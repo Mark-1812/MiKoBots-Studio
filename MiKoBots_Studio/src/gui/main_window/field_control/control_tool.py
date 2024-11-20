@@ -9,11 +9,10 @@ import backend.core.variables as var
 from backend.core.event_manager import event_manager
 
 from backend.robot_management import change_tool
-from backend.robot_management import get_tool_info
+from backend.robot_management import get_tool_info, get_selected_tool
 
-
-from backend.simulation import simulation_move_gui
 from backend.run_program import run_single_line      
+
 
 class ControlTool(QWidget):
     def __init__(self, frame, parent = None):
@@ -99,8 +98,8 @@ class ControlTool(QWidget):
         
     def ChangeStateTool(self, state):
         if not self.simulation:
-
-            tool = var.TOOLS3D[var.SELECTED_TOOL][0]
+            tool_nr = get_selected_tool()
+            tool = var.TOOLS3D[tool_nr][0]
             
             if state == 2:
                 run_single_line(f"tool.SetTool('{tool}')\ntool.State('HIGH')")
@@ -142,24 +141,19 @@ class ControlTool(QWidget):
         if get_tool_info() != "Servo":
             return
         
-        if self.simulation:
-            if dir == 1:
-                pos = event_manager.publish("request_get_jog_distance")[0]
-            else:
-                pos = -1 * int(event_manager.publish("request_get_jog_distance")[0])
-            
-            simulation_move_gui(pos, "Tool_MoveTo")
+
+        if dir == 1:
+            pos = event_manager.publish("request_get_jog_distance")[0]
         else:
-            if dir == 1:
-                pos = event_manager.publish("request_get_jog_distance")[0]
-            else:
-                pos = -1 * int(event_manager.publish("request_get_jog_distance")[0])
-                
-            tool = var.TOOLS3D[var.SELECTED_TOOL][0]    
-            line = f"""tool.SetTool("{tool}")\ntool.MoveTo({pos})"""
-            
-            run_single_line(line)
-            
+            pos = -1 * int(event_manager.publish("request_get_jog_distance")[0])
             
 
- 
+        tool_nr = get_selected_tool()
+        tool = var.TOOLS3D[tool_nr][0]    
+        line = f"""tool.SetTool("{tool}")\ntool.MoveTo({pos})"""
+        
+        run_single_line(line)
+        
+        
+
+

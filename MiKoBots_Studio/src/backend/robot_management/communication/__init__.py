@@ -47,8 +47,12 @@ def connect_robot(addres = None, type = None):
     
 def send_line_to_robot(command, Home = False):
 
-    if talk_with_robot_bt.stop:
-        print("Press first play")
+    if talk_with_robot_bt.stop or talk_with_robot_com.stop:
+        print("Error: Stop mode, press first play")
+        return
+    
+    if talk_with_robot_bt.pauze or talk_with_robot_com.pauze:
+        print("Error: Pauze mode, press first play")
         return
 
     if talk_with_robot_bt.connect:
@@ -79,12 +83,25 @@ def close_robot():
         talk_with_robot_bt.Close()
     else:
         talk_with_robot_com.Close()    
- 
+
+def scan_for_robots():
+    talk_with_robot_bt.ScanForDevice()
+
+
+# play, pauze and stop the robot functions, also the IO??
 def pauze_robot():
-    pass
+    if talk_with_robot_bt.connect:
+        talk_with_robot_bt.PauzeProgram()
+
+    if talk_with_robot_com.connect:
+        talk_with_robot_com.PauzeProgram()
 
 def play_robot():
-    pass
+    if talk_with_robot_bt.connect:
+        talk_with_robot_bt.PlayProgram()
+
+    if talk_with_robot_com.connect:
+        talk_with_robot_com.PlayProgram()
 
 def stop_robot():
     if talk_with_robot_bt.connect:
@@ -92,8 +109,7 @@ def stop_robot():
     elif talk_with_robot_com.connect:
         talk_with_robot_com.StopProgram()  
 
-def scan_for_robots():
-    talk_with_robot_bt.ScanForDevice()
+
 
 
     

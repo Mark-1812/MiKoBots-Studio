@@ -61,19 +61,22 @@ class TicTacToe():
                     else:
                         Xplace_from_center = -((self.height_picture / 2) - Xcenter) * mm_per_pixel    
                         
-                    if var.TOOL_TURN_CAM == 1:
-                        Yobject_place = round(-Yplace_from_center  + float(var.POS_AXIS[1]) - float(var.TOOL_OFFSET_CAM[1]),1)           
-                        Xobject_place = round(-Xplace_from_center  + float(var.POS_AXIS[0]) - float(var.TOOL_OFFSET_CAM[0]),1)
-                    else:
-                        Yobject_place = round(Yplace_from_center  + float(var.POS_AXIS[1]) + float(var.TOOL_OFFSET_CAM[1]),1)          
-                        Xobject_place = round(Xplace_from_center  + float(var.POS_AXIS[0]) + float(var.TOOL_OFFSET_CAM[0]),1)  
+
+                    # needs degrees not tool_turn_cam
+
+                    # if var.TOOL_TURN_CAM == 1:
+                    #     Yobject_place = round(-Yplace_from_center  + float(var.POS_AXIS[1]) - float(var.TOOL_OFFSET_CAM[1]),1)           
+                    #     Xobject_place = round(-Xplace_from_center  + float(var.POS_AXIS[0]) - float(var.TOOL_OFFSET_CAM[0]),1)
+                    # else:
+                    #     Yobject_place = round(Yplace_from_center  + float(var.POS_AXIS[1]) + float(var.TOOL_OFFSET_CAM[1]),1)          
+                    #     Xobject_place = round(Xplace_from_center  + float(var.POS_AXIS[0]) + float(var.TOOL_OFFSET_CAM[0]),1)  
                     
                     
-                    x_average = x_average + Xobject_place
-                    y_average = y_average + Yplace_from_center
+                    # x_average = x_average + Xobject_place
+                    # y_average = y_average + Yplace_from_center
                                         
                     
-                    self.Objects.append([[Xobject_place],[Yobject_place],[width_object],[height_object]])             
+                    # self.Objects.append([[Xobject_place],[Yobject_place],[width_object],[height_object]])             
         
         event_manager.publish("request_set_pixmap_image", image_RGB)
         
@@ -154,26 +157,28 @@ class TicTacToe():
                         Xplace_from_center = (Xcenter - (self.height_picture / 2)) * mm_per_pixel
                     else:
                         Xplace_from_center = -((self.height_picture / 2) - Xcenter) * mm_per_pixel    
-                        
-                    if var.TOOL_TURN_CAM == 1:
-                        Yobject_place = round(-Yplace_from_center  + float(var.POS_AXIS[1]) - float(var.TOOL_OFFSET_CAM[1]),1)           
-                        Xobject_place = round(-Xplace_from_center  + float(var.POS_AXIS[0]) - float(var.TOOL_OFFSET_CAM[0]),1)
-                    else:
-                        Yobject_place = round(Yplace_from_center  + float(var.POS_AXIS[1]) + float(var.TOOL_OFFSET_CAM[1]),1)          
-                        Xobject_place = round(Xplace_from_center  + float(var.POS_AXIS[0]) + float(var.TOOL_OFFSET_CAM[0]),1)  
+
+                    # needs degrees not tool_turn_cam
+
+                    # if var.TOOL_TURN_CAM == 1:
+                    #     Yobject_place = round(-Yplace_from_center  + float(var.POS_AXIS[1]) - float(var.TOOL_OFFSET_CAM[1]),1)           
+                    #     Xobject_place = round(-Xplace_from_center  + float(var.POS_AXIS[0]) - float(var.TOOL_OFFSET_CAM[0]),1)
+                    # else:
+                    #     Yobject_place = round(Yplace_from_center  + float(var.POS_AXIS[1]) + float(var.TOOL_OFFSET_CAM[1]),1)          
+                    #     Xobject_place = round(Xplace_from_center  + float(var.POS_AXIS[0]) + float(var.TOOL_OFFSET_CAM[0]),1)  
                     
                     
-                    row = round((Xobject_place - Place_X) / column_width)
-                    if row < 0:
-                        row = 0
-                    elif row > 2:
-                        row = 2
+                    # row = round((Xobject_place - Place_X) / column_width)
+                    # if row < 0:
+                    #     row = 0
+                    # elif row > 2:
+                    #     row = 2
                         
-                    column = round((Yobject_place - Place_Y) / row_height)
-                    if column < 0:
-                        column = 0
-                    elif column > 2:
-                        column = 2
+                    # column = round((Yobject_place - Place_Y) / row_height)
+                    # if column < 0:
+                    #     column = 0
+                    # elif column > 2:
+                    #     column = 2
                     
                     # print(f"X{Xobject_place} Y{Yobject_place}")
                     # print(f"column: {column}, row: {row}")
