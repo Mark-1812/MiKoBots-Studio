@@ -37,6 +37,7 @@ class TalkThroughBT(QThread):
         self.connect = False
         self.robot_home = False
         self.busy = False
+        self.stop = False
 
     def ScanForDevice(self):
         asyncio.run_coroutine_threadsafe(self._ScanForDevices(), self.loop)
@@ -61,35 +62,47 @@ class TalkThroughBT(QThread):
             characteristic_uuids.append(char.uuid)
 
         if self.ROBOT and (SERVICE_UUID_ROBOT not in characteristic_uuids):
-            await self.client_bt.disconnect()
             print(var.LANGUAGE_DATA.get("message_wrong_device")) 
+            return False
 
         if self.IO and (SERVICE_UUID_IO not in characteristic_uuids):
-            await self.client_bt.disconnect()
-            print(var.LANGUAGE_DATA.get("message_wrong_device")) 
+            #print(var.LANGUAGE_DATA.get("message_wrong_device")) 
+            return False
+
+        return True
 
     def Connect(self, addres):
         asyncio.run_coroutine_threadsafe(self._Connect(addres), self.loop)
 
 
+        start_time = time.time()
+        while not self.connect:
+            time.sleep(0.01)  
+            current_time = time.time()
+            if current_time - start_time > 4:
+                break
+        
+        if self.ROBOT and self.connect:
+            event_manager.publish("request_robot_connect_button_color", self.connect)
+        if self.IO and self.connect:
+            event_manager.publish("request_io_connect_button_color", self.connect)
+
     async def _Connect(self, addres):
         self.client_bt = BleakClient(addres)
 
-        print(f"self.robot {self.ROBOT}")
-
         await self.client_bt.connect()
-        await self.validate_characteristic_uuid()
+        device = await self.validate_characteristic_uuid()
         
-        if self.ROBOT and self.client_bt.is_connected:
+        if self.ROBOT and self.client_bt.is_connected and device:
             await self.client_bt.start_notify(CHARACTERISTIC_UUID_ROBOT, self.ReadData) # start reading data
-            asyncio.run_coroutine_threadsafe(self.SendLineCommand("CONNECT"), self.loop)              
-            self.connect = True
-        elif self.IO and self.client_bt.is_connected:
+            self.busy = False
+            self.SendLineCommand("CONNECT")   
+        elif self.IO and self.client_bt.is_connected and device:
             await self.client_bt.start_notify(CHARACTERISTIC_UUID_IO, self.ReadData) # start reading data
-            self.connect = True
+            self.busy = False
+            self.SendLineCommand("CONNECT")   
         else:
             print(var.LANGUAGE_DATA.get("message_faild_connect_bt")) 
-            self.connect = False
             
 
     def Disconnect(self):
@@ -134,15 +147,18 @@ class TalkThroughBT(QThread):
             if self.ROBOT:
                 self.connect = True
                 self.busy = False
-                event_manager.publish("request_robot_connect_button_color", True)
+                #event_manager.publish("request_robot_connect_button_color", True)
                 self.SendSettingsRobot()    
             if self.IO:
                 print(var.LANGUAGE_DATA.get("message_io_instead_of_robot"))
+                self.disconnect()
 
 
         elif data_text.strip() == "IO_CONNECTED":
             if self.ROBOT:
-                print(var.LANGUAGE_DATA.get("message_robot_instead_of_io"))
+                #print(var.LANGUAGE_DATA.get("message_robot_instead_of_io"))
+                print(" error")
+                self.disconnect()
             
             if self.IO:
                 self.connect = True
@@ -193,26 +209,35 @@ class TalkThroughBT(QThread):
                 event_manager.publish("request_label_pos_joint", var.POS_JOINT, var.NAME_JOINTS, var.UNIT_JOINT)
                 event_manager.publish("request_label_pos_axis", var.POS_AXIS, var.NAME_AXIS, var.UNIT_AXIS)
         else:
-            data_text = "ROBOT: " + data_text
-            print(data_text) 
+            pass
+        data_text = "ROBOT: " + data_text
+        print(data_text) 
 
     def SendLineCommand(self, command):
-        asyncio.run_coroutine_threadsafe(self._SendLineCommand(command), self.loop)
-
-    async def _SendLineCommand(self, message):
         while self.pause_event.is_set():
             time.sleep(0.1)
 
-        time.sleep(0.2)
+        start_time = time.time()
+        while self.busy: 
+            if time.time() - start_time >= 10:
+                break 
+            time.sleep(0.03)
+            
         self.busy = True
-        
+        asyncio.run_coroutine_threadsafe(self._SendLineCommand(command), self.loop)
+
+    async def _SendLineCommand(self, message):
         if self.ROBOT and self.client_bt.is_connected:
+            print(f"sent: {message}")
             await self.client_bt.write_gatt_char(CHARACTERISTIC_UUID_ROBOT, message.encode())
         elif self.IO and self.client_bt.is_connected:
+            print(f"sent: {message}")
             await self.client_bt.write_gatt_char(CHARACTERISTIC_UUID_IO, message.encode())
         else:
             print(var.LANGUAGE_DATA.get("message_lost_connection_robot"))
             self.disconnect()    
+            
+
 
     def SendSettingsRobot(self):
         if not self.busy and self.connect:
@@ -247,21 +272,17 @@ class TalkThroughBT(QThread):
                 # sent first the number of joints
                 command = f'Set_number_of_joints A{var.NUMBER_OF_JOINTS}'
                 self.SendLineCommand(command)
-                time.sleep(0.2)
                 
                 if var.SETTINGS["Set_extra_joint"][0] == 1:
                     command = f'Set_extra_joint A1'
-                    self.SendLineCommand(command)
-                    time.sleep(0.2)
-                           
+                    self.SendLineCommand(command)           
 
                 for i, setting in enumerate(var.SETTINGS):
                     settings = var.SETTINGS[category_names[i]]
-                    if settings[1] == "" and  category_names[i] != 'Set_extra_joint' and  category_names[i] != 'Set_io_pin':
+                    if settings[1] == "" and  category_names[i] != 'Set_extra_joint' and  category_names[i] != 'Set_io_pin'and  category_names[i] != 'Set_robot_name':
                         
                         command = make_line_ABC(settings[0], category_names[i])
                         self.SendLineCommand(command)
-                        time.sleep(0.2)
 
             t_threadSettings = threading.Thread(target=threadSettings)  
             t_threadSettings.start()         
@@ -275,16 +296,6 @@ class TalkThroughBT(QThread):
                 print(var.LANGUAGE_DATA.get("message_robot_not_connected")) 
                 ErrorMessage(var.LANGUAGE_DATA.get("message_robot_not_connected"))
       
-    def StopProgram(self):
-        if self.client_bt.is_connected:
-            asyncio.run_coroutine_threadsafe(self.SendLineToRobot("stop"), self.loop)
-            
-        print("Stop robot, wait 3 seconds before sending new command.")
-        time.sleep(3)
-        self.busy = 0
-        
-        if self.client_bt.is_connected:
-            asyncio.run_coroutine_threadsafe(self.SendLineToRobot("play"), self.loop)         
 
     def SendSettingsIO(self):
         if not self.busy and self.connect:
@@ -319,8 +330,7 @@ class TalkThroughBT(QThread):
                     settings = var.SETTINGS[category_names[i]]
                     if settings[1] == "IO":
                         command = make_line_ABC(settings[0], category_names[i])
-                        asyncio.run_coroutine_threadsafe(self.SendLineCommand(command), self.loop)
-                        time.sleep(0.2)
+                        ready = asyncio.run_coroutine_threadsafe(self.SendLineCommand(command), self.loop)
                 
             t_threadSettings = threading.Thread(target=threadSettings)  
             t_threadSettings.start()         
@@ -333,7 +343,18 @@ class TalkThroughBT(QThread):
             elif self.connect == 0:
                 print(var.LANGUAGE_DATA.get("message_io_not_connected"))
 
+    def StopProgram(self):
+        if self.client_bt.is_connected:
+            asyncio.run_coroutine_threadsafe(self._SendLineCommand("stop"), self.loop)
+            
+        self.busy = False
+        self.stop = True
+
+    def PlayProgram(self):
+        if self.client_bt.is_connected:
+            asyncio.run_coroutine_threadsafe(self._SendLineCommand("play"), self.loop)
+
+
 
     def run(self):
         self.loop.run_forever()
-

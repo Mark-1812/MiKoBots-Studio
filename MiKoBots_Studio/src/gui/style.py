@@ -107,6 +107,7 @@ style_button_menu = ("""
                 height: 25px; 
                 font-size: 14px;
                 font-family: "Segoe UI";
+                padding: 0;
             }
             QPushButton:hover { 
                 background-color: white; 
@@ -218,6 +219,30 @@ style_button_tab = ( """
                 color: black;
             }
         """)
+
+style_button_help = ("""
+            QPushButton { 
+                background-color: rgba(150, 155, 155, 128);
+                color: black; 
+                border: 0px solid black; 
+                border-radius: 10px; 
+                height: 20px; 
+                font-size: 14px;
+                font-family: "Segoe UI";
+                padding: 20px;
+            }
+            QPushButton:hover { 
+                background-color: white; 
+            }
+            QPushButton:pressed { 
+                background-color: gray; 
+            }
+                     
+            """)
+
+
+
+
 
 ## label
 style_label_title = ("""
@@ -537,11 +562,13 @@ style_messagebox = ("""
 
 style_listwidget = ("""
     QListWidget {
+        font-family: "Arial";
         background-color: white;
         color: black;
         font-size: 14px;
         border: 0px solid black;
         border-radius: 6px;
+                    
     }
 
     /* Scrollbar styles applied directly */

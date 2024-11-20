@@ -1,12 +1,14 @@
 from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
-from PyQt5.QtWidgets import QDialog, QCheckBox, QSlider, QWidget, QMenu, QPushButton, QLabel, QScrollArea, QComboBox, QFrame, QGridLayout, QLineEdit, QFileDialog
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QSlider, QWidget, QMenu, QPushButton, QLabel, QScrollArea, QComboBox, QFrame, QGridLayout, QLineEdit, QFileDialog
 from PyQt5 import  QtGui
 
 from backend.core.event_manager import event_manager
 
-from backend.simulation import add_origin
-from backend.simulation import delete_origin
-from backend.simulation import save_origin
+from backend.simulation.origins import add_origin
+from backend.simulation.origins import delete_origin
+from backend.simulation.origins import save_origin
+
+from gui.style import *
 
 class SimulationOriginGUI(QWidget):
     def __init__(self, parent=None):
@@ -29,32 +31,43 @@ class SimulationOriginGUI(QWidget):
     def GUI(self):
         self.layout = QGridLayout()
         self.setLayout(self.layout)
+        self.layout.setContentsMargins(5, 5, 5, 5)
+        self.layout.setSpacing(0)
         
         self.setWindowTitle("Add Origin")
         self.setWindowIcon(QtGui.QIcon('mikobot.ico'))
         self.setFixedSize(500,200)
 
-        self.setStyleSheet(
-            "QFrame { background-color: lightgray; border: 0px solid black; border-radius: 5px; }" +
-            "QPushButton { background-color: orange; color: black; border: 0px solid black; border-radius: 3px; height: 20px; font-size: 12px;font-family: Arial;}"
-            "QPushButton:hover { background-color: white; }"
-            "QPushButton:pressed { background-color: darkorange; }"+
-            "QCheckBox {  background-color: white; }"+
-            "QLabel {font-size: 12px; font-family: Arial;}"+
-            "QTextEdit { background-color: white; border-radius: 5px; font-size: 12px;}"
-            )
+        self.setStyleSheet("background-color: #E8E8E8;")
+
+            
+        frame = QFrame()
+        frame.setStyleSheet(style_frame)
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(5, 5, 5, 5)
+        frame.setLayout(main_layout)
+        self.layout.addWidget(frame) 
         
-        scroll_area = QScrollArea(self)
-        scroll_area.setWidgetResizable(True)
-        self.layout.addWidget(scroll_area,0,0)
+        scroll = QScrollArea()
+        scroll.setStyleSheet(style_scrollarea)
+        scroll.setWidgetResizable(True)
+
+        scroll_widget = QWidget()
+        scroll_widget.setStyleSheet(style_widget)
+        self.scroll_layout = QVBoxLayout(scroll_widget)
+        self.scroll_layout.setContentsMargins(0, 0, 0, 0)
+        self.scroll_layout.setSpacing(0)
+        self.scroll_layout.setAlignment(Qt.AlignTop)
+
+        scroll.setWidget(scroll_widget)
+        main_layout.addWidget(scroll)
 
         self.button_add_new = QPushButton("Add new Origin")
-        self.layout.addWidget(self.button_add_new, 1, 0)
+        self.button_add_new.setStyleSheet(style_button_menu)
+        main_layout.addWidget(self.button_add_new)
         self.button_add_new.clicked.connect(lambda: add_origin())
-        
-        frame_origins = QFrame()
-        self.layout_origins = QGridLayout(frame_origins)
-        scroll_area.setWidget(frame_origins)
+
+
 
     def GetData(self, item):
         data = [0,0,0,0]
@@ -68,64 +81,77 @@ class SimulationOriginGUI(QWidget):
 
     def CreateButtons(self, item, data):
         self.widgets.append([[],[],[],[],[],[],[],[],[]])
-        
+
+        frame = QFrame()
+        layout = QHBoxLayout()
+        layout.setContentsMargins(5, 0, 5, 5)
+        frame.setLayout(layout)
+        self.scroll_layout.addWidget(frame) 
+
         entry = QLineEdit()
+        entry.setStyleSheet(style_entry)
         entry.setText(data[0])
         entry.setFixedWidth(80)  # Set the width as needed
-        self.layout_origins.addWidget(entry, item, 0)
+        layout.addWidget(entry)
         self.widgets[item][0] = entry
         
         label = QLabel("X:")
+        label.setStyleSheet(style_label)
         label.setAlignment(Qt.AlignRight | Qt.AlignCenter)
         label.setMinimumWidth(10)
-        self.layout_origins.addWidget(label, item, 1)
+        layout.addWidget(label)
         self.widgets[item][1] = label
         
         entry_X = QLineEdit()
+        entry_X.setStyleSheet(style_entry)
         entry_X.setText(str(data[1]))
         entry_X.setFixedWidth(40)  # Set the width as needed
-        self.layout_origins.addWidget(entry_X, item, 2)
+        layout.addWidget(entry_X)
         self.widgets[item][2] = entry_X
         
         label = QLabel("Y:")
+        label.setStyleSheet(style_label)
         label.setAlignment(Qt.AlignRight | Qt.AlignCenter)
         label.setMinimumWidth(10)
-        self.layout_origins.addWidget(label, item, 3)
+        layout.addWidget(label)
         self.widgets[item][3] = label
         
         entry_Y = QLineEdit()
+        entry_Y.setStyleSheet(style_entry)
         entry_Y.setText(str(data[2]))
         entry_Y.setFixedWidth(40)  # Set the width as needed
-        self.layout_origins.addWidget(entry_Y, item, 4)
+        layout.addWidget(entry_Y)
         self.widgets[item][4] = entry_Y
         
         label = QLabel("Z:")
+        label.setStyleSheet(style_label)
         label.setAlignment(Qt.AlignRight | Qt.AlignCenter)
         label.setMinimumWidth(10)
-        self.layout_origins.addWidget(label, item, 5)
+        layout.addWidget(label)
         self.widgets[item][5] = label
         
         entry_Z = QLineEdit()
+        entry_Z.setStyleSheet(style_entry)
         entry_Z.setText(str(data[3]))
         entry_Z.setFixedWidth(40)  # Set the width as needed
-        self.layout_origins.addWidget(entry_Z, item, 6)
+        layout.addWidget(entry_Z)
         self.widgets[item][6] = entry_Z
         
         button_Save = QPushButton("Save")
+        button_Save.setStyleSheet(style_button)
         button_Save.setFixedSize(40,20)
         button_Save.pressed.connect(lambda idx = item: save_origin(idx))
-        self.layout_origins.addWidget(button_Save, item, 7)
+        layout.addWidget(button_Save)
         self.widgets[item][7] = button_Save
         
         button_del = QPushButton("Delete")
+        button_del.setStyleSheet(style_button)
         button_del.setFixedSize(40,20)
         button_del.pressed.connect(lambda idx = item: delete_origin(idx))
-        self.layout_origins.addWidget(button_del, item, 8)
+        layout.addWidget(button_del)
         self.widgets[item][8] = button_del
         
-        self.spacer_widget = QWidget()
-        self.layout_origins.addWidget(self.spacer_widget, self.layout_origins.rowCount(), 0, 1, self.layout_origins.columnCount())
-    
+
     def DeleteSpacerWidget(self):
         # delete the spacer under rhe buttons
         if self.spacer_widget:

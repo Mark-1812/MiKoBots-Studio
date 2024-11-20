@@ -17,7 +17,7 @@ import backend.core.variables as var
 from gui.windows.update_window import UpdateChecker
 from backend.file_manager import open_file_from_path
 
-CURRENT_VERSION = 1.1
+CURRENT_VERSION = 1.11
 
            
 class StartupWorker(QThread):
@@ -27,7 +27,6 @@ class StartupWorker(QThread):
     def run(self): 
         update_version, update_description = check_updates()
         check_folders()
-        open_setting()
         load_languages()
         
         ## later set style here
@@ -42,6 +41,8 @@ def updateScreen(update_version, update_description):
 def showMainWindow(file_path):
     main_window = MainWindow(screen_geometry) 
     main_window.show()  
+    
+    open_setting()
     
     setup_robot()
     

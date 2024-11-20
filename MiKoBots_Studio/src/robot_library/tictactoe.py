@@ -1,4 +1,4 @@
-from backend.calculations.calculations_vision import calculate_mm_per_pixel
+from backend.vision import calculate_mm_per_pixel
 
 import backend.core.variables as var
 from backend.core.event_manager import event_manager

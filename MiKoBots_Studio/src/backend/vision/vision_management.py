@@ -23,6 +23,15 @@ class VisionManagement():
         self.stop = False   
         self.connect = False
         self.image_HSV = None
+        
+        self.cam_tool = False
+        
+        self.show_square_tool = False
+        self.show_square = False
+        self.square_size_per = 0.8
+        self.square_width_px = 0
+        
+        
        
     def CloseCam(self):
         if self.connect:
@@ -42,22 +51,21 @@ class VisionManagement():
 
     def DisconnectCam(self):
         self.connect = False
-        try:
-            time.sleep(0.1)
-            self._stop_event.set()
-            self.cap.release()
-            
-            event_manager.publish("request_cam_connect_button_color", False)
-            print(var.LANGUAGE_DATA.get("message_camera_connected"))
-        except: 
-            print(var.LANGUAGE_DATA.get("message_error_releasing_cam"))
+        self._stop_event.set()
+        #self.cap.release()
+        event_manager.publish("request_cam_connect_button_color", False)
+        #print(var.LANGUAGE_DATA.get("message_camera_connected"))
+        
+
 
     def ConnectCam(self, addres = None):
         com_port_adress = addres
         if self.is_valid_url(com_port_adress):    
             self.cap = cv2.VideoCapture(com_port_adress)
         else:
+            print(" try to connect")
             self.cap = cv2.VideoCapture(addres)
+            print(" test")
         
         
         if self.cap.isOpened():
@@ -70,28 +78,89 @@ class VisionManagement():
             event_manager.publish("request_cam_connect_button_color", False)
             ErrorMessage(var.LANGUAGE_DATA.get("message_not_find_cam"))
 
-
+    def calculate_mm_per_pixel(self, image = None, Height = None):
+        mm_per_pixel = 0
+        if self.cam_tool:
+            settings_cam = var.TOOLS3D[var.SELECTED_TOOL][11]
+            
+            z1 = float(settings_cam[0]) # Z distance big square
+            z2 = float(settings_cam[1]) # Z distance small square
+            
+            size1 = float(settings_cam[2]) # size big square
+            size2 = float(settings_cam[3]) # size small square
+            
+            Zdelta = z1 - z2
+            Xdelta = size1 - size2
+            
+            Ratio_height_width = Xdelta/Zdelta
+            
+            if Height == None:    
+                new_Zdelta = z1 - float(var.POS_AXIS[2])
+            else:
+                new_Zdelta = z1 - Height
+                
+            height_picture, width_picture, ch = image.shape 
+                
+            square_width_pixel = width_picture * 0.8
+                
+            mm_per_pixel = (size1 - (new_Zdelta * Ratio_height_width)) / square_width_pixel
+        else:
+            square_size_mm = event_manager.publish("request_get_square_size")[0]
+            
+            mm_per_pixel = square_size_mm / self.square_width_px
+            # get square size
+            
+        return mm_per_pixel
  
     def threadCAM(self):
         while not self._stop_event.is_set() and self.cap.isOpened():
-            try:
-                time.sleep(0.01)
-                if self.cap.isOpened():  # Check the stop condition
+            if self.cap.isOpened():  # Check the stop condition
+                try:
                     ret, self.frame = self.cap.read()
                     if not ret:
                         print(var.LANGUAGE_DATA.get("message_failed_grab_frame"))
+                        self.DisconnectCam()
                         continue
-                    image_RGB = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)   
-                               
-                    if var.CAM_SQUARE:
-                        self.ShowCalSquare(image_RGB)
-                               
-                    event_manager.publish("request_set_pixmap_video", image_RGB)
-            except Exception as e:
-                print(f"Error in threadCAM: {e}")
+                    
+                except Exception as e:
+                    print(f"Error in threadCAM: {e}")
+                
+                image_RGB = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)   
+                            
+                if self.show_square_tool:
+                    image_RGB = self.ShowCalSquareTool(image_RGB)
+                if self.show_square:
+                    image_RGB = self.ShowCalSquare(image_RGB)
+                    
+                event_manager.publish("request_set_pixmap_video", image_RGB)
+                
+                time.sleep(0.01)
+        
+        self.cap.release()
   
-            
     def ShowCalSquare(self, image):
+        self.height_picture, self.width_picture, ch = image.shape 
+        
+        offset = (1 - self.square_size_per) / 2
+        
+        y_1 = int(offset * self.height_picture)
+        h_1 = int(self.square_size_per * self.height_picture)
+        
+        w_1 = int(self.square_size_per * self.height_picture)
+        x_1 = int((self.width_picture - w_1) / 2)
+        
+        self.square_width_px = h_1
+        
+        cv2.rectangle(image, (x_1, y_1), (x_1+w_1, y_1+h_1), (0, 255, 0), 2)
+        return image
+    
+    def ChangeSizeSquare(self, dir):
+        if dir:
+            self.square_size_per += 0.02
+        else:
+            self.square_size_per -= 0.02
+             
+    def ShowCalSquareTool(self, image):
         self.height_picture, self.width_picture, ch = image.shape 
         
         y_1 = int(0.1 * self.height_picture)
@@ -103,17 +172,15 @@ class VisionManagement():
         self.square_size_pixel = 0.8 * self.height_picture
         
         cv2.rectangle(image, (x_1, y_1), (x_1+w_1, y_1+h_1), (0, 255, 0), 2)
-        
         return image
-            
+          
     def GetImageFrame(self):
         return self.frame
             
     def video(self):            
         t_threadRead = threading.Thread(target=self.threadCAM)  
         t_threadRead.start()
-
-        
+       
     def GetMask(self, color_name, image):
         if color_name in var.VISION_COLOR_OPTIONS:
             if len(var.VISION_COLOR_OPTIONS[color_name]) == 2:
@@ -133,7 +200,6 @@ class VisionManagement():
             return mask
         else:
             print(var.LANGUAGE_DATA.get("message_no_colors"))                
-
 
     def DrawAxis(self, img, p_, q_, color, scale):
         p = list(p_)

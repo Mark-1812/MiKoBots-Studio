@@ -47,6 +47,10 @@ def connect_robot(addres = None, type = None):
     
 def send_line_to_robot(command, Home = False):
 
+    if talk_with_robot_bt.stop:
+        print("Press first play")
+        return
+
     if talk_with_robot_bt.connect:
         if Home and talk_with_robot_bt.robot_home:  # check if the root is home
             talk_with_robot_bt.SendLineCommand(command)
@@ -76,6 +80,12 @@ def close_robot():
     else:
         talk_with_robot_com.Close()    
  
+def pauze_robot():
+    pass
+
+def play_robot():
+    pass
+
 def stop_robot():
     if talk_with_robot_bt.connect:
         talk_with_robot_bt.StopProgram()

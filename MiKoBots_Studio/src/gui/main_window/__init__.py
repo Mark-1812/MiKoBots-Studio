@@ -8,12 +8,13 @@ import sys
 
 #from gui.windows import close_startup_screen
 
-from gui.fields.field_settings import SettingsField
-from gui.fields.field_control import ControlField
-from gui.fields.field_program import ProgramField
-from gui.fields.field_log import LogField
-from gui.fields.field_menu import MenuField
-from gui.fields.simulation_frame import SimulationGUI
+from .field_settings import SettingsField
+from .field_control import ControlField
+from .field_program import ProgramField
+from .field_log import LogField
+from .field_menu import MenuField
+from .simulation_frame import SimulationGUI
+
 from backend.file_managment.file_management import FileManagement
 from backend.core.event_manager import event_manager
 

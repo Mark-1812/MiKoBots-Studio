@@ -1,9 +1,11 @@
-from PyQt5.QtWidgets import QPushButton, QLabel, QSizePolicy, QCheckBox, QLineEdit, QSpacerItem, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog
+from PyQt5.QtWidgets import QPushButton, QLabel, QSizePolicy, QCheckBox, QLineEdit, QSpacerItem, QHBoxLayout, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog
 from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
-from PyQt5.QtGui import QTextCharFormat, QTextCursor, QColor, QDoubleValidator
+from PyQt5.QtGui import QTextCharFormat, QTextCursor, QColor, QDoubleValidator, QDesktopServices
 
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
+
+from backend.simulation.simulation_interaction import CustomInteractorStyle
 
 from backend.core.event_manager import event_manager
 
@@ -15,27 +17,19 @@ from backend.robot_management  import show_tool_settings
 from backend.robot_management  import update_tool_settings
 from backend.robot_management  import save_robot
 
+from backend.vision import show_square_tool
+
 from backend.simulation.axis import Axis
 from backend.simulation.planes import Planes
 
 from gui.style import *
 
-class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
-    def __init__(self, parent=None):
-        super().__init__()
 
-    # Override the middle mouse button press event to rotate
-    def OnMiddleButtonDown(self):
-        self.StartRotate()
-
-    def OnMiddleButtonUp(self):
-        self.EndRotate()
-
-    def OnMouseMove(self):
-        if self.GetInteractor().GetControlKey():  # If Control is pressed
-            return  # Do not rotate if Control is pressed
-
-        self.Rotate()  # Rotate the camera
+        
+URL_HELP_CAM = "https://mikobots.com/mikobots-studio/help/tool/camera-settings/" 
+URL_HELP_PIN = "https://mikobots.com/mikobots-studio/help/tool/"
+URL_HELP_TOOL_FRAME = "https://mikobots.com/mikobots-studio/help/tool/setup-tool-frame/"
+URL_HELP_MODEL = "https://mikobots.com/mikobots-studio/help/tool/setup-3d-model/"
 
 class RobotTools(QWidget):
     def __init__(self, frame):
@@ -66,6 +60,7 @@ class RobotTools(QWidget):
     def GUI(self):
         self.main_layout = QGridLayout(self.frame)
         self.main_layout.setContentsMargins(3, 3, 3, 3)
+        self.main_layout.setSpacing(5)
 
         # Frame with the stl files
         title = QLabel("Tools:")
@@ -73,7 +68,6 @@ class RobotTools(QWidget):
         title.setStyleSheet(style_label_bold)
         title.setFixedHeight(30)
         self.main_layout.addWidget(title,0,0)
-        
         
         # create an area where the parts will be placed
         scroll = QScrollArea()
@@ -84,7 +78,10 @@ class RobotTools(QWidget):
         
         scroll_widget = QWidget()
         scroll_widget.setStyleSheet(style_widget)
-        self.layout = QGridLayout(scroll_widget)
+        self.layout_scroll = QVBoxLayout(scroll_widget)
+        self.layout_scroll.setContentsMargins(0, 0, 0, 0)
+        self.layout_scroll.setSpacing(0)
+        self.layout_scroll.setAlignment(Qt.AlignTop)
         
         scroll.setWidget(scroll_widget)
         self.main_layout.addWidget(scroll,1,0)    
@@ -97,39 +94,112 @@ class RobotTools(QWidget):
         frame_plotter.setLayout(self.layout_plotter)
 
         # frame with change origin
-        layout_options = QGridLayout()
+        layout_options = QVBoxLayout()
+        layout_options.setContentsMargins(0, 0, 0, 0)
+        layout_options.setSpacing(0)
         frame_options = QFrame()
-        frame_options.setMaximumWidth(250)
+        frame_options.setFixedWidth(280)
         self.main_layout.addWidget(frame_options,0,1,3,1)
-        frame_options.setLayout(layout_options)
+        frame_options.setLayout(layout_options)     
+
+        
+        title = QLabel("Tool settings")
+        title.setStyleSheet(style_label_bold)
+        title.setFixedSize(250,25)
+        title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+        layout_options.addWidget(title)
+
+        # create a scroll area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet(style_scrollarea)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        
+        scroll_widget = QWidget()
+        scroll_widget.setStyleSheet(style_widget)
+        layout_scroll = QGridLayout(scroll_widget) 
+        layout_scroll.setSpacing(0)
+        layout_scroll.setContentsMargins(0, 0, 0, 0)
+        
+        scroll.setWidget(scroll_widget)
+        layout_options.addWidget(scroll) 
+        
+       
+        frame = QFrame()
+        layout_origin = QGridLayout()
+        frame.setLayout(layout_origin)
+        layout_scroll.addWidget(frame)
+        self.OriginSettingsGUI(layout_origin)     
+            
+        
+        frame = QFrame()
+        layout_pin = QGridLayout()
+        frame.setLayout(layout_pin)
+        layout_scroll.addWidget(frame)
+        self.PinSettingsGUI(layout_pin)
+            
+
+        frame = QFrame()
+        layout_cam = QGridLayout()
+        frame.setLayout(layout_cam)
+        layout_scroll.addWidget(frame)
+        self.CamSettingsGUI(layout_cam)
+        
+        frame = QFrame()
+        layout_buttons = QGridLayout()
+        layout_buttons.setSpacing(5)
+        frame.setLayout(layout_buttons)
+        layout_options.addWidget(frame)
+        self.ButtonsSettingsGUI(layout_buttons)                       
+
         
         
         # put everything on the left side of the screen
         spacer_widget = QWidget()
         spacer_widget.setStyleSheet(style_widget)
         self.main_layout.addWidget(spacer_widget, 3, 0)
+
         
-        spacer_widget = QWidget()
-        spacer_widget.setStyleSheet(style_widget)
-        self.main_layout.addWidget(spacer_widget, 0, 2)
+   
+    def ButtonsSettingsGUI(self, layout):
+        self.button_update = QPushButton("Update 3D model")
+        self.button_update.setStyleSheet(style_button_menu)
+        layout.addWidget(self.button_update)
+        self.button_update.clicked.connect(lambda: update_tool_settings())
         
-        title = QLabel("Tool settings")
-        title.setStyleSheet(style_label_bold)
-        title.setFixedSize(250,25)
-        title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-        layout_options.addWidget(title,0,0,1,4)
+        self.button_add_new = QPushButton("Add new tool")
+        self.button_add_new.setStyleSheet(style_button_menu)
+        layout.addWidget(self.button_add_new)
+        self.button_add_new.clicked.connect(lambda: add_new_tool())    
         
+        self.button_save_robot = QPushButton("Save robot")
+        self.button_save_robot.setStyleSheet(style_button_menu)
+        layout.addWidget(self.button_save_robot)
+        self.button_save_robot.clicked.connect(lambda: save_robot(True))
+   
+    def OriginSettingsGUI(self, layout):
+        validator = QDoubleValidator()
+        validator.setNotation(QDoubleValidator.StandardNotation)
+
+        button = QPushButton("?")
+        button.setStyleSheet(style_button_help)
+        button.setFixedSize(20,20)
+        button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(URL_HELP_MODEL)))
+        layout.addWidget(button, 0, 0)
+            
         title = QLabel("Change origin:")
         title.setStyleSheet(style_label_bold)
-        title.setFixedSize(125,25)
-        title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-        layout_options.addWidget(title,1,0,1,2)
+        layout.addWidget(title, 0, 1)
         
+        button = QPushButton("?")
+        button.setStyleSheet(style_button_help)
+        button.setFixedSize(20,20)
+        button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(URL_HELP_TOOL_FRAME)))
+        layout.addWidget(button, 0, 2)
+
         title = QLabel("Tool frame:")
         title.setStyleSheet(style_label_bold)
-        title.setFixedSize(125,25)
-        title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-        layout_options.addWidget(title,1,2,1,2)
+        layout.addWidget(title, 0, 3)
         
         labels = ["X:", "Y:", "Z:", "y", "p", "r"]
         self.entry_origin_pos = []
@@ -140,8 +210,6 @@ class RobotTools(QWidget):
             label.setStyleSheet(style_label)
             label.setFixedWidth(20)  # Set the width as needed
 
-            validator = QDoubleValidator()
-            validator.setNotation(QDoubleValidator.StandardNotation)
 
             entry = QLineEdit()
             entry.setStyleSheet(style_entry)
@@ -149,11 +217,11 @@ class RobotTools(QWidget):
             entry.setValidator(validator)
             self.entry_origin_pos.append(entry)
 
-            row = idx + 2
+            row = idx + 1
             col = 0
 
-            layout_options.addWidget(label, row, col)
-            layout_options.addWidget(entry, row, col + 1)  # Put entry in the next column
+            layout.addWidget(label, row, col)
+            layout.addWidget(entry, row, col + 1)  # Put entry in the next column
                        
             label = QLabel(label_text)
             label.setStyleSheet(style_label)
@@ -165,22 +233,31 @@ class RobotTools(QWidget):
             entry.setValidator(validator)
             self.ToolFrame.append(entry)
             
-            layout_options.addWidget(label, row, col + 2)
-            layout_options.addWidget(entry, row, col + 3)  # Put entry in the next column
-            
-        # Pin settings tool
-        row = layout_options.rowCount()
-            
+            layout.addWidget(label, row, col + 2)
+            layout.addWidget(entry, row, col + 3)  # Put entry in the next column
+   
+    def PinSettingsGUI(self, layout):
+        validator = QDoubleValidator()
+        validator.setNotation(QDoubleValidator.StandardNotation)
+        
+        button = QPushButton("?")
+        button.setStyleSheet(style_button_help)
+        button.setFixedSize(20,20)
+        button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(URL_HELP_PIN)))
+        layout.addWidget(button, 0, 0) 
+        
         title = QLabel("Pin settings tool:")
         title.setStyleSheet(style_label_bold)
         title.setFixedSize(125,25)
         title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-        layout_options.addWidget(title, row, 0, 1, 4)    
+        layout.addWidget(title, 0, 1, 1, 3)    
+        
+
             
         tools = ["Tool pin 1", "Tool pin 2", "Tool pin 3", "Tool pin 4", "Tool pin 5"]
         self.combobox_tool_pin = QComboBox() 
         self.combobox_tool_pin.setStyleSheet(style_combo)
-        layout_options.addWidget(self.combobox_tool_pin, row + 1, 0, 1, 4)
+        layout.addWidget(self.combobox_tool_pin, 1, 0, 1, 4)
         self.combobox_tool_pin.addItems(tools)
 
         ## define the type of tool, what is connected to the pin
@@ -188,57 +265,67 @@ class RobotTools(QWidget):
         self.radio_button_no_con = QRadioButton()
         self.radio_button_no_con.setChecked(False)  # Set the initial state of the radio_button
         self.radio_button_no_con.setStyleSheet(style_radiobutton)
-        layout_options.addWidget(self.radio_button_no_con,  row + 2,0)
+        layout.addWidget(self.radio_button_no_con,  2, 0)
         
         label = QLabel("No connection")
         label.setStyleSheet(style_label)
-        layout_options.addWidget(label, row + 2,1,1,3)
+        layout.addWidget(label, 2, 1, 1, 3)
         
         # Relay
         self.radio_button_relay = QRadioButton()
         self.radio_button_relay.setChecked(False)  # Set the initial state of the radio_button
         self.radio_button_relay.setStyleSheet(style_radiobutton)
-        layout_options.addWidget(self.radio_button_relay,  row + 3,0)
+        layout.addWidget(self.radio_button_relay, 3, 0)
         
         label = QLabel("ON/OFF relay")
         label.setStyleSheet(style_label)
-        layout_options.addWidget(label, row + 3,1,1,3)
+        layout.addWidget(label, 3, 1, 1, 3)
         
         # Servo
         self.radio_button_servo = QRadioButton()
         self.radio_button_servo.setChecked(False)  # Set the initial state of the radio_button
         self.radio_button_servo.setStyleSheet(style_radiobutton)
-        layout_options.addWidget(self.radio_button_servo, row + 4,0)
+        layout.addWidget(self.radio_button_servo, 4, 0)
 
         self.entry_servo_min = QLineEdit()
         self.entry_servo_min.setStyleSheet(style_entry)
         self.entry_servo_min.setPlaceholderText("Min")
         self.entry_servo_min.setFixedWidth(50)
         self.entry_servo_min.setValidator(validator)
-        layout_options.addWidget(self.entry_servo_min, row + 4, 1)
+        layout.addWidget(self.entry_servo_min, 4, 1)
         
         self.entry_servo_max = QLineEdit()
         self.entry_servo_max.setStyleSheet(style_entry)
         self.entry_servo_max.setPlaceholderText("Max")
         self.entry_servo_max.setFixedWidth(50)
         self.entry_servo_max.setValidator(validator)
-        layout_options.addWidget(self.entry_servo_max, row + 4, 2)
+        layout.addWidget(self.entry_servo_max, 4, 2)
 
         label = QLabel("Servo")
         label.setStyleSheet(style_label)
-        layout_options.addWidget(label, row + 4, 3)        
-                       
-        ## camera offset
-        row = layout_options.rowCount()
+        layout.addWidget(label, 4, 3)        
         
+    def CamSettingsGUI(self, layout):
+        validator = QDoubleValidator()
+        validator.setNotation(QDoubleValidator.StandardNotation)
+
+        button = QPushButton("?")
+        button.setStyleSheet(style_button_help)
+        button.setFixedSize(20,20)
+        button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(URL_HELP_CAM)))
+        layout.addWidget(button, 0, 0)
+                
         title = QLabel("Camera settings:")
         title.setStyleSheet(style_label_bold)
-        title.setFixedSize(250,25)
-        layout_options.addWidget(title, row, 0, 1, 4)
+        layout.addWidget(title, 0, 1, 1, 3)
+        
+        label = QLabel("Camera offset")
+        label.setStyleSheet(style_label)
+        layout.addWidget(label, 1, 0, 1, 4)
         
         label = QLabel("XYZ:")
         label.setStyleSheet(style_label)
-        layout_options.addWidget(label, row + 1, 0)
+        layout.addWidget(label, 2, 0)
         
         self.cam_offset = []
         for i in range(3):
@@ -246,95 +333,89 @@ class RobotTools(QWidget):
             entry_cam.setStyleSheet(style_entry)
             entry_cam.setFixedWidth(50)
             entry_cam.setValidator(validator)
-            layout_options.addWidget(entry_cam, row + 1, i + 1)
+            layout.addWidget(entry_cam, 2, i + 1)
             
             self.cam_offset.append(entry_cam)
         
         # rotational compensation       
-        label = QLabel("Rotation offset")
+        label = QLabel("Rotation offset in degreed")
         label.setStyleSheet(style_label)
-        layout_options.addWidget(label, row + 2, 0 , 1, 3)
+        layout.addWidget(label, 3, 0 , 1, 3)
         
         self.camere_rotation_offset = QLineEdit()
         self.camere_rotation_offset.setText("0")
         self.camere_rotation_offset.setStyleSheet(style_entry)
         self.camere_rotation_offset.setFixedWidth(50)
         self.camere_rotation_offset.setValidator(validator)
-        layout_options.addWidget(self.camere_rotation_offset, row + 2, 3)
+        layout.addWidget(self.camere_rotation_offset, 3, 3)
         
      
         
-        label = QLabel("small square")
+        label = QLabel("Small square")
         label.setStyleSheet(style_label)
-        layout_options.addWidget(label, row + 3, 0 , 1, 2)
+        layout.addWidget(label, 4, 0 , 1, 2)
+        
+        label = QLabel("Width")
+        label.setStyleSheet(style_label)
+        layout.addWidget(label, 5, 0)
         
         self.size_small_square = QLineEdit()
         self.size_small_square.setText("120")
         self.size_small_square.setStyleSheet(style_entry)
         self.size_small_square.setFixedWidth(50)
         self.size_small_square.setValidator(validator)
-        layout_options.addWidget(self.size_small_square, row + 3, 2)
+        layout.addWidget(self.size_small_square, 5, 1)
+        
+        label = QLabel("Height")
+        label.setStyleSheet(style_label)
+        layout.addWidget(label, 5, 2)
         
         self.z_dis_small_square = QLineEdit()
         self.z_dis_small_square.setPlaceholderText("Max")
         self.z_dis_small_square.setStyleSheet(style_entry)
         self.z_dis_small_square.setFixedWidth(50)
         self.z_dis_small_square.setValidator(validator)
-        layout_options.addWidget(self.z_dis_small_square, row + 3, 3)
+        layout.addWidget(self.z_dis_small_square, 5, 3)
 
-        label = QLabel("big square")
+        label = QLabel("Big square")
         label.setStyleSheet(style_label)
-        layout_options.addWidget(label, row + 4, 0 , 1, 2)
+        layout.addWidget(label, 6, 0, 1, 2)
+        
+        label = QLabel("Width")
+        label.setStyleSheet(style_label)
+        layout.addWidget(label, 7, 0)
         
         self.size_big_square = QLineEdit()
         self.size_big_square.setText("160")
         self.size_big_square.setStyleSheet(style_entry)
         self.size_big_square.setFixedWidth(50)
         self.size_big_square.setValidator(validator)
-        layout_options.addWidget(self.size_big_square, row + 4, 2)
+        layout.addWidget(self.size_big_square, 7, 1)
+        
+        label = QLabel("Height")
+        label.setStyleSheet(style_label)
+        layout.addWidget(label, 7, 2)
         
         self.z_dis_big_square = QLineEdit()
         self.z_dis_big_square.setPlaceholderText("Max")
         self.z_dis_big_square.setStyleSheet(style_entry)
         self.z_dis_big_square.setFixedWidth(50)
         self.z_dis_big_square.setValidator(validator)
-        layout_options.addWidget(self.z_dis_big_square, row + 4, 3)
-        
-        # Camera turn 180 degrees        
+        layout.addWidget(self.z_dis_big_square, 7, 3)
+              
         checkbox_cal_square = QCheckBox('Show calibration square')
         checkbox_cal_square.setStyleSheet(style_checkbox)
-        layout_options.addWidget(checkbox_cal_square, row + 5, 0, 1, 4) 
+        layout.addWidget(checkbox_cal_square, 8, 0, 1, 4) 
         checkbox_cal_square.stateChanged.connect(self.show_square)
         
-        
-        row = layout_options.rowCount()
-        
-                       
-        self.button_update = QPushButton("Update 3D model")
-        self.button_update.setStyleSheet(style_button)
-        layout_options.addWidget(self.button_update, row, 0, 1, 4)
-        self.button_update.clicked.connect(lambda: update_tool_settings())
-        
-        self.button_add_new = QPushButton("Add new tool")
-        self.button_add_new.setStyleSheet(style_button)
-        layout_options.addWidget(self.button_add_new, row + 1, 0, 1, 4)
-        self.button_add_new.clicked.connect(lambda: add_new_tool())    
-        
-        self.button_save_robot = QPushButton("Save robot")
-        self.button_save_robot.setStyleSheet(style_button)
-        layout_options.addWidget(self.button_save_robot, row + 2, 0, 1, 4)
-        self.button_save_robot.clicked.connect(lambda: save_robot(True))      
-        
-        spacer_widget = QWidget()
-        spacer_widget.setStyleSheet(style_widget)
-        layout_options.addWidget(spacer_widget, layout_options.rowCount(), 4)
+
 
 
     def show_square(self, state):
         if state == 2:  # Checked (Qt.Checked)
-            var.CAM_SQUARE = True
+            show_square_tool(True)
         else:  # Unchecked (Qt.Unchecked)
-            var.CAM_SQUARE = False
+            show_square_tool(False)
 
     def open_plotter(self):
         if self.plotter is None:
@@ -364,7 +445,7 @@ class RobotTools(QWidget):
             self.plotter.Initialize()
             self.plotter.Start()
             
-            Axis(self.renderer)
+            Axis(self.renderer, 200)
             Planes(self.renderer)
             
             self.layout_plotter.addWidget(self.plotter,0,0)
@@ -376,31 +457,32 @@ class RobotTools(QWidget):
         save_robot(False)
 
     def CreateButtons(self, item, tool_data):
-        if self.spacer_widget:
-            self.spacer_widget.deleteLater()  
-            self.spacer_widget.setParent(None)
-            self.spacer_widget = None
-            
         self.Tools_robot_buttons.append([[],[],[],[]])
+
+        frame = QFrame()
+        layout_tool = QHBoxLayout()
+        layout_tool.setContentsMargins(5,0,5,5)
+        frame.setLayout(layout_tool)
+        self.layout_scroll.addWidget(frame) 
             
         label = QLabel(tool_data[item][0])
-        self.layout.addWidget(label, item, 0)
         label.setStyleSheet(style_label)
         label.setMinimumWidth(60)
+        layout_tool.addWidget(label)
         self.Tools_robot_buttons[item][0] = label
         
         button = QPushButton("X")
-        self.layout.addWidget(button, item, 1)
         button.setStyleSheet(style_button)
         button.setFixedSize(25,25)
         button.pressed.connect(lambda idx = item: delete_tool(idx))
+        layout_tool.addWidget(button)
         self.Tools_robot_buttons[item][1] = button
         
         button = QPushButton("Settings")
-        self.layout.addWidget(button, item, 2)
         button.setStyleSheet(style_button)
         button.setFixedSize(75,25)
         button.pressed.connect(lambda idx = item: show_tool_settings(idx))
+        layout_tool.addWidget(button)
         self.Tools_robot_buttons[item][2] = button
         
         def on_combobox_change(nr):
@@ -413,29 +495,24 @@ class RobotTools(QWidget):
                 combo_nr = i
         
         combo = QComboBox()
-        self.layout.addWidget(combo, item, 3)
+        combo.view().setMinimumWidth(170)
         combo.setStyleSheet(style_combo)
         combo.addItems(colors)
         combo.setCurrentIndex(combo_nr)
         combo.currentIndexChanged.connect(lambda index, idx = item: on_combobox_change(idx))
+        layout_tool.addWidget(combo)
         self.Tools_robot_buttons[item][3] = combo
             
-        self.spacer_widget = QWidget()
-        self.spacer_widget.setStyleSheet(style_widget)
-        self.layout.addWidget(self.spacer_widget, self.layout.rowCount(), 0, 1, self.layout.columnCount())
-
+    
     def DeleteButtons(self):
-        for i in range(len(self.Tools_robot_buttons)):
-            for j in range(4):
-                self.Tools_robot_buttons[i][j].setParent(None)
-                self.Tools_robot_buttons[i][j].deleteLater()
+        while self.layout_scroll.count():
+            item = self.layout_scroll.takeAt(0)  # Take the first item from the layout
+            widget = item.widget()   # If it's a widget, delete it
+            if widget is not None:
+                widget.deleteLater()  # This ensures the widget is properly deleted
+            else:
+                self.layout_scroll.removeItem(item)  # If it's not a widget, just remove it (e.g., a spacer item)
 
-        self.Tools_robot_buttons = []
-        
-        if self.spacer_widget:
-            self.spacer_widget.deleteLater()  
-            self.spacer_widget.setParent(None)
-            self.spacer_widget = None
 
     def ShowSettings(self, tool_settings): 
         if self.stl_actor == None:
@@ -580,4 +657,5 @@ class RobotTools(QWidget):
         self.renderer.ResetCamera()
         #self.renderer.Render()
         self.plotter.Render() 
+        
         

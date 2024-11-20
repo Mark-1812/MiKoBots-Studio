@@ -16,6 +16,7 @@ class StartupScreen(QDialog):
         self.setWindowFlags(Qt.FramelessWindowHint)  # Remove title bar
         self.setModal(True)  # Prevent user interaction with other windows
         self.setWindowModality(Qt.ApplicationModal)  # Block other windows
+        self.setStyleSheet("background-color: white;")
 
         # Set up layout and widgets
         layout = QVBoxLayout()

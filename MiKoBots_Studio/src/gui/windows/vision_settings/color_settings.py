@@ -1,6 +1,7 @@
-from PyQt5.QtWidgets import QLineEdit, QLabel, QTabWidget, QSlider, QComboBox, QVBoxLayout, QSpacerItem, QPushButton, QWidget, QGridLayout, QCheckBox, QTextEdit
+from PyQt5.QtWidgets import QLineEdit, QLabel, QFrame, QSlider, QComboBox, QVBoxLayout, QSpacerItem, QPushButton, QWidget, QGridLayout, QCheckBox, QTextEdit
 from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
 from PyQt5.QtGui import QPixmap, QImage, QDoubleValidator
+from PyQt5.QtWidgets import QSpacerItem, QSizePolicy
 
 from backend.vision.vision_management import VisionManagement
 import cv2
@@ -12,28 +13,52 @@ import numpy as np
 
 import backend.core.variables as var
 
-from backend.vision import get_image_frame, cam_connected
+from backend.vision import get_image_frame, cam_connected, show_square, change_size_square, cam_tool_connected
 
 from gui.windows.message_boxes import ErrorMessage
 
-class VisionSetup(QWidget):
+class ColorSettings(QWidget):
     def __init__(self, frame):     
         super().__init__()  
         self.frame = frame
-        self.layout = QGridLayout(self.frame)
+        self.layout = QVBoxLayout(self.frame)
+        self.layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         
         self.image_HSV = None
         self.image_RGB = None
         self.PICTURE = False
-
         
+        self.gui()
+
+
+    def gui(self):
+        label = QLabel("Camera settings")        
+        label.setStyleSheet(style_label_bold)
+        self.layout.addWidget(label) 
+        
+        frame = QFrame()
+        frame_layout = QGridLayout()
+        frame_layout.setSpacing(5)
+        frame_layout.setContentsMargins(0, 0, 0, 0)
+        frame.setLayout(frame_layout)
+        self.layout.addWidget(frame)
+        
+        self.ColorsSettingsGUI(frame_layout)
+
+        space_widget = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.layout.addItem(space_widget)  
+
+
+                     
+        
+    def ColorsSettingsGUI(self, layout):
         label = QLabel("Colors HSV")        
         label.setStyleSheet(style_label_bold)
-        self.layout.addWidget(label, 0, 0) 
+        layout.addWidget(label, 0, 0) 
         
         self.image_label = QLabel(self)
         self.image_label.setFixedWidth(300)
-        self.layout.addWidget(self.image_label,1,1,11,1)
+        layout.addWidget(self.image_label, 0, 1, 11, 1)
         
         
         
@@ -50,41 +75,41 @@ class VisionSetup(QWidget):
         
         
         self.colors_combo = QComboBox()
-        self.colors_combo.addItems(var.COLOR_RANGE.keys())
         self.colors_combo.setStyleSheet(style_combo)
-        self.colors_combo.currentIndexChanged.connect(self.ChangeColor)
-        self.layout.addWidget(self.colors_combo, 1 , 0)
+        layout.addWidget(self.colors_combo, 2 , 0)
+        
         
         button_show_image = QPushButton("Show image")
         button_show_image.clicked.connect(self.ShowImage)
-        button_show_image.setStyleSheet(style_button)
-        self.layout.addWidget(button_show_image, 2, 0)
+        button_show_image.setStyleSheet(style_button_menu)
+        layout.addWidget(button_show_image, 1, 0)
         
         button_show_image = QPushButton("Update image")
         button_show_image.clicked.connect(self.UpdateImage)
-        button_show_image.setStyleSheet(style_button)
-        self.layout.addWidget(button_show_image, 3, 0)
+        button_show_image.setStyleSheet(style_button_menu)
+        layout.addWidget(button_show_image, 3, 0)
         
         button_save_color = QPushButton("Save color")
         button_save_color.clicked.connect(self.SaveColor)
-        button_save_color.setStyleSheet(style_button)
-        self.layout.addWidget(button_save_color, 4, 0)
+        button_save_color.setStyleSheet(style_button_menu)
+        layout.addWidget(button_save_color, 4, 0)
         
         button_restore_color = QPushButton("restore color")
         button_restore_color.clicked.connect(self.RestoreColor)
-        button_restore_color.setStyleSheet(style_button)
-        self.layout.addWidget(button_restore_color, 5, 0)
+        button_restore_color.setStyleSheet(style_button_menu)
+        layout.addWidget(button_restore_color, 5, 0)
         
         
         # Create sliders for HSV ranges
-        self.lower_hue_slider = CreateSlider(self.layout, 6, 'Lower Hue', 0, 179)
-        self.upper_hue_slider = CreateSlider(self.layout, 7, 'Upper Hue', 0, 179)
-        self.lower_sat_slider = CreateSlider(self.layout, 8, 'Lower Sat', 0, 255)
-        self.upper_sat_slider = CreateSlider(self.layout, 9, 'Upper Sat', 0, 255)
-        self.lower_val_slider = CreateSlider(self.layout, 10, 'Lower Val', 0, 255)
-        self.upper_val_slider = CreateSlider(self.layout, 11, 'Upper Val', 0, 255)
+        self.lower_hue_slider = CreateSlider(layout, 6, 'Lower Hue', 0, 179)
+        self.upper_hue_slider = CreateSlider(layout, 7, 'Upper Hue', 0, 179)
+        self.lower_sat_slider = CreateSlider(layout, 8, 'Lower Sat', 0, 255)
+        self.upper_sat_slider = CreateSlider(layout, 9, 'Upper Sat', 0, 255)
+        self.lower_val_slider = CreateSlider(layout, 10, 'Lower Val', 0, 255)
+        self.upper_val_slider = CreateSlider(layout, 11, 'Upper Val', 0, 255)
         
-    
+        
+
     def SaveColor(self):
         lower_hue = self.lower_hue_slider.current_val
         upper_hue = self.upper_hue_slider.current_val
@@ -114,10 +139,7 @@ class VisionSetup(QWidget):
         self.upper_hue_slider.slider.setValue(initial_hsv_ranges[1][0])
         self.upper_sat_slider.slider.setValue(initial_hsv_ranges[1][1])
         self.upper_val_slider.slider.setValue(initial_hsv_ranges[1][2])
-        
-        
-        
-        
+            
     def ChangeColor(self):
         if not self.PICTURE:
             return
@@ -153,10 +175,13 @@ class VisionSetup(QWidget):
         
         # Display the scaled image in the QLabel
         self.image_label.setPixmap(scaled_pixmap)
-        
     
     def ShowImage(self):
-        if cam_connected():
+        print(f"check connection cam {cam_connected()}")
+        
+        
+        
+        if not cam_connected():
             ErrorMessage(var.LANGUAGE_DATA.get("message_cam_not_connect"))
             return
         
@@ -200,18 +225,17 @@ class VisionSetup(QWidget):
         # Display the scaled image in the QLabel
         self.image_label.setPixmap(scaled_pixmap)
         
-        
-    
-    
+    def show_square(self, state):
+        if state == 2:  # Checked (Qt.Checked)
+            show_square(True)
+        else:  # Unchecked (Qt.Unchecked)
+            show_square(False)    
+            
 
-        
-        
     def UpdateImage(self):
         if not self.PICTURE:
             return
-        
-        
-        
+
         """Update the displayed image based on the current HSV slider values."""
         # Get HSV ranges from sliders
         lower_hue = self.lower_hue_slider.current_val
@@ -274,7 +298,7 @@ class CreateSlider():
         max_label.setFixedWidth(20)
         slider_layout.addWidget(max_label, 0, 4) 
         
-        self.value_label = QLabel(str(0))
+        self.value_label = QLabel(f"{name}: 0")
         self.value_label.setObjectName(f"{name}_label")
         self.value_label.setStyleSheet(style_label)
         self.value_label.setFixedWidth(90)

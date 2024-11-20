@@ -1,20 +1,16 @@
 from PyQt5.QtWidgets import QLabel, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog, QButtonGroup
 from PyQt5.QtCore import  Qt
 
-from .robot_settings import RobotSettings
-from .robot_overview import RobotOverview
-from .robot_tools import RobotTools
-from .robot_3d_model import Robot3DModel
 from .vision_setup import VisionSetup
-
+from .color_settings import ColorSettings
 
 from gui.style import *
 
-class RobotWindow(QWidget):
+class VisionSettingsWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Robot settings")
-        self.setFixedSize(800,600)
+        self.setWindowTitle("Vision settings")
+        self.setFixedSize(800,750)
         self.setStyleSheet("background-color: #E8E8E8;")
         
         self.layout = QGridLayout(self)
@@ -39,7 +35,7 @@ class RobotWindow(QWidget):
         layout_menu.addWidget(title, row, 0)
                  
         button_group = QButtonGroup()     
-        button_names = ["Robots", "Tools", "Settings", "3D model", "Vision"]    
+        button_names = ["Vision setup", "Colors"]    
         
         for name in button_names:
             radio_button = QRadioButton(name)
@@ -60,74 +56,25 @@ class RobotWindow(QWidget):
         self.frame_1 = QFrame()
         self.frame_1.setStyleSheet(style_frame)
         self.layout.addWidget(self.frame_1, 0, 1)
-        self.RobotOverview = RobotOverview(self.frame_1)
+        self.RobotOverview = VisionSetup(self.frame_1)
         
         self.show_frame_2 = 0
         self.frame_2 = QFrame()
         self.frame_2.setStyleSheet(style_frame)
         self.layout.addWidget(self.frame_2, 0, 1)
         self.frame_2.hide()
-        self.RobotTools = RobotTools(self.frame_2)
+        self.RobotTools = ColorSettings(self.frame_2)
         
-        
-        self.show_frame_3 = 0
-        self.frame_3 = QFrame()
-        self.frame_3.setStyleSheet(style_frame)
-        self.layout.addWidget(self.frame_3, 0, 1)
-        self.frame_3.hide()  
-        self.RobotSettings = RobotSettings(self.frame_3)   
-        
-        self.show_frame_4 = 0
-        self.frame_4 = QFrame()      
-        self.frame_4.setStyleSheet(style_frame)
-        self.layout.addWidget(self.frame_4, 0, 1)
-        self.frame_4.hide()
-        self.Robot3DModel = Robot3DModel(self.frame_4)
-        
-        self.show_frame_5 = 0
-        self.frame_5 = QFrame()      
-        self.frame_5.setStyleSheet(style_frame)
-        self.layout.addWidget(self.frame_5, 0, 1)
-        self.frame_5.hide()
-        self.VisionSetup = VisionSetup(self.frame_5)
+
     
     def show_hide(self, library):
-        if library == "Robots":
+        if library == "Vision setup":
             self.frame_1.show()
             self.frame_2.hide()
-            self.frame_3.hide()
-            self.frame_4.hide()
-            self.frame_5.hide()  
             
-        elif library == "Tools":
+        elif library == "Colors":
             self.frame_1.hide()
             self.frame_2.show()
-            self.frame_3.hide()
-            self.frame_4.hide()   
-            self.frame_5.hide()   
                         
-        elif library == "Settings":
-            self.frame_1.hide()
-            self.frame_2.hide()
-            self.frame_3.show()
-            self.frame_4.hide()  
-            self.frame_5.hide()  
-                                
-        elif library == "3D model":
-            self.frame_1.hide()
-            self.frame_2.hide()
-            self.frame_3.hide()
-            self.frame_4.show()   
-            self.frame_5.hide()  
-            
-        elif library == "Vision":
-            self.frame_1.hide()
-            self.frame_2.hide()
-            self.frame_3.hide()
-            self.frame_4.hide()   
-            self.frame_5.show()   
-        
-    def closeEvent(self, event):
-        self.RobotTools.ClosePlotter()
-        self.Robot3DModel.ClosePlotter()
+
         

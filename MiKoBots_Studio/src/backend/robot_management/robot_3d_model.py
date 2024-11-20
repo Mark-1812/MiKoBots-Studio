@@ -20,12 +20,7 @@ class Robot3dModel(QObject):
     def __init__(self):
         super().__init__()
         self.file_management = FileManagement()
-        self.subscribeToEvents()
-        
         self.model_3d_item = None
-
-    def subscribeToEvents(self):
-        event_manager.subscribe("setup_3d_model", self.setup)
 
     def setup(self):
         event_manager.publish("request_delete_buttons_3d_model")
@@ -35,7 +30,7 @@ class Robot3dModel(QObject):
             event_manager.publish("request_create_buttons_3d_model", i, var.ROBOT3D)  
 
 
-    def AddNewModel(self):
+    def AddNewModel(self, robot, robot_name):
         # Select a new file with Qfiledialog
         file_dialog = QFileDialog()
         file_dialog.setWindowTitle('Open File')
@@ -56,7 +51,7 @@ class Robot3dModel(QObject):
         name = os.path.basename(file_path)
         
         # Get the name of the folder of the current robot
-        folder_name = var.ROBOTS[var.SELECTED_ROBOT][0]   
+        folder_name = robot_name 
 
         # Save the modified mesh to a new STL file             
         var.ROBOT3D[i][0] = name

@@ -29,8 +29,6 @@ FILE_PATH = None
 
 ######### robot config
 
-NAME = None
-
 # Settings
 SETTINGS = []         
     # RV.TOOLS3D[i][0] = name
@@ -64,13 +62,11 @@ POS_AXIS_SIM = [400,0,500,0,90,0]
 POS_AXIS = [400,0,300,0,0,0]
 POS_JOINT = [0,0,0,0,0,0]
 TOOL_POS = 0
-SELECTED_ROBOT = None
 SELECTED_TOOL = None
 
 # variables related to the connection of the robot
 ROBOT_JOINT_MOVE = None
 ROBOT_NAME = ""
-ROBOTS = []
 
 # variables related to the connection of the robot
 TOOL_FRAME = [0,0,0,0,0,0]

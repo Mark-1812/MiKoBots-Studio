@@ -8,7 +8,7 @@ def LoadLanguage(file_mangement):
     # print(path)
 
     # path = '/Users/markkleinjan/Library/CloudStorage/OneDrive-MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/Language'
-    # path = 'C:/Users/MarkKleinJan/OneDrive - MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/Language/en'
+    path = 'C:/Users/MarkKleinJan/OneDrive - MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/Language/en'
     lan_path = Path(path+".json")
     try:
         with open(lan_path, "r", encoding="utf-8") as f:

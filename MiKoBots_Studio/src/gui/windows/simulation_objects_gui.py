@@ -1,5 +1,5 @@
 from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
-from PyQt5.QtWidgets import QOpenGLWidget, QCheckBox, QSlider, QWidget, QMenu, QPushButton, QLabel, QScrollArea, QComboBox, QFrame, QGridLayout, QLineEdit, QFileDialog
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QSlider, QWidget, QMenu, QPushButton, QLabel, QScrollArea, QComboBox, QFrame, QGridLayout, QLineEdit, QFileDialog
 from PyQt5.QtGui import QDoubleValidator, QIcon
 
 from gui.style import *
@@ -12,33 +12,19 @@ from backend.core.event_manager import event_manager
 from backend.simulation.axis import Axis
 from backend.simulation.planes import Planes
 
-from backend.simulation import open_object_models
-from backend.simulation import show_origin_object
-from backend.simulation import change_origin_object
-from backend.simulation import delete_stl_object_1
-from backend.simulation import add_new_object_model
-from backend.simulation import add_object_to_plotter
-from backend.simulation import show_pos_object
-from backend.simulation import change_pos_object
-from backend.simulation import delete_object_plotter
-from backend.simulation import change_color_object
+from backend.simulation.simulation_interaction import CustomInteractorStyle
 
-class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
-    def __init__(self, parent=None):
-        super().__init__()
+from backend.simulation.object import open_object_models
+from backend.simulation.object import show_origin_object
+from backend.simulation.object import change_origin_object
+from backend.simulation.object import delete_stl_object_1
+from backend.simulation.object import add_new_object_model
+from backend.simulation.object import add_object_to_plotter
+from backend.simulation.object import show_pos_object
+from backend.simulation.object import change_pos_object
+from backend.simulation.object import delete_object_plotter
+from backend.simulation.object import change_color_object
 
-    # Override the middle mouse button press event to rotate
-    def OnMiddleButtonDown(self):
-        self.StartRotate()
-
-    def OnMiddleButtonUp(self):
-        self.EndRotate()
-
-    def OnMouseMove(self):
-        if self.GetInteractor().GetControlKey():  # If Control is pressed
-            return  # Do not rotate if Control is pressed
-
-        self.Rotate()  # Rotate the camera
 
 class SimulationObjectsGUI(QWidget):
     def __init__(self, parent = None):
@@ -143,105 +129,110 @@ class SimulationObjectsGUI(QWidget):
     # Create the buttons for all the stl files that are saved in the mikobots studio
     def CreateButtons1(self, item, name):
         self.Buttons1.append([[],[],[],[]])
+
+        frame = QFrame()
+        frame.setFixedWidth(280)
+        layout = QHBoxLayout()
+        layout.setContentsMargins(5, 0, 5, 5)
+        frame.setLayout(layout)
+        self.scroll_area1.addWidget(frame) 
         
         label = QLabel(name)
         label.setStyleSheet(style_label)
-        label.setMinimumWidth(60)
-        self.scroll_area1.addWidget(label, item , 0)
+        layout.addWidget(label)
         self.Buttons1[item][0] = label
 
         button = QPushButton("X")
         button.setStyleSheet(style_button)
         button.setFixedSize(25,25)
         button.pressed.connect(lambda idx = item: delete_stl_object_1(idx))
-        self.scroll_area1.addWidget(button, item, 1)
+        layout.addWidget(button)
         self.Buttons1[item][1] = button
  
         button = QPushButton("+")
         button.setStyleSheet(style_button)
         button.setFixedSize(25,25)
         button.pressed.connect(lambda idx = item: add_object_to_plotter(idx))
-        self.scroll_area1.addWidget(button, item, 2)
+        layout.addWidget(button)
         self.Buttons1[item][2] = button
         
         button = QPushButton("Origin")
         button.setStyleSheet(style_button)
         button.setFixedSize(75,25)
         button.pressed.connect(lambda idx = item: show_origin_object(idx))
-        self.scroll_area1.addWidget(button, item, 3)
+        layout.addWidget(button)
         self.Buttons1[item][3] = button
         
-        spacer_widget = QWidget()
-        spacer_widget.setStyleSheet(style_widget)
-        self.scroll_area1.addWidget(spacer_widget, self.scroll_area1.rowCount(), 0, 1, self.scroll_area1.columnCount())
 
-    def DeleteButtons1(self):
-        for i in range(len(self.Buttons1)):
-            for j in range(4):
-                self.Buttons1[i][j].setParent(None)
-                self.Buttons1[i][j].deleteLater()
-        
-        self.Buttons1 = []        
+    def DeleteButtons1(self):         
+        while self.scroll_area1.count():
+            item = self.scroll_area1.takeAt(0)  # Take the first item from the layout
+            widget = item.widget()   # If it's a widget, delete it
+            if widget is not None:
+                widget.deleteLater()  # This ensures the widget is properly deleted
+            else:
+                self.scroll_area1.removeItem(item)  # If it's not a widget, just remove it (e.g., a spacer item)
+
+        self.Buttons1 = []  
 
 
     # create the buttons for the objects that are shown in the plotter
     def CreateButtons2(self, item, name):
-        if self.spacer_widget_2:
-            self.spacer_widget_2.setParent(None)
-            self.spacer_widget_2.deleteLater()
-        
         self.Buttons2.append([[],[],[],[],[],[]])
-            
+
+        frame = QFrame()
+        layout = QHBoxLayout()
+        layout.setContentsMargins(5, 0, 5, 5)
+        frame.setLayout(layout)
+        self.scroll_area2.addWidget(frame) 
+
         label = QLabel(name)
         label.setStyleSheet(style_label)
         label.setMinimumWidth(60)
-        self.scroll_area2.addWidget(label, item , 0)
+        layout.addWidget(label)
         self.Buttons2[item][0] = label
         
         button = QPushButton("X")
         button.setStyleSheet(style_button)
         button.setFixedSize(25,25)
         button.pressed.connect(lambda idx = item: delete_object_plotter(idx))
-        self.scroll_area2.addWidget(button, item, 1)
+        layout.addWidget(button)
         self.Buttons2[item][1] = button
                
         button = QPushButton("Position")
         button.setStyleSheet(style_button)
         button.setFixedSize(75,25)
         button.pressed.connect(lambda idx = item: show_pos_object(idx))
-        self.scroll_area2.addWidget(button, item, 2)
+        layout.addWidget(button)
         self.Buttons2[item][2] = button
        
-        colors = ['red', 'blue', 'black', 'white', 'darkgray']
+        colors = ['red', 'blue', 'green', 'yellow','white', 'darkgray']
         combo_nr = 0
         
         self.combo = QComboBox()
+        self.combo.view().setMinimumWidth(170)
         self.combo.setStyleSheet(style_combo)
         self.combo.addItems(colors)
         self.combo.setCurrentIndex(combo_nr)
         self.combo.currentIndexChanged.connect(lambda index, idx = item: self.ChangeColorCombo(idx))
-        self.scroll_area2.addWidget(self.combo, item, 3)
+        layout.addWidget(self.combo)
         self.Buttons2[item][3] = self.combo
             
-        self.spacer_widget_2 = QWidget()
-        self.spacer_widget_2.setStyleSheet(style_widget)
-        self.scroll_area2.addWidget(self.spacer_widget_2, self.scroll_area2.rowCount(), 0, 1, self.scroll_area2.columnCount())
 
     def DeleteButtons2(self):
         # Delete all the buttons
-        for i in range(len(self.Buttons2)):
-            for j in range(4):
-                self.Buttons2[i][j].setParent(None)
-                self.Buttons2[i][j].deleteLater()
-                
-        self.Buttons2 = []
-        
-        if self.spacer_widget_2:
-            self.spacer_widget_2.setParent(None)
-            self.spacer_widget_2.deleteLater()       
-            self.spacer_widget_2 = None
+        while self.scroll_area2.count():
+            item = self.scroll_area2.takeAt(0)  # Take the first item from the layout
+            widget = item.widget()   # If it's a widget, delete it
+            if widget is not None:
+                widget.deleteLater()  # This ensures the widget is properly deleted
+            else:
+                self.scroll_area2.removeItem(item)  # If it's not a widget, just remove it (e.g., a spacer item)
+
+        self.Buttons2 = []  
         
     def ChangeColorCombo(self, nr):
+        color = [0,0,0]
         if self.combo.currentText() == "red":
             color = [1,0,0]
         elif self.combo.currentText() == "blue":
@@ -250,6 +241,8 @@ class SimulationObjectsGUI(QWidget):
             color = [0,0,0]
         elif self.combo.currentText() == "white":
             color = [1,1,1]
+        elif self.combo.currentText() == "yellow":
+            color = [1,1,0]
         elif self.combo.currentText() == "darkgray":
             color = [0.5,0.5,0.5]
             
@@ -287,7 +280,7 @@ class SimulationObjectsGUI(QWidget):
             self.plotter.Initialize()
             self.plotter.Start()
             
-            Axis(self.renderer)
+            Axis(self.renderer, 100)
             Planes(self.renderer)
             
             self.layout_plotter.addWidget(self.plotter,2,0) 
@@ -309,7 +302,11 @@ class SimulationObjectsGUI(QWidget):
         validator.setNotation(QDoubleValidator.StandardNotation)
         
         frame_1_layout = QGridLayout()
+        frame_1_layout.setAlignment(Qt.AlignTop)
+        frame_1_layout.setContentsMargins(0, 0, 0, 0)
+        frame_1_layout.setSpacing(0)
         frame_1_items = QFrame()
+        frame_1_items.setFixedWidth(300)
         frame_1_items.setStyleSheet(style_frame)
         frame_1_items.setLayout(frame_1_layout)
         
@@ -318,8 +315,12 @@ class SimulationObjectsGUI(QWidget):
         frame_2_position.setStyleSheet(style_frame)
         frame_2_position.setLayout(frame_2_layout)
         
-        frame_3_layout = QGridLayout()
+        frame_3_layout = QVBoxLayout()
+        frame_3_layout.setAlignment(Qt.AlignTop)
+        frame_3_layout.setContentsMargins(0, 0, 0, 0)
+        frame_3_layout.setSpacing(0)
         frame_3_3dfiles = QFrame()
+        frame_3_3dfiles.setFixedWidth(300)
         frame_3_3dfiles.setStyleSheet(style_frame)
         frame_3_3dfiles.setLayout(frame_3_layout)
         
@@ -345,19 +346,22 @@ class SimulationObjectsGUI(QWidget):
         title.setStyleSheet(style_label_bold)
         title.setFixedHeight(30)
         title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-        frame_1_layout.addWidget(title, 0, 0)
+        frame_1_layout.addWidget(title)
         
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet(style_scrollarea)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll = QScrollArea()
+        scroll.setStyleSheet(style_scrollarea)
+        scroll.setWidgetResizable(True)
         
         scroll_widget = QWidget()
         scroll_widget.setStyleSheet(style_widget)
-        self.scroll_area2 = QGridLayout(scroll_widget) 
+        self.scroll_area2 = QVBoxLayout(scroll_widget)
+        self.scroll_area2.setContentsMargins(0, 0, 0, 0)
+        self.scroll_area2.setSpacing(0)
+        self.scroll_area2.setAlignment(Qt.AlignTop)
         
-        scroll_area.setWidget(scroll_widget)
-        frame_1_layout.addWidget(scroll_area) 
+        
+        scroll.setWidget(scroll_widget)
+        frame_1_layout.addWidget(scroll) 
 
 
         #### frame 2   
@@ -397,19 +401,24 @@ class SimulationObjectsGUI(QWidget):
         title.setFixedHeight(30)
         title.setStyleSheet(style_label_bold)
         title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-        frame_3_layout.addWidget(title, 0 , 0)
+        frame_3_layout.addWidget(title)
         
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet(style_scrollarea)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll = QScrollArea()
+        scroll.setStyleSheet(style_scrollarea)
+        scroll.setWidgetResizable(True)
+        scroll.setFixedWidth(400)
+        scroll.setFixedHeight(300)
         
         scroll_widget = QWidget()
         scroll_widget.setStyleSheet(style_widget)
-        self.scroll_area1 = QGridLayout(scroll_widget) 
+        self.scroll_area1 = QVBoxLayout(scroll_widget)
+        self.scroll_area1.setContentsMargins(0, 0, 0, 0)
+        self.scroll_area1.setSpacing(0)
+        self.scroll_area1.setAlignment(Qt.AlignTop)
         
-        scroll_area.setWidget(scroll_widget)
-        frame_3_layout.addWidget(scroll_area) 
+        
+        scroll.setWidget(scroll_widget)
+        frame_3_layout.addWidget(scroll) 
                
          
         ## frame 4

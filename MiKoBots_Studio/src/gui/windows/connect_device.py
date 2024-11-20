@@ -76,6 +76,8 @@ class ConnectDevice(QWidget):
             self.scan_button.clicked.connect(self.start_scanning)
             self.connect_bt_button.clicked.connect(self.connect_bt_device)
 
+            self.subscribeToEvents()
+
         elif self.type == "CAMERA":
             label3 = QLabel("fill in the IP adress")
             label3.setStyleSheet(style_label_bold)
@@ -92,7 +94,7 @@ class ConnectDevice(QWidget):
 
         #self.label_connected.hide()
         self.selected_port = None
-        self.subscribeToEvents()
+        
 
     def subscribeToEvents(self):
         event_manager.subscribe("request_bt_channels", self.update_device_list)

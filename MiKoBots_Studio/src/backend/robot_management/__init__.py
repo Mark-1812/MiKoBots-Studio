@@ -13,9 +13,21 @@ robot_3d_model = Robot3dModel()
 
 #### robot
 
+def get_selected_robot():
+    return robot_loader.selected_robot
+
+def get_selected_robot_name():
+    return robot_loader.robots[robot_loader.selected_robot][0]
+
+def set_selected_robot(robot):
+    print("set the selected robot")
+    print(robot)
+    robot_loader.selected_robot = robot
+    print(get_selected_robot())
+
 def setup_robot():
-    robot = robot_loader.SetupRobot(var.SELECTED_ROBOT)
-    robot_loader.ChangeRobot(robot)
+    robot_loader.SetupRobot()
+    robot_loader.ChangeRobot()
     robot_3d_model.setup()
     tool_management.SetupTool()
     tool_management.changeTool(0)
@@ -23,7 +35,7 @@ def setup_robot():
     robot_loader.CreateNewButtons()
     
         
-def change_robot(robot):
+def change_robot(robot = None):
     robot_loader.CloseCurrentRobot()
     robot_loader.ChangeRobot(robot)
     robot_3d_model.setup()
@@ -72,7 +84,7 @@ def export_robot():
     
 def import_robot():
     robot_loader.ImportRobot()
-    change_robot(var.SELECTED_ROBOT)
+    change_robot()
     
 
     
@@ -83,7 +95,9 @@ def import_robot():
 #########################################
 
 def add_new_3d_model():
-    robot_3d_model.AddNewModel()
+    robot = get_selected_robot()
+    robot_name = get_selected_robot_name()
+    robot_3d_model.AddNewModel(robot, robot_name)
 
 def show_3d_model_settings(item):
     robot_3d_model.Show3dModelSettings(item)
@@ -94,12 +108,17 @@ def delete_robot_model(item):
 def change_origin_3d_model():
     robot_3d_model.ChangeOrigin3dModel()
     
+    
+    
+    
 #########################################
 ## Tool
 #########################################
 
 def add_new_tool():
-    tool_management.AddNewTool()
+    robot = get_selected_robot()
+    robot_name = get_selected_robot_name()
+    tool_management.AddNewTool(robot, robot_name)
 
 def show_tool_settings(tool):
     tool_management.ShowSettings(tool)

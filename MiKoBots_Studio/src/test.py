@@ -1,64 +1,35 @@
-from PyQt5.QtCore import QTranslator, QLocale, QCoreApplication
-from PyQt5.QtWidgets import QApplication, QMainWindow, QComboBox, QVBoxLayout, QWidget, QLabel
-import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QComboBox
 
-class LanguageManager:
-    def __init__(self, app):
-        self.app = app
-        self.translator = QTranslator()
-
-    def set_language(self, language_code):
-        # Unload any previous translation
-        self.app.removeTranslator(self.translator)
-        
-        # Load new translation file based on language code
-        translation_file = f"translations_{language_code}.qm"
-        if self.translator.load(translation_file):
-            self.app.installTranslator(self.translator)
-            print(f"Language set to {language_code}")
-        else:
-            print(f"Failed to load language file for {language_code}")
-
-class MainWindow(QMainWindow):
-    def __init__(self, language_manager):
+class MyWindow(QWidget):
+    def __init__(self):
         super().__init__()
-        self.language_manager = language_manager
-        self.setWindowTitle(QCoreApplication.translate("MainWindow", "Language Example"))
+        self.setWindowTitle("QComboBox Popup Width Adjustment")
+        self.setGeometry(100, 100, 300, 200)
 
-        # Main layout
-        central_widget = QWidget()
-        layout = QVBoxLayout(central_widget)
-        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout(self)
 
-        # Label to display translated text
-        self.label = QLabel(QCoreApplication.translate("MainWindow", "Hello, world!"))
-        layout.addWidget(self.label)
+        # Create a QComboBox with items
+        self.combo_box = QComboBox(self)
+        self.combo_box.addItems([
+            "Short", 
+            "A bit longer text", 
+            "Much longer text that won't fit initially"
+        ])
+        self.combo_box.setMaximumWidth(100)
+        layout.addWidget(self.combo_box)
 
-        # Dropdown for language selection
-        self.language_combo = QComboBox()
-        self.language_combo.addItem("English", "en")
-        self.language_combo.addItem("Spanish", "es")
-        self.language_combo.currentIndexChanged.connect(self.change_language)
-        layout.addWidget(self.language_combo)
+        # Adjust popup width to fit contents
+        self.combo_box.view().setMinimumWidth(self.get_popup_width())
 
-    def change_language(self):
-        language_code = self.language_combo.currentData()
-        self.language_manager.set_language(language_code)
-        self.update_texts()
+    def get_popup_width(self):
+        # Calculate the width needed for the longest item
+        font_metrics = self.combo_box.fontMetrics()
+        longest_item = max([font_metrics.width(self.combo_box.itemText(i)) for i in range(self.combo_box.count())])
+        # Add some padding for aesthetics
+        return longest_item + 20
 
-    def update_texts(self):
-        # Update all translatable texts
-        self.setWindowTitle(QCoreApplication.translate("MainWindow", "Language Example"))
-        self.label.setText(QCoreApplication.translate("MainWindow", "Hello, world!"))
-
-# Main Application
-app = QApplication(sys.argv)
-
-# Initialize Language Manager
-language_manager = LanguageManager(app)
-
-# Create and show main window
-main_window = MainWindow(language_manager)
-main_window.show()
-
-sys.exit(app.exec_())
+# Create and run the application
+app = QApplication([])
+window = MyWindow()
+window.show()
+app.exec_()

@@ -1,8 +1,9 @@
 import vtk
 
 class Axis():
-    def __init__(self, renderer):
+    def __init__(self, renderer, size):
         self.renderer = renderer
+        self.size = size
         
         self.ShowAxis = False
         # Create axis arrows
@@ -22,7 +23,7 @@ class Axis():
         # Transform to orient the arrow in the desired direction
         transform = vtk.vtkTransform()
         transform.RotateWXYZ(direction[0], direction[1], direction[2], direction[3])
-        transform.Scale(500, 150, 150)
+        transform.Scale(self.size, self.size/3, self.size/3)
         
         # Apply transformation
         transform_filter = vtk.vtkTransformPolyDataFilter()

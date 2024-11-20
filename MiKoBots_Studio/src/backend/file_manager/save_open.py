@@ -10,9 +10,12 @@ from gui.windows.message_boxes import ErrorMessage, SaveProgramMessage
 
 from backend.core.event_manager import event_manager
 
-from backend.robot_management import change_robot
+from backend.robot_management import change_robot, get_selected_robot, get_selected_robot_name
 
 from backend.run_program import check_program_run
+
+from backend.simulation.object import open_object_file, close_object_file, get_objects_sim
+from backend.simulation.origins import open_origins_file, close_origins_file, get_origins_file
 
 import threading
 import time
@@ -50,7 +53,7 @@ class SaveOpen:
                 "",
                 [],
                 [],
-                var.SELECTED_ROBOT,
+                get_selected_robot(),
                 var.SELECTED_TOOL,
                 ""
         ]
@@ -63,9 +66,9 @@ class SaveOpen:
             self.MikoFile[6] = ""
             self.MikoFile[0] = event_manager.publish("request_program_field_get")[0]
             #self.MikoFile[1] = event_manager.publish("request_gcode_text_get")[0]
-            self.MikoFile[2] = event_manager.publish("request_get_objects_plotter")[0]
-            self.MikoFile[3] = event_manager.publish("request_get_origins_plotter")[0]
-            self.MikoFile[4] = var.ROBOTS[var.SELECTED_ROBOT][0] # robot name
+            self.MikoFile[2] = get_objects_sim()
+            self.MikoFile[3] = get_origins_file()
+            self.MikoFile[4] = get_selected_robot_name()
             self.MikoFile[5] = var.SELECTED_TOOL
             event_manager.publish("request_save_blockly_file")
             
@@ -92,9 +95,9 @@ class SaveOpen:
 
         self.MikoFile[0] = event_manager.publish("request_program_field_get")[0]
         #self.MikoFile[1] = event_manager.publish("request_gcode_text_get")[0]
-        self.MikoFile[2] = event_manager.publish("request_get_objects_plotter")[0]
-        self.MikoFile[3] = event_manager.publish("request_get_origins_plotter")[0]
-        self.MikoFile[4] = var.ROBOTS[var.SELECTED_ROBOT][0]
+        self.MikoFile[2] = get_objects_sim()
+        self.MikoFile[3] = get_origins_file()
+        self.MikoFile[4] = get_selected_robot_name()
         self.MikoFile[5] = var.SELECTED_TOOL
         event_manager.publish("request_save_blockly_file")
         
@@ -173,12 +176,12 @@ class SaveOpen:
         
         # 3d models
         try:
-            event_manager.publish("request_open_doc_objects", self.MikoFile[2])
+            open_object_file(self.MikoFile[2])
         except:
             ErrorMessage(var.LANGUAGE_DATA.get("message_not_open_3dmodel"))
 
         # Origin
-        event_manager.publish("request_open_doc_origins", self.MikoFile[3])
+        open_origins_file(self.MikoFile[3])
         
         
         # Robot
@@ -195,8 +198,8 @@ class SaveOpen:
     def CloseFile(self):            
         event_manager.publish("request_program_field_clear")     
         event_manager.publish("request_gcode_text_clear")
-        event_manager.publish("request_close_doc_objects")
-        event_manager.publish("request_close_doc_origins")
+        close_object_file()
+        close_origins_file()
         event_manager.publish("request_clear_blockly_file")
         
         

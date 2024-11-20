@@ -113,7 +113,11 @@ class TalkThroughCOM():
             self.CloseRobot()
             print(var.LANGUAGE_DATA.get("message_lost_connection_robot"))
             
-        time.sleep(0.3)
+        start_time = time.time()
+        while self.busy: 
+            if time.time() - start_time >= 10:
+                break 
+            time.sleep(0.03)
                    
     def ReadDate(self):
         while self.com_ser.is_open:

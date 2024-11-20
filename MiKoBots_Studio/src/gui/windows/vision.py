@@ -18,13 +18,15 @@ class VisionWindow(QWidget):
         
         
         # Create the label to display the frame
-        self.label_Image = QLabel()
-        self.label_Image.setAlignment(Qt.AlignCenter | Qt.AlignBottom)
+        self.label_Image = QLabel("No camera connected")
+        self.label_Image.setStyleSheet(style_label)
+        self.label_Image.setAlignment(Qt.AlignCenter | Qt.AlignCenter)
         layout.addWidget(self.label_Image)
 
         
-        self.label_video = QLabel()
-        self.label_video.setAlignment(Qt.AlignCenter | Qt.AlignBottom)
+        self.label_video = QLabel("No camere connected")
+        self.label_video.setStyleSheet(style_label)
+        self.label_video.setAlignment(Qt.AlignCenter | Qt.AlignCenter)
         layout.addWidget(self.label_video)
         
         self.subscribeToEvents()

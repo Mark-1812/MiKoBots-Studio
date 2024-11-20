@@ -19,6 +19,8 @@ from backend.core.event_manager import event_manager
 
 from gui.windows.message_boxes import WarningMessageRe
 
+from backend.simulation.robot import change_pos_robot, add_tool_sim, delete_tool_sim
+
 class ToolManagment(QObject):
     def __init__(self):
         super().__init__()
@@ -47,13 +49,12 @@ class ToolManagment(QObject):
             #event_manager.publish("request_delete_spacer_tool")
             event_manager.publish("request_create_buttons_tool", i, var.TOOLS3D)
             event_manager.publish("request_add_tool_combo", var.TOOLS3D[i][0])
-            pass
             
             
         event_manager.publish("request_add_tool_combo", "No tool")
             
 
-    def AddNewTool(self):
+    def AddNewTool(self, robot, robot_name):
         # Select a new file with Qfiledialog
         file_dialog = QFileDialog()
         file_dialog.setWindowTitle('Open File')
@@ -74,7 +75,7 @@ class ToolManagment(QObject):
         
 
         # get the name of the robot
-        folder_name = var.ROBOTS[var.SELECTED_ROBOT][0]           
+        folder_name = robot_name       
 
         # Save the modified mesh to a new STL file             
         var.TOOLS3D[i][0] = name
@@ -110,7 +111,7 @@ class ToolManagment(QObject):
         event_manager.publish("request_save_robot_tool")
                 
     def changeTool(self, tool):
-        event_manager.publish("request_delete_tool_plotter")
+        delete_tool_sim()
     
         # if no tool
         if (tool + 1) > len(var.TOOLS3D):
@@ -119,11 +120,14 @@ class ToolManagment(QObject):
             if var.NUMBER_OF_JOINTS == 6:
                 joint_pos = self.InverseKinematics_6.InverseKinematics(var.POS_AXIS_SIM, var.POS_JOINT_SIM)
                 matrix = self.ForwardKinematics_6.ForwardKinematics(joint_pos)
-                event_manager.publish("request_move_robot", matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
-            elif var.NUMBER_OF_JOINTS == 3:
-                joint_pos = self.InverseKinematics_3.inverseKinematics(var.POS_AXIS_SIM)
-                matrix = self.ForwardKinematics_3.ForwardKinematics(joint_pos)
-                event_manager.publish("request_move_robot", matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)        
+                change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+            elif var.NUMBER_OF_JOINTS == 3 and var.EXTRA_JOINT:
+                try:
+                    joint_pos = self.InverseKinematics_3.inverseKinematics(var.POS_AXIS_SIM)
+                    matrix = self.ForwardKinematics_3.ForwardKinematics(joint_pos)
+                    change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT) 
+                except:
+                    print(" Error")     
             return
     
     
@@ -131,10 +135,9 @@ class ToolManagment(QObject):
             file_path = self.file_management.GetFilePath(var.TOOLS3D[tool][2])
             
             data = [file_path, var.TOOLS3D[tool][3], np.eye(4), np.eye(4)]
-            
-            event_manager.publish("request_add_tool_to_plotter", data)
+
+            add_tool_sim(data)
  
-            
             var.TOOL_FRAME = var.TOOLS3D[tool][5]            
             var.TOOL_PIN_NUMBER = var.TOOLS3D[tool][6]
             var.TOOL_TYPE = var.TOOLS3D[tool][7] # Type of tool pin (Servo or relay)
@@ -148,10 +151,10 @@ class ToolManagment(QObject):
         if var.NUMBER_OF_JOINTS == 6:
             joint_pos = self.InverseKinematics_6.InverseKinematics(var.POS_AXIS_SIM, var.POS_JOINT_SIM)
             matrix = self.ForwardKinematics_6.ForwardKinematics(joint_pos)
-            event_manager.publish("request_move_robot", matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
         elif var.NUMBER_OF_JOINTS == 3:
             matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0])
-            event_manager.publish("request_move_robot", matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
                     
     def ShowSettings(self, tool):
         self.selected_tool = tool

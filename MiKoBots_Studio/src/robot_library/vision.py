@@ -1,4 +1,4 @@
-from backend.calculations.calculations_vision import calculate_mm_per_pixel
+from backend.vision import calculate_mm_per_pixel
 import backend.core.variables as var
 from backend.core.event_manager import event_manager
 
@@ -20,6 +20,7 @@ class Vision():
         self.Objects = None
 
     def FindObject(self, color = None):       
+        print("find objects")
         self.frame = get_image_frame()
         image_RGB = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB) 
         image_GRAY = cv2.cvtColor(image_RGB, cv2.COLOR_RGB2GRAY) 
@@ -27,9 +28,13 @@ class Vision():
         image_GRAY = cv2.adaptiveThreshold(image_GRAY, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 399, 12)
         image_HSV = cv2.cvtColor(image_RGB, cv2.COLOR_RGB2HSV)
         
+        
         mm_per_pixel = calculate_mm_per_pixel(image_RGB)
+        print(mm_per_pixel)
         
         self.height_picture, self.width_picture, ch = image_RGB.shape 
+        
+        
         
         # get the contours of the color
         if color:
@@ -59,6 +64,7 @@ class Vision():
             width = round(np.sqrt(eigenvalues[1][0]) * mm_per_pixel, 2)
             
             if height > 5 and width > 5:
+                print("found objects")
                 
                 ## [visualization]
                 # Draw the principal components
@@ -80,16 +86,116 @@ class Vision():
                     Xplace_from_center = -((self.height_picture / 2) - Xcenter) * mm_per_pixel    
 
 
+                print("1")
+
+                if Yplace_from_center > 0 and Xplace_from_center > 0:
+                    angle_xy = math.atan(abs(Xplace_from_center) / abs(Yplace_from_center))
+                    angle = 270 + math.degrees(angle_xy)
+
+                elif Yplace_from_center > 0 and Xplace_from_center < 0:
+                    angle_xy = math.atan(abs(Yplace_from_center) / abs(Xplace_from_center))
+                    angle = 180 + math.degrees(angle_xy)
+
+                elif Yplace_from_center < 0 and Xplace_from_center < 0:
+                    angle_xy = math.atan(abs(Xplace_from_center) / abs(Yplace_from_center))
+                    angle = 90 + math.degrees(angle_xy)
+
+                elif Yplace_from_center < 0 and Xplace_from_center > 0:
+                    angle_xy = math.atan(abs(Yplace_from_center) / abs(Xplace_from_center))
+                    angle = math.degrees(angle_xy)
+
+                radius = math.sqrt(pow(Xplace_from_center, 2) + pow(Yplace_from_center, 2))
+
+
+                camera_settings = event_manager.publish("request_get_offset_cam")[0]
+                angle_camera = camera_settings[2]
+                print(f"angle_camera {angle_camera}")
+                print(f"angle {angle}")
+
+                new_angle = angle_camera + angle
+                if new_angle > 360:
+                    new_angle = new_angle - 360
+                    
+                print(f"new angle {new_angle}")
+                    
+                # get x and Y location of the objects
+                if new_angle >= 0 and new_angle < 90:
+                    print("X positive Y negative")
+                    # Y negative X positive
+                    
+                    angle_radians = math.radians(new_angle)
+                    pos_y = radius * math.sin(angle_radians)
+                    pos_x = radius * math.cos(angle_radians)
+                    
+                    pos_y = pos_y * -1 # make y position negative
+                    
+                elif new_angle >= 90 and new_angle < 180:
+                    print("X negative Y negative")
+                    # X negative Y negative
+                    
+                    angle_radians = math.radians(new_angle - 90)
+                    pos_x = radius * math.sin(angle_radians)
+                    pos_y = radius * math.cos(angle_radians)
+                    
+                    pos_x = pos_x * -1
+                    pos_y = pos_y * -1
+                   
+                elif new_angle >= 180 and new_angle < 270:
+                    print("X negative Y positive")
+                    # X negative Y positive
+                    
+                    angle_radians = math.radians(new_angle - 180)
+                    pos_y = radius * math.sin(angle_radians)
+                    pos_x = radius * math.cos(angle_radians)
+                    
+                    print(f"pos x {pos_x}")
+                    print(f"pos y {pos_y}")
+                    
+                    pos_x = pos_x * -1
+                    
+                    print(f"pos x {pos_x}")
+                    print(f"pos y {pos_y}")
+                    
+                elif new_angle >= 270 and new_angle < 360:
+                    print("Y positive X positive")
+                    # X negative Y positive
+                    
+                    angle_radians = math.radians(new_angle - 270)
+                    pos_x = radius * math.sin(angle_radians)
+                    pos_y = radius * math.cos(angle_radians)
+                  
+                    
+                print(f"pos x {pos_x}")
+                print(f"pos y {pos_y}")
+
                 # get the orientation of the position of the camera
 
 
                 angle = math.atan2(eigenvectors[0,1], eigenvectors[0,0]) # orientation in radians
                 angle = round(math.degrees(angle),2)
 
+                print("3")
 
-                Yobject_place = round(Yplace_from_center  + float(var.POS_AXIS[1]) + float(var.TOOL_OFFSET_CAM[1]),1)          
-                Xobject_place = round(Xplace_from_center  + float(var.POS_AXIS[0]) + float(var.TOOL_OFFSET_CAM[0]),1)  
-                
+                # check if the camera is connected to the camera
+                # if not the location of the camera is static
+                cam_tool = False
+
+                if cam_tool:
+                    # get the rotation of the camera how it is connected to the tool
+                    Yobject_place = round(pos_y  + float(var.POS_AXIS[1]) + float(var.TOOL_OFFSET_CAM[1]),1)          
+                    Xobject_place = round(pos_x  + float(var.POS_AXIS[0]) + float(var.TOOL_OFFSET_CAM[0]),1)  
+                else:
+                    # get the cent lace of the camera out of the settings'
+                    # get the rotation of the camera out of the settings
+
+                    offset = event_manager.publish("request_get_offset_cam")[0]
+                    print(offset)
+                    
+                    x_offset = offset[0]
+                    y_offset = offset[1]
+                    
+                    Yobject_place = round(pos_y  + y_offset, 1)          
+                    Xobject_place = round(pos_x  + x_offset, 1)
                     
                 print(f"X {Xobject_place} Y {Yobject_place} width {width} height {height} angle {angle}")
                 
@@ -99,7 +205,7 @@ class Vision():
         
         return self.Objects
     
-    def MoveToObject(self, list_objects = list, number = 0, Zdistance = float):
+    def MoveToObject(self, list_objects = list, number = 0, Zdistance = None):
         self.RobotCommand = Move()
 
         POSXYZ = [0]*6
@@ -111,7 +217,8 @@ class Vision():
         POSXYZ[4] = 0
         POSXYZ[5] = 180        
         
-        if (var.POS_AXIS[2] - Zdistance) < 130:
+
+        if (var.POS_AXIS[2] - Zdistance) < 130 or Zdistance == None:
             POSXYZ[2] = Zdistance
             self.RobotCommand.MoveJ(pos=POSXYZ, v=50, a=50) 
         

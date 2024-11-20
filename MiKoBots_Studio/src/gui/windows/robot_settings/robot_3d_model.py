@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QPushButton, QLabel, QSizePolicy, QCheckBox, QLineEdit, QSpacerItem, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog
+from PyQt5.QtWidgets import QPushButton, QLabel, QSizePolicy, QCheckBox, QLineEdit, QHBoxLayout, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog
 from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
 from PyQt5.QtGui import QTextCharFormat, QTextCursor, QColor, QDoubleValidator
 
@@ -7,6 +7,7 @@ from gui.style import *
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 
+from backend.simulation.simulation_interaction import CustomInteractorStyle
 
 from backend.simulation.axis import Axis
 from backend.simulation.planes import Planes
@@ -20,22 +21,6 @@ from backend.robot_management  import add_new_3d_model
 from backend.robot_management  import save_robot 
 
 
-class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
-    def __init__(self, parent=None):
-        super().__init__()
-
-    # Override the middle mouse button press event to rotate
-    def OnMiddleButtonDown(self):
-        self.StartRotate()
-
-    def OnMiddleButtonUp(self):
-        self.EndRotate()
-
-    def OnMouseMove(self):
-        if self.GetInteractor().GetControlKey():  # If Control is pressed
-            return  # Do not rotate if Control is pressed
-
-        self.Rotate()  # Rotate the camera
 
 class Robot3DModel(QWidget): 
     def __init__(self, frame):
@@ -81,7 +66,10 @@ class Robot3DModel(QWidget):
         
         scroll_widget = QWidget()
         scroll_widget.setStyleSheet(style_widget)
-        self.layout = QGridLayout(scroll_widget)
+        self.layout_scroll = QVBoxLayout(scroll_widget)
+        self.layout_scroll.setContentsMargins(0, 0, 0, 0)
+        self.layout_scroll.setSpacing(0)
+        self.layout_scroll.setAlignment(Qt.AlignTop)
         
         scroll.setWidget(scroll_widget)
         self.main_layout.addWidget(scroll,1,0)      
@@ -181,7 +169,7 @@ class Robot3DModel(QWidget):
             
 
             
-            Axis(self.renderer)
+            Axis(self.renderer, 100)
             Planes(self.renderer)
             
             self.layout_plotter.addWidget(self.plotter,0,0)
@@ -218,31 +206,32 @@ class Robot3DModel(QWidget):
             self.renderer = None
 
     def CreateButtons(self, item, robot_3d_data):
-        if self.spacer_widget:
-            self.spacer_widget.deleteLater()    
-            self.spacer_widget.setParent(None)
-            self.spacer_widget = None
-            
         self.Robot_buttons.append([[],[],[],[],[]])
+
+        frame = QFrame()
+        layout_model = QHBoxLayout()
+        layout_model.setContentsMargins(5,0,5,5)
+        frame.setLayout(layout_model)
+        self.layout_scroll.addWidget(frame) 
             
         label = QLabel(robot_3d_data[item][0])
         label.setStyleSheet(style_label)
         label.setMinimumWidth(60)
-        self.layout.addWidget(label, item, 0)
+        layout_model.addWidget(label)
         self.Robot_buttons[item][0] = label
         
         button = QPushButton("X")
         button.setFixedSize(25,25)
         button.setStyleSheet(style_button)
         button.pressed.connect(lambda idx = item: delete_robot_model(idx))
-        self.layout.addWidget(button, item, 2)
+        layout_model.addWidget(button)
         self.Robot_buttons[item][1] = button
         
         button = QPushButton("Origin")
         button.setFixedSize(75,25)
         button.setStyleSheet(style_button)
         button.pressed.connect(lambda idx = item: show_3d_model_settings(idx))
-        self.layout.addWidget(button, item, 3)
+        layout_model.addWidget(button)
         self.Robot_buttons[item][2] = button
         
         def on_combobox_change(nr):
@@ -256,11 +245,12 @@ class Robot3DModel(QWidget):
                 combo_nr = i
         
         combo_color = QComboBox()
+        combo_color.view().setMinimumWidth(170)
         combo_color.addItems(colors)
         combo_color.setStyleSheet(style_combo)
         combo_color.setCurrentIndex(combo_nr)
         combo_color.currentIndexChanged.connect(lambda index, idx = item: on_combobox_change(idx))
-        self.layout.addWidget(combo_color, item, 4)
+        layout_model.addWidget(combo_color)
         self.Robot_buttons[item][3] = combo_color
         
                         
@@ -275,30 +265,22 @@ class Robot3DModel(QWidget):
 
         
         combo = QComboBox()
+        combo.view().setMinimumWidth(170)
         combo.setStyleSheet(style_combo)
         combo.addItems(linkages)
         combo.setCurrentIndex(combo_nr)
         combo.currentIndexChanged.connect(lambda index, idx = item: on_linkage_change(idx))
-        self.layout.addWidget(combo, item, 5)
+        layout_model.addWidget(combo)
         self.Robot_buttons[item][4] = combo
-        
-            
-        self.spacer_widget = QWidget()
-        self.spacer_widget.setStyleSheet(style_widget)
-        self.layout.addWidget(self.spacer_widget, self.layout.rowCount(), 0, 1, self.layout.columnCount())
 
     def DeleteButtons(self):
-        for i in range(len(self.Robot_buttons)):
-            for j in range(len(self.Robot_buttons[i])):
-                self.Robot_buttons[i][j].setParent(None)
-                self.Robot_buttons[i][j].deleteLater()
-                
-        self.Robot_buttons = []    
-        
-        if self.spacer_widget:
-            self.spacer_widget.deleteLater()    
-            self.spacer_widget.setParent(None)
-            self.spacer_widget = None
+        while self.layout_scroll.count():
+            item = self.layout_scroll.takeAt(0)  # Take the first item from the layout
+            widget = item.widget()   # If it's a widget, delete it
+            if widget is not None:
+                widget.deleteLater()  # This ensures the widget is properly deleted
+            else:
+                self.layout_scroll.removeItem(item)  # If it's not a widget, just remove it (e.g., a spacer item)
 
     def SetOriginfields(self, data):
         for i in range(6):

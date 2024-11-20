@@ -12,6 +12,8 @@ import math
 
 from backend.core.event_manager import event_manager
 
+from .robot import change_pos_robot
+
 class SimulationManagement(QObject):
     def __init__(self):
         self.forward_kinematics_6 = ForwardKinematics_6()
@@ -86,13 +88,13 @@ class SimulationManagement(QObject):
                 line = Move
                 for i in range(var.NUMBER_OF_JOINTS):
                     line += (f" {var.NAME_JOINTS[i]}{POS[i]}")   
-                self.jogJ(line, False)
+                self.jogJ(line)
                 
             elif words[0] == "MoveJoint":
                 line = Move
                 for i in range(var.NUMBER_OF_JOINTS):
                     line += (f" {var.NAME_JOINTS[i]}{POS[i]}")              
-                self.MoveJoint(line, False)
+                self.MoveJoint(line)
                 
             elif words[0] == "Tool_MoveTo":
                 self.updateLabelTool(line)
@@ -420,7 +422,7 @@ class SimulationManagement(QObject):
             elif var.NUMBER_OF_JOINTS == 3: 
                 matrix = self.forward_kinematics_3.ForwardKinematics(Joint_angles)
                                 
-            event_manager.publish("request_move_robot", matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
             joint_increments = [a - b for a, b in zip(Joint_angles, var.POS_JOINT_SIM)]
             delay = self.CalculateSpeed(joint_increments)
             time.sleep(delay)
@@ -442,7 +444,7 @@ class SimulationManagement(QObject):
             elif var.NUMBER_OF_JOINTS == 3: 
                 matrix = self.forward_kinematics_3.ForwardKinematics(Joint_angles_start)
                 
-            event_manager.publish("request_move_robot", matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
             delay_time = self.CalculateSpeed(Joints_increments)
             time.sleep(delay_time)
                 
