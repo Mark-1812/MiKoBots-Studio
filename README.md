@@ -1,10 +1,11 @@
-MiKoBots Studio is an opensource project, designed to control diy robot arm. So if you have designed your own robot arm and don't know how to controll it you can use MiKoBots Studio. MiKoBots has a lot of features build in to get the maximum out of tour robotic arm, like:
+MiKoBots Studio is an opensource project, designed to control diy robot arms. So if you have designed your own robot arm and don't know how to controll it you can use MiKoBots Studio. The software has a lot of features build in to get the maximum out of tour robotic arm, like:
 
 * Blockly programming
-* Simulation, you can upload your 3d model of the robot arm and simulate your robot arm.
-* Export and import robot arms, with the software you can easily configure and share it with others
+* Simulation, you can upload the 3d model of your robot arm and simulate it.
+* Export and import robot arms, with the software you can easily configure and share your ptofile with others
 * Vision control build in the librery that allows you to connect a camera to the software to give your robot eyes
 * Bluetooth and usb connectivity
+* Add input and output signals
 
 ![MiKoBots Studio](MiKoBots_Studio/assets/images/MiKoBots_studio.png "MiKoBots Studio")
 

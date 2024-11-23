@@ -7,12 +7,14 @@ python.pythonGenerator.forBlock['ttt_find_board'] = function(block, generator)
   return [code, python.Order.NONE];
 }
 
+
 // block find human move
 python.pythonGenerator.forBlock['ttt_find_human_move'] = function(block, generator) 
 {
   const dropdown_name = block.getFieldValue('NAME');
+  const value_board = generator.valueToCode(block, 'board', python.Order.ATOMIC);
 
-  const code = `tictactoe.FindHumanMove("${dropdown_name}")\n`;
+  const code = `tictactoe.FindHumanMove("${dropdown_name}", ${value_board})\n`;
   return code;
 }
 

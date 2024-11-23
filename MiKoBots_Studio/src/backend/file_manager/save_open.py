@@ -71,18 +71,24 @@ class SaveOpen:
         self.MikoFile[4] = get_selected_robot_name()
         self.MikoFile[5] = get_selected_tool()
         event_manager.publish("request_save_blockly_file")
+        
+        def ThreadSave():
+            while self.MikoFile[6] == "":
+                time.sleep(0.01)
             
-        try:
-            if self.program_path:
-                event_manager.publish("request_set_program_title", os.path.basename(self.program_path))       
-                with open(self.program_path, "w") as file:
-                    file.write(str(self.MikoFile))
-            else:
-                
+            try:
+                if self.program_path:
+                    event_manager.publish("request_set_program_title", os.path.basename(self.program_path))       
+                    with open(self.program_path, "w") as file:
+                        file.write(str(self.MikoFile))
+                else:
+                    
+                    self.SaveAsFile()
+            except:
                 self.SaveAsFile()
-        except:
-            self.SaveAsFile()
-
+                
+        t_threadRead = threading.Thread(target=ThreadSave)  
+        t_threadRead.start()
 
     def SaveAsFile(self):
         if check_program_run():    

@@ -20,7 +20,6 @@ class Vision():
         self.Objects = None
 
     def FindObject(self, color = None):       
-        print("find objects")
         self.frame = get_image_frame()
         image_RGB = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB) 
         image_GRAY = cv2.cvtColor(image_RGB, cv2.COLOR_RGB2GRAY) 
@@ -33,8 +32,6 @@ class Vision():
         
         self.height_picture, self.width_picture, ch = image_RGB.shape 
         
-        print("1")
-        
         # get the contours of the color
         if color:
             mask_HSV = get_mask(color, image_HSV)
@@ -44,9 +41,6 @@ class Vision():
             contours_HSV, _ = cv2.findContours(mask_HSV, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
         self.Objects = []
-        
-        
-        print("2")
         
         for contour in contours_HSV:
             # Filter out small contours
@@ -67,8 +61,6 @@ class Vision():
 
             height = round(bounding_h * mm_per_pixel, 2)
             width = round(bounding_w * mm_per_pixel, 2)
-            
-            print("3")
             
             if height > 5 and width > 5:
                 ## [visualization]
@@ -108,9 +100,7 @@ class Vision():
 
                 radius = math.sqrt(pow(Xplace_from_center, 2) + pow(Yplace_from_center, 2))
 
-                print("test")
                 camera_settings = event_manager.publish("request_get_offset_cam")[0]
-                print(camera_settings)
                 angle_camera = camera_settings[2]
 
                 new_angle = angle_camera + angle
@@ -179,27 +169,21 @@ class Vision():
                     
                     Yobject_place = round(pos_y  + y_offset, 1)          
                     Xobject_place = round(pos_x  + x_offset, 1)
-                    
-                print(f"X {Xobject_place} Y {Yobject_place} width {width} height {height} angle {angle}")
                 
-                self.Objects.append([[Xobject_place], [Yobject_place], [width], [height], [angle], [color]])
+                self.Objects.append([Xobject_place, Yobject_place, width, height, angle, color])
 
         event_manager.publish("request_set_pixmap_image", image_RGB)
         
         return self.Objects
     
     def MoveToObject(self, list_objects = list, Zdistance = int, vel = 50, accel = 50, check = None):
-
         self.RobotCommand = Move()
-
-        print(f"check {check}")
-
 
         if var.NUMBER_OF_JOINTS == 6:
             POSXYZ = [0]*6
             
-            POSXYZ[0] = list_objects[0][0]
-            POSXYZ[1] = list_objects[1][0]
+            POSXYZ[0] = list_objects[0]
+            POSXYZ[1] = list_objects[1]
             POSXYZ[2] = Zdistance
             POSXYZ[3] = 0
             POSXYZ[4] = 0
@@ -207,8 +191,8 @@ class Vision():
         elif var.NUMBER_OF_JOINTS == 3:
             POSXYZ = [0]*3
             
-            POSXYZ[0] = list_objects[0][0]
-            POSXYZ[1] = list_objects[1][0]
+            POSXYZ[0] = list_objects[0]
+            POSXYZ[1] = list_objects[1]
             POSXYZ[2] = Zdistance             
         
         
@@ -222,32 +206,30 @@ class Vision():
             self.RobotCommand.MoveJ(pos=POSXYZ, v = vel, a = accel)
             
             # check the color of the object out of the lsit
-            color = list_objects[0][5][0]
+            color = list_objects[0][5]
             
             time.sleep(0.5)
             objects = self.FindObject(color)
-            # print(f"new X location {objects[0][0][0]}")
-            # print(f"new Y location {objects[0][1][0]}")
 
-            X = list_objects[0][0]
-            Y = list_objects[1][0]        
+            X = list_objects[0]
+            Y = list_objects[1]        
                     
             # if it sees multiples object pick the object that is closed to the object
             for i in range(len(objects)):
-                X_object = objects[i][0][0] 
-                Y_object = objects[i][1][0] 
+                X_object = objects[i][0]
+                Y_object = objects[i][1] 
                 
                 X_delta = abs(X - X_object)
                 Y_delta = abs(Y - Y_object)
                 # print(f"X delta {X_delta} Y delta {Y_delta}")
-                # print(f"X size {list_objects[number][2][0]} Y size {list_objects[number][3][0]}")
+                # print(f"X size {list_objects[number][2]} Y size {list_objects[number][3]}")
                 
-                if X_delta < list_objects[2][0] * 3 and Y_delta < list_objects[3][0] * 3:
+                if X_delta < list_objects[2] * 3 and Y_delta < list_objects[3] * 3:
                     object_nr = i
                     break
                 
             # when the object is found move to the location of the obejct
-            POSXYZ[0] = objects[object_nr][0][0]
-            POSXYZ[1] = objects[object_nr][1][0]
+            POSXYZ[0] = objects[object_nr][0]
+            POSXYZ[1] = objects[object_nr][1]
             POSXYZ[2] = Zdistance
             self.RobotCommand.MoveJ(pos=POSXYZ, v = vel, a = accel)   

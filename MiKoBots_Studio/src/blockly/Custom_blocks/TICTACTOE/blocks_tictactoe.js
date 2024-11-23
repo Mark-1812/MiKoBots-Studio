@@ -43,7 +43,7 @@ Blockly.defineBlocksWithJsonArray([
     "type": "ttt_find_human_move",
     "tooltip": "",
     "helpUrl": "",
-    "message0": "Find human move %1 color %2 %3",
+    "message0": "Find human move %1 color %2 %3 board %4",
     "args0": [
       {
         "type": "input_dummy",
@@ -70,6 +70,11 @@ Blockly.defineBlocksWithJsonArray([
       {
         "type": "input_dummy",
         "name": "color"
+      },
+      {
+        "type": "input_value",
+        "name": "board",
+        "check": "String"
       }
     ],
     "previousStatement": null,

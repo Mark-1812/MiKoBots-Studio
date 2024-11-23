@@ -19,4 +19,4 @@ venvlaptop/
 venv/
 .venv/
 
-stepup.py
+setup.py

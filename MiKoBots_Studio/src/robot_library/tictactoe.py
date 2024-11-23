@@ -24,30 +24,34 @@ class TicTacToe():
         
         x_average = 0
         y_average = 0  
+        Place_X = 0
+        Place_Y = 0
+        
+        board = None
 
         if len(self.Objects) == 4:
             x_average = x_average/4
             y_average = y_average/4
             
             for i in range(len(self.Objects)):
-                if self.Objects[i][0][0] < x_average and self.Objects[i][1][0] < y_average:
+                if self.Objects[i][0] < x_average and self.Objects[i][1] < y_average:
                     # print(f"1pos x: {self.Objects[i][0]} pos y {self.Objects[i][1]}")
-                    x1 = self.Objects[i][0][0]
-                    y1 = self.Objects[i][1][0]
+                    x1 = self.Objects[i][0]
+                    y1 = self.Objects[i][1]
                     # print(self.Objects[i][0])
                     # print(x1)
-                if self.Objects[i][0][0] < x_average and self.Objects[i][1][0] > y_average:
+                if self.Objects[i][0] < x_average and self.Objects[i][1] > y_average:
                     # print(f"4pos x: {self.Objects[i][0]} pos y {self.Objects[i][1]}")
-                    x4 = self.Objects[i][0][0]
-                    y4 = self.Objects[i][1][0]
-                if self.Objects[i][0][0] > x_average and self.Objects[i][1][0] < y_average:
+                    x4 = self.Objects[i][0]
+                    y4 = self.Objects[i][1]
+                if self.Objects[i][0] > x_average and self.Objects[i][1] < y_average:
                     # print(f"2pos x: {self.Objects[i][0]} pos y {self.Objects[i][1]}")
-                    x2 = self.Objects[i][0][0]
-                    y2 = self.Objects[i][1][0]
-                if self.Objects[i][0][0] > x_average and self.Objects[i][1][0] > y_average:
+                    x2 = self.Objects[i][0]
+                    y2 = self.Objects[i][1]
+                if self.Objects[i][0] > x_average and self.Objects[i][1] > y_average:
                     # print(f"3pos x: {self.Objects[i][0]} pos y {self.Objects[i][1]}")
-                    x3 = self.Objects[i][0][0]
-                    y3 = self.Objects[i][1][0]
+                    x3 = self.Objects[i][0]
+                    y3 = self.Objects[i][1]
                     
 
             Place_X = x1
@@ -56,12 +60,18 @@ class TicTacToe():
             width_board = x2 - x1
             height_board = y4 - y1
                 
-        board = [Place_X, Place_Y, width_board, height_board]
-        print(board)
+            board = [Place_X, Place_Y, width_board, height_board]
+        else:
+            print("Error: board not found")
 
         return board
                  
-    def FindMoveHuman(self, color, board=list):   
+    def FindHumanMove(self, color, board):   
+        if not board:
+            return 
+        
+        print(board)
+        
         # X Y coordinates board   
         board_x = board[0]
         board_Y = board[1]
@@ -75,6 +85,8 @@ class TicTacToe():
         # print(f"col {column_width} row{row_height}")
 
         objects = self.vision.FindObject(color=color)
+        print(f"objects {objects}")
+
 
         for object in objects:
             object_x = object[0]
@@ -93,16 +105,19 @@ class TicTacToe():
                 column = 2
             
             # print(f"X{Xobject_place} Y{Yobject_place}")
-            # print(f"column: {column}, row: {row}")
+            print(f"column: {column}, row: {row}")
             
             index = 3 * row + column
             self.s = get_result_ttt(self.s, (1, index))
                     
+                    
         print_board_ttt(self.s)
- 
-        event_manager.publish("request_set_pixmap_video", image_RGB)
+
         
     def GenerateMoveAi(self, board):
+        if not board:
+            return
+        
         action = minimax_ttt(self.s)
         
         self.s = get_result_ttt(self.s, action[0])
