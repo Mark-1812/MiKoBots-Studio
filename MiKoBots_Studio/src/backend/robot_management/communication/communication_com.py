@@ -8,7 +8,6 @@ from gui.windows.message_boxes import ErrorMessage
 
 class TalkThroughCOM():
     pause_event = threading.Event()
-    busy_event = threading.Event()
 
     def __init__(self, ROBOT = False, IO = False):
         super().__init__()
@@ -24,7 +23,6 @@ class TalkThroughCOM():
         self.pauze = False
 
         self.pause_event.clear()
-        self.busy_event.clear()
 
 # Connect the robot
     def Connect(self, com_port = None):
@@ -108,7 +106,6 @@ class TalkThroughCOM():
                     self.robot_home = True
                     event_manager.publish("request_robot_home_button_color", True)
                 elif data.strip() == "END":
-                    self.busy_event.clear()
                     self.busy = 0   
                 elif data.startswith("Tool state"):
                     state = data.split()[-1]

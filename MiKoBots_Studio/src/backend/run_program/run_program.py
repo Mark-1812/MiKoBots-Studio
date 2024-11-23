@@ -35,14 +35,14 @@ class RunProgram():
                 event_manager.publish("request_get_blockly_code")
             else:
                 script = event_manager.publish("request_program_field_get")[0]
-                self.script_thread = threading.Thread(target=self.execute_script, args=(script,))
+                self.script_thread = threading.Thread(target=self.execute_script, args=(script,), name = "run script")
                 self.script_thread.start()          
         elif not sim and (connect_robot_check() or connect_io_check()) and not self.program_running:
             if event_manager.publish("request_get_program_type")[0]:
                 event_manager.publish("request_get_blockly_code")
             else:
                 script = event_manager.publish("request_program_field_get")[0]
-                self.script_thread = threading.Thread(target=self.execute_script, args=(script,))
+                self.script_thread = threading.Thread(target=self.execute_script, args=(script,), name = "run script")
                 self.script_thread.start()            
         else:
             if not self.program_running and not sim:
@@ -54,9 +54,11 @@ class RunProgram():
 
     def RunBlocklyCode(self, code):
         try:
-            program = "from robot_library import Move, Tool, Vision, IO\nrobot = Move()\nvision = Vision()\ntool = Tool()\nIO = IO()\n"
+            program = "from robot_library import Move, Tool, Vision, IO, Connect4, TicTacToe\nrobot = Move()\nvision = Vision()\ntool = Tool()\nIO = IO()\nconnect4 = Connect4()\ntictactoe = TicTacToe()\n"
             program += code
-            self.script_thread = threading.Thread(target=self.execute_script, args=(program,))
+
+            print(program)
+            self.script_thread = threading.Thread(target=self.execute_script, args=(program,), name = "run script")
             self.script_thread.start() 
         except Exception as e:
             print(f"Error executing code: {e}")
@@ -67,7 +69,7 @@ class RunProgram():
             program += line
             
                 
-            self.script_thread = threading.Thread(target=self.execute_script, args=(program,))
+            self.script_thread = threading.Thread(target=self.execute_script, args=(program,), name = "run script")
             self.script_thread.start() 
             
     
@@ -141,6 +143,9 @@ class OutputStream(QObject):
             return  # Prevent recursion if we're already inside a write
         
         # Prevent emitting the signal while inside the write method
-        self._in_write = True
-        self.textWritten.emit(str(text))  # Emit the text
-        self._in_write = False  # Reset the flag after emitting the signal
+        try:
+            self._in_write = True
+            self.textWritten.emit(str(text))  # Emit the text
+            self._in_write = False  # Reset the flag after emitting the signal
+        except:
+            pass

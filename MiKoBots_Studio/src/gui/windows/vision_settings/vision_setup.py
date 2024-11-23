@@ -3,17 +3,11 @@ from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
 from PyQt5.QtGui import QPixmap, QImage, QDoubleValidator
 from PyQt5.QtWidgets import QSpacerItem, QSizePolicy
 
-from backend.vision.vision_management import VisionManagement
-import cv2
 from backend.core.event_manager import event_manager
 
 from gui.style import *
 
-import numpy as np
-
-import backend.core.variables as var
-
-from backend.vision import get_image_frame, cam_connected, show_square, change_size_square, cam_tool_connected
+from backend.vision import show_square, change_size_square, cam_tool_connected
 
 from gui.windows.message_boxes import ErrorMessage
 
@@ -40,9 +34,6 @@ class VisionSetup(QWidget):
         event_manager.subscribe("request_get_vision_settings", self.GetVisionSettings)
         
         
-
-
-
     def gui(self):
         label = QLabel("Camera settings")        
         label.setStyleSheet(style_label_bold)
@@ -68,9 +59,6 @@ class VisionSetup(QWidget):
         space_widget = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.layout.addItem(space_widget)  
 
-
-        
-        
     def CamSettingsGUI(self, layout):
         self.checkbox_cam_tool = QCheckBox("Camera connected to the tool")
         self.checkbox_cam_tool.stateChanged.connect(self.cam_connec_tool)
@@ -180,8 +168,8 @@ class VisionSetup(QWidget):
             
     def cam_connec_tool(self, state):
         if state == 2:  # Checked (Qt.Checked)
-            cam_tool_connected(False)
+            cam_tool_connected(True)
         else:  # Unchecked (Qt.Unchecked)
-            cam_tool_connected(True)               
+            cam_tool_connected(False)               
             
  

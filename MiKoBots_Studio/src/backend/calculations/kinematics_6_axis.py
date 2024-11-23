@@ -332,6 +332,11 @@ class InverseKinmatics_6:
                     R05_rev_matrix[k][i] += R06_rev_matrix[k][j] * R06_neg_matrix[j][i]
 
         # Calculate robot[0].PosJEnd based on conditions
+        if R05_rev_matrix[0][3] == 0:
+            R05_rev_matrix[0][3] = 0.001
+        if R05_rev_matrix[1][3] == 0:
+            R05_rev_matrix[1][3] = 0.001
+
         if R05_rev_matrix[0][3] >= 0 and R05_rev_matrix[1][3] > 0:
             J1 = math.degrees(math.atan(R05_rev_matrix[1][3] / R05_rev_matrix[0][3]))
         elif R05_rev_matrix[0][3] >= 0 and R05_rev_matrix[1][3] <= 0:

@@ -13,7 +13,7 @@ import numpy as np
 
 import backend.core.variables as var
 
-from backend.vision import get_image_frame, cam_connected, show_square, change_size_square, cam_tool_connected
+from backend.vision import get_image_frame, cam_connected, show_square
 
 from gui.windows.message_boxes import ErrorMessage
 
@@ -43,6 +43,8 @@ class ColorSettings(QWidget):
         return self.color_ranges
     
     def SetColorRange(self, colors):
+        print(f"set color {colors}")
+
         if colors is None:
             self.color_ranges = self.color_ranges_init
         else:

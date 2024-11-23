@@ -58,36 +58,31 @@ class SaveOpen:
                 ""
         ]
         self.SetProgram()
-
-
-                  
+            
     def SaveFile(self):
-        def ThreadSave():
-            self.MikoFile[6] = ""
-            self.MikoFile[0] = event_manager.publish("request_program_field_get")[0]
-            #self.MikoFile[1] = event_manager.publish("request_gcode_text_get")[0]
-            self.MikoFile[2] = get_objects_sim()
-            self.MikoFile[3] = get_origins_file()
-            self.MikoFile[4] = get_selected_robot_name()
-            self.MikoFile[5] = get_selected_tool()
-            event_manager.publish("request_save_blockly_file")
+        if check_program_run():    
+            return
+        
+        self.MikoFile[6] = ""
+        self.MikoFile[0] = event_manager.publish("request_program_field_get")[0]
+        #self.MikoFile[1] = event_manager.publish("request_gcode_text_get")[0]
+        self.MikoFile[2] = get_objects_sim()
+        self.MikoFile[3] = get_origins_file()
+        self.MikoFile[4] = get_selected_robot_name()
+        self.MikoFile[5] = get_selected_tool()
+        event_manager.publish("request_save_blockly_file")
             
-            while self.MikoFile[6] == "":
-                time.sleep(0.01)
-            
-            try:
-                if self.program_path:
-                    event_manager.publish("request_set_program_title", os.path.basename(self.program_path))       
-                    with open(self.program_path, "w") as file:
-                        file.write(str(self.MikoFile))
-                else:
-                    
-                    self.SaveAsFile()
-            except:
-                self.SaveAsFile()
+        try:
+            if self.program_path:
+                event_manager.publish("request_set_program_title", os.path.basename(self.program_path))       
+                with open(self.program_path, "w") as file:
+                    file.write(str(self.MikoFile))
+            else:
                 
-        t_threadRead = threading.Thread(target=ThreadSave)  
-        t_threadRead.start()
+                self.SaveAsFile()
+        except:
+            self.SaveAsFile()
+
 
     def SaveAsFile(self):
         if check_program_run():    
@@ -114,10 +109,7 @@ class SaveOpen:
                 file.write(str(self.MikoFile))          
                 
     def OpenFileFromPath(self, file_path):
-
         self.program_path = file_path
-
-        
         self.CloseFile()
         
         self.program_folder = os.path.dirname(self.program_path)
@@ -138,7 +130,7 @@ class SaveOpen:
         
         answer = SaveProgramMessage(var.LANGUAGE_DATA.get("title_save"), var.LANGUAGE_DATA.get("message_ask_save_program"))
 
-        if answer == 1:
+        if answer:
             self.SaveFile()    
             
         options = QFileDialog.Options()

@@ -22,7 +22,7 @@ CURRENT_VERSION = 1.11
            
 class StartupWorker(QThread):
     version = pyqtSignal(float, str)
-    """This class handles the startup process in the background."""
+    # This class handles the startup process in the background.
     
     def run(self): 
         update_version, update_description = check_updates()

@@ -374,25 +374,34 @@ class SimulationObjectWindow(QObject):
         new_list = objects
         self.Objects_stl2 = []
         
+        # see if the objects are in the main object list 1
+        # makes a list with all the object that needed to be added to te simulation
         for i in range(len(new_list)):
             for j in range(len(self.Objects_stl1)):
                 if new_list[i][0] == self.Objects_stl1[j][0]:
                     self.Objects_stl2.append(new_list[i])
                     
-                    
+        # Add the items out of the list to the plotter
         for i in range(len(self.Objects_stl2)):
-            file_path = self.file_management.GetFilePath(self.Objects_stl2[i][1])
-            data = [file_path, self.Objects_stl2[i][2], np.eye(4), np.eye(4)]
-            event_manager.publish("request_add_item_to_plotter", data)
+            # add the item to the simulation
+            self.AddObjectToSimulation(i)
+
             # Make buttons
             name = self.Objects_stl2[i][0]
             event_manager.publish("request_create_buttons_2_object", i, name)
+
+            # show the settings of the object so the position can be changeds
             self.ShowPosObject(i)
             self.ChangePosObject()
 
     def CloseFile(self):    
+        # delete the item out of the simulation
+        for i in range(len(self.plotter_items)):
+            self.renderer.RemoveActor(self.plotter_items[i][0])
+        
+        self.plotter_items = []
+        
         for i in range(len(self.Objects_stl2)):
-            event_manager.publish("request_delete_item_plotter")
             event_manager.publish("request_delete_buttons_2_object")
         self.Objects_stl2 = []
 

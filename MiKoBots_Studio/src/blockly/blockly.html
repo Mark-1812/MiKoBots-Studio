@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <script src="blockly/blockly_compressed.js"></script>
     <script src="blockly/blocks_compressed.js"></script>
-    <script src="blockly/python_compressed.js"></script> <!-- Include Python generator -->
+    <script src="blockly/python_compressed.js"></script>
     <script src="blockly/msg/js/en.js"></script>
     <script src="Custom_blocks/ROBOT_6/blocks_robot_6.js"></script>
     <script src="Custom_blocks/ROBOT_6/generators/python.js"></script>
@@ -18,6 +18,10 @@
     <script src="Custom_blocks/IO/generators/python.js"></script>
     <script src="Custom_blocks/TOOLS/blocks_tools.js"></script>
     <script src="Custom_blocks/TOOLS/generators/python.js"></script>
+    <script src="Custom_blocks/TICTACTOE/blocks_tictactoe.js"></script>
+    <script src="Custom_blocks/TICTACTOE/generators/python.js"></script>
+    <script src="Custom_blocks/CONNECT_4/blocks_connect_4.js"></script>
+    <script src="Custom_blocks/CONNECT_4/generators/python.js"></script>
     <style>
         body {
             margin: 0;
@@ -78,10 +82,6 @@
         var workspace = Blockly.inject('blocklyDiv', {
             toolbox: `
                 <xml id="toolbox" style="display: none">
-                    <category name="Math" colour="230">           <!-- Existing Math category -->
-                        <block type="math_number"></block>
-                        <block type="math_arithmetic"></block>
-                    </category>
                     <category name="Logic" colour="210">
                         <block type="controls_if"></block>
                         <block type="logic_compare"></block>
@@ -140,32 +140,44 @@
                     </category>
                     <category name="Variables" colour="330" custom="VARIABLE"></category>
                     <category name="Functions" colour="290" custom="PROCEDURE"></category>
-                    <category name="Robot 6 axis" colour="210">  
+                    <category name="Robot 6 axis" colour="15">  
                         <block type="MoveJ_6"></block> 
                         <block type="MoveL_6"></block>    
                         <block type="OffsetJ_6"></block> 
                         <block type="OffsetL_6"></block>    
                     </category>
-                    <category name="Robot 3 axis" colour="210">  
+                    <category name="Robot 3 axis" colour="15">  
                         <block type="MoveJ_3"></block>   
                         <block type="MoveL_3"></block>    
                         <block type="OffsetJ_3"></block> 
                         <block type="OffsetL_3"></block>   
                     </category>
-                    <category name="Tool" colour="210">  
+                    <category name="Tool" colour="60">  
                         <block type="set_tool"></block>   
                         <block type="tool_move_to"></block>  
                         <block type="tool_state"></block>  
                     </category>
-                    <category name="I/O" colour="210">  
+                    <category name="I/O" colour="90">  
                         <block type="io_pin"></block>   
                         <block type="set_io_pin"></block>   
                         <block type="io_digital_write"></block>   
                         <block type="io_digital_read"></block>   
                     </category>
-                    <category name="Vision" colour="210">  
+                    <category name="Vision" colour="0">  
                         <block type="vision_find_objects"></block>   
                         <block type="vision_move_to"></block>
+                    </category>
+                    <category name="Tic Tac Toe" colour="180">  
+                        <block type="ttt_find_board"></block>   
+                        <block type="ttt_find_human_move"></block>
+                        <block type="ttt_generate_move_ai"></block>
+                        <block type="ttt_check_winning_move"></block>
+                    </category>
+                    <category name="Connect 4" colour="330">  
+                        <block type="connect4_find_board"></block>   
+                        <block type="connect4_find_human_move"></block>
+                        <block type="connect4_generate_move_ai"></block>
+                        <block type="connect4_check_winning_move"></block>
                     </category>
                 </xml>`,
 

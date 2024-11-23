@@ -233,7 +233,10 @@ class ProgramField(QWidget):
     @pyqtSlot()
     def save_workspace(self):
         # Call the saveWorkspace function in JavaScript and handle the result
-        self.web_view.page().runJavaScript("saveWorkspace();", self.BlocklyConverting)
+        try:
+            self.web_view.page().runJavaScript("saveWorkspace();", self.BlocklyConverting)
+        except Exception as e:
+            print(f"Error running JavaScript: {e}")
 
     def BlocklyConverting(self, xmlString):
         blockly_save(xmlString)

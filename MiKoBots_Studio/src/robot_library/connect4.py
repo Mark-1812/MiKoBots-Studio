@@ -16,7 +16,7 @@ class Connect4():
     def __init__(self):
         self.SolveConnect4 = SolveConnect4()
     
-    def FindMoveHuman(self, color):                    
+    def FindHumanMove(self, color):                    
         pieces_list = []
         width = 700
         height = 600
@@ -171,7 +171,7 @@ class Connect4():
         self.SolveConnect4.drop_piece(self.SolveConnect4.board, row, col, self.SolveConnect4.AI_PIECE)
         return col
                 
-    def WinningMove(self, AI):
+    def CheckWinningMove(self, AI):
         if AI == True:
             if self.SolveConnect4.winning_move(self.SolveConnect4.board, self.SolveConnect4.AI_PIECE):
                 return True

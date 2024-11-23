@@ -7,7 +7,7 @@ import numpy as np
 import cv2
 import math
 
-from backend.vision import get_image_frame
+from backend.vision import get_image_frame, check_cam_tool_connect
 from backend.vision import get_mask
 from backend.vision import draw_axis
 
@@ -30,20 +30,23 @@ class Vision():
         
         
         mm_per_pixel = calculate_mm_per_pixel(image_RGB)
-        print(mm_per_pixel)
         
         self.height_picture, self.width_picture, ch = image_RGB.shape 
         
-        
+        print("1")
         
         # get the contours of the color
         if color:
             mask_HSV = get_mask(color, image_HSV)
+            print(mask_HSV)
             kernel = np.ones((5, 5), np.uint8)
             mask_HSV = cv2.morphologyEx(mask_HSV, cv2.MORPH_OPEN, kernel)
             contours_HSV, _ = cv2.findContours(mask_HSV, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        
+
         self.Objects = []
+        
+        
+        print("2")
         
         for contour in contours_HSV:
             # Filter out small contours
@@ -58,14 +61,16 @@ class Vision():
             
             cntr = (int(mean[0,0]), int(mean[0,1]))
             Xcenter = cntr[1]
-            Ycenter = cntr[0]         
+            Ycenter = cntr[0]      
 
-            height = round(np.sqrt(eigenvalues[0][0]) * mm_per_pixel, 2)
-            width = round(np.sqrt(eigenvalues[1][0]) * mm_per_pixel, 2)
+            x, y, bounding_w, bounding_h = cv2.boundingRect(contour)
+
+            height = round(bounding_h * mm_per_pixel, 2)
+            width = round(bounding_w * mm_per_pixel, 2)
+            
+            print("3")
             
             if height > 5 and width > 5:
-                print("found objects")
-                
                 ## [visualization]
                 # Draw the principal components
                 cv2.circle(image_RGB, cntr, 3, (255, 0, 255), 2)
@@ -85,9 +90,6 @@ class Vision():
                 else:
                     Xplace_from_center = -((self.height_picture / 2) - Xcenter) * mm_per_pixel    
 
-
-                print("1")
-
                 if Yplace_from_center > 0 and Xplace_from_center > 0:
                     angle_xy = math.atan(abs(Xplace_from_center) / abs(Yplace_from_center))
                     angle = 270 + math.degrees(angle_xy)
@@ -106,79 +108,61 @@ class Vision():
 
                 radius = math.sqrt(pow(Xplace_from_center, 2) + pow(Yplace_from_center, 2))
 
-
+                print("test")
                 camera_settings = event_manager.publish("request_get_offset_cam")[0]
+                print(camera_settings)
                 angle_camera = camera_settings[2]
-                print(f"angle_camera {angle_camera}")
-                print(f"angle {angle}")
 
                 new_angle = angle_camera + angle
                 if new_angle > 360:
                     new_angle = new_angle - 360
                     
-                print(f"new angle {new_angle}")
-                    
                 # get x and Y location of the objects
                 if new_angle >= 0 and new_angle < 90:
-                    print("X positive Y negative")
                     # Y negative X positive
                     
                     angle_radians = math.radians(new_angle)
                     pos_y = radius * math.sin(angle_radians)
                     pos_x = radius * math.cos(angle_radians)
                     
-                    pos_y = pos_y * -1 # make y position negative
+                    pos_x = pos_x * -1 # make x position negative
                     
                 elif new_angle >= 90 and new_angle < 180:
-                    print("X negative Y negative")
                     # X negative Y negative
                     
                     angle_radians = math.radians(new_angle - 90)
                     pos_x = radius * math.sin(angle_radians)
                     pos_y = radius * math.cos(angle_radians)
-                    
-                    pos_x = pos_x * -1
-                    pos_y = pos_y * -1
                    
                 elif new_angle >= 180 and new_angle < 270:
-                    print("X negative Y positive")
                     # X negative Y positive
                     
                     angle_radians = math.radians(new_angle - 180)
                     pos_y = radius * math.sin(angle_radians)
                     pos_x = radius * math.cos(angle_radians)
                     
-                    print(f"pos x {pos_x}")
-                    print(f"pos y {pos_y}")
-                    
-                    pos_x = pos_x * -1
-                    
-                    print(f"pos x {pos_x}")
-                    print(f"pos y {pos_y}")
+                    pos_y = pos_y * -1
                     
                 elif new_angle >= 270 and new_angle < 360:
-                    print("Y positive X positive")
                     # X negative Y positive
                     
                     angle_radians = math.radians(new_angle - 270)
                     pos_x = radius * math.sin(angle_radians)
                     pos_y = radius * math.cos(angle_radians)
-                  
-                    
-                print(f"pos x {pos_x}")
-                print(f"pos y {pos_y}")
+
+                    pos_y = pos_y * -1
+                    pos_x = pos_x * -1
 
                 # get the orientation of the position of the camera
 
-
+ 
                 angle = math.atan2(eigenvectors[0,1], eigenvectors[0,0]) # orientation in radians
                 angle = round(math.degrees(angle),2)
 
-                print("3")
-
                 # check if the camera is connected to the camera
                 # if not the location of the camera is static
-                cam_tool = False
+
+                cam_tool = check_cam_tool_connect()
 
                 if cam_tool:
                     # get the rotation of the camera how it is connected to the tool
@@ -189,7 +173,6 @@ class Vision():
                     # get the rotation of the camera out of the settings
 
                     offset = event_manager.publish("request_get_offset_cam")[0]
-                    print(offset)
                     
                     x_offset = offset[0]
                     y_offset = offset[1]
@@ -205,40 +188,51 @@ class Vision():
         
         return self.Objects
     
-    def MoveToObject(self, list_objects = list, number = 0, Zdistance = None):
+    def MoveToObject(self, list_objects = list, Zdistance = int, vel = 50, accel = 50, check = None):
+
         self.RobotCommand = Move()
 
-        POSXYZ = [0]*6
-        
-        POSXYZ[0] = list_objects[number][0][0] + float(var.TOOL_OFFSET_CAM[0])
-        POSXYZ[1] = list_objects[number][1][0]
-        POSXYZ[2] = 120
-        POSXYZ[3] = 0
-        POSXYZ[4] = 0
-        POSXYZ[5] = 180        
-        
+        print(f"check {check}")
 
-        if (var.POS_AXIS[2] - Zdistance) < 130 or Zdistance == None:
+
+        if var.NUMBER_OF_JOINTS == 6:
+            POSXYZ = [0]*6
+            
+            POSXYZ[0] = list_objects[0][0]
+            POSXYZ[1] = list_objects[1][0]
             POSXYZ[2] = Zdistance
-            self.RobotCommand.MoveJ(pos=POSXYZ, v=50, a=50) 
+            POSXYZ[3] = 0
+            POSXYZ[4] = 0
+            POSXYZ[5] = 180     
+        elif var.NUMBER_OF_JOINTS == 3:
+            POSXYZ = [0]*3
+            
+            POSXYZ[0] = list_objects[0][0]
+            POSXYZ[1] = list_objects[1][0]
+            POSXYZ[2] = Zdistance             
         
+        
+        # check if the camera is connected to the tool
+        if not check_cam_tool_connect() or not check:
+            # Move to the object with the given Z distance
+            self.RobotCommand.MoveJ(pos=POSXYZ, v = vel, a = accel) 
         else:
-            POSXYZ[2] = 120 + Zdistance
+            # Do an extra check at 120 mm above the given z distance
+            POSXYZ[2] += 120
+            self.RobotCommand.MoveJ(pos=POSXYZ, v = vel, a = accel)
             
-            # print(f"position to move to {POSXYZ}")
-            # move to the object stay 150 mm above
-            self.RobotCommand.MoveJ(pos=POSXYZ, v=50, a=50)
-            
+            # check the color of the object out of the lsit
             color = list_objects[0][5][0]
             
             time.sleep(0.5)
-            objects = self.find_object(color)
+            objects = self.FindObject(color)
             # print(f"new X location {objects[0][0][0]}")
             # print(f"new Y location {objects[0][1][0]}")
 
-            X = list_objects[number][0][0]
-            Y = list_objects[number][1][0]        
+            X = list_objects[0][0]
+            Y = list_objects[1][0]        
                     
+            # if it sees multiples object pick the object that is closed to the object
             for i in range(len(objects)):
                 X_object = objects[i][0][0] 
                 Y_object = objects[i][1][0] 
@@ -248,12 +242,12 @@ class Vision():
                 # print(f"X delta {X_delta} Y delta {Y_delta}")
                 # print(f"X size {list_objects[number][2][0]} Y size {list_objects[number][3][0]}")
                 
-                if X_delta < list_objects[number][2][0] * 3 and Y_delta < list_objects[number][3][0] * 3:
+                if X_delta < list_objects[2][0] * 3 and Y_delta < list_objects[3][0] * 3:
                     object_nr = i
                     break
-            
+                
+            # when the object is found move to the location of the obejct
             POSXYZ[0] = objects[object_nr][0][0]
             POSXYZ[1] = objects[object_nr][1][0]
             POSXYZ[2] = Zdistance
-            # print(f"position to move to {POSXYZ}")
-            self.RobotCommand.MoveJ(pos=POSXYZ, v=50, a=50)   
+            self.RobotCommand.MoveJ(pos=POSXYZ, v = vel, a = accel)   

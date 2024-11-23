@@ -1,6 +1,7 @@
 // File: custom_blocks/my_custom_blocks.js
 
 Blockly.defineBlocksWithJsonArray([
+  // block set tool
   {
     "type": "set_tool",
     "tooltip": "",
@@ -19,8 +20,10 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": 225
+    "colour": 60
   },
+  
+  // block move to
   {
     "type": "tool_move_to",
     "tooltip": "",
@@ -41,8 +44,10 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": 225
+    "colour": 60
   },
+
+  // block change state
   {
     "type": "tool_state",
     "tooltip": "",
@@ -70,7 +75,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": 225,
+    "colour": 60,
     "inputsInline": true
   }
                       

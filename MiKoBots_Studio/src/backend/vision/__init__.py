@@ -18,10 +18,14 @@ def set_square_size_per(size):
     vision_management.square_size_per = size
     
 def calculate_mm_per_pixel(image = None, Height = None):
-    vision_management.calculate_mm_per_pixel(image, Height)
+    return vision_management.calculate_mm_per_pixel(image, Height)
     
 def cam_tool_connected(state):
+    print("change the state of the cam tool")
     vision_management.cam_tool = state
+
+def check_cam_tool_connect():
+    return vision_management.cam_tool
     
 def show_square_tool(state):
     vision_management.show_square_tool = state

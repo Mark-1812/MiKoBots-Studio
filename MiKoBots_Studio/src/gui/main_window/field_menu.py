@@ -54,6 +54,8 @@ class MenuField(QWidget):
         self.connect_cam_window = ConnectDevice("CAMERA")
         
         self.vision_window = VisionWindow()
+        
+        self.file_management = FileManagement()
 
         frame = QFrame()
         layout = QVBoxLayout()
@@ -95,14 +97,14 @@ class MenuField(QWidget):
         event_manager.subscribe("request_disable_cam_button", self.ButtonConnectCamDisable)
         
     def FrameButtons(self, layout):
-        file_management = FileManagement()
-        image_path = file_management.resource_path('studio.png')
+        image_path = self.file_management.resource_path('studio.png')
         
         button = QPushButton(self)
         button.setFixedSize(125,125)
         button.setIcon(QIcon(image_path))
         button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("https://www.mikobots.com")))
-        button.setStyleSheet(style_button)
+        button.setStyleSheet("border-radius: 15px;")
+        button.setIconSize(button.size())
         layout.addWidget(button)
         
         button = QPushButton("New file")
@@ -204,17 +206,23 @@ class MenuField(QWidget):
         self.BUTTON_HOME_ROBOT.pressed.connect(lambda: run_single_line("robot.Home()"))
         layout.addWidget(self.BUTTON_HOME_ROBOT, 5, 0, 1, 2)
 
-        button_pauze = QPushButton("pauze")
+        image_path = self.file_management.resource_path('pauze.png')
+        button_pauze = QPushButton()
+        button_pauze.setIcon(QIcon(image_path))
         button_pauze.setStyleSheet(style_button_menu)
         button_pauze.pressed.connect(lambda: self.pauze_robot())
         layout.addWidget(button_pauze, 6, 0, 1, 1)
 
-        button_play = QPushButton("play")
+        image_path = self.file_management.resource_path('play.png')
+        button_play = QPushButton()
+        button_play.setIcon(QIcon(image_path))
         button_play.setStyleSheet(style_button_menu)
         button_play.pressed.connect(lambda: self.play_robot())
         layout.addWidget(button_play, 6, 1, 1, 1)
         
-        button_stop = QPushButton("Stop")
+        image_path = self.file_management.resource_path('stop.png')
+        button_stop = QPushButton()
+        button_stop.setIcon(QIcon(image_path))
         button_stop.setFixedHeight(40)
         button_stop.setStyleSheet(style_button_red)     
         button_stop.pressed.connect(lambda: self.stop_robot())

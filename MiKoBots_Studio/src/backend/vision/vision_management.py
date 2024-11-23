@@ -82,6 +82,10 @@ class VisionManagement():
 
     def calculate_mm_per_pixel(self, image = None, Height = None):
         mm_per_pixel = 0
+
+        print(f"self.cam_tool {self.cam_tool}")
+
+
         if self.cam_tool:
 
             tool = get_selected_tool
@@ -111,8 +115,16 @@ class VisionManagement():
             mm_per_pixel = (size1 - (new_Zdelta * Ratio_height_width)) / square_width_pixel
         else:
             square_size_mm = event_manager.publish("request_get_square_size")[0]
-            
-            mm_per_pixel = square_size_mm / self.square_width_px
+            print(f"percentage square = {self.square_size_per}")
+
+
+            h, w, ch = image.shape
+
+            print(f"square size mm {square_size_mm}")
+
+            print(f"square height: {h}")
+
+            mm_per_pixel = square_size_mm / (self.square_size_per * h)
             # get square size
             
         return mm_per_pixel
@@ -144,14 +156,14 @@ class VisionManagement():
         self.cap.release()
   
     def ShowCalSquare(self, image):
-        self.height_picture, self.width_picture, ch = image.shape 
+        height_picture, self.width_picture, ch = image.shape 
         
         offset = (1 - self.square_size_per) / 2
         
-        y_1 = int(offset * self.height_picture)
-        h_1 = int(self.square_size_per * self.height_picture)
+        y_1 = int(offset * height_picture)
+        h_1 = int(self.square_size_per * height_picture)
         
-        w_1 = int(self.square_size_per * self.height_picture)
+        w_1 = int(self.square_size_per * height_picture)
         x_1 = int((self.width_picture - w_1) / 2)
         
         self.square_width_px = h_1
@@ -166,15 +178,15 @@ class VisionManagement():
             self.square_size_per -= 0.02
              
     def ShowCalSquareTool(self, image):
-        self.height_picture, self.width_picture, ch = image.shape 
+        height_picture, self.width_picture, ch = image.shape 
         
-        y_1 = int(0.1 * self.height_picture)
-        h_1 = int(0.8 * self.height_picture)
+        y_1 = int(0.1 * height_picture)
+        h_1 = int(0.8 * height_picture)
         
-        w_1 = int(0.8 * self.height_picture)
+        w_1 = int(0.8 * height_picture)
         x_1 = int((self.width_picture - w_1) / 2)
         
-        self.square_size_pixel = 0.8 * self.height_picture
+        self.square_size_pixel = 0.8 * height_picture
         
         cv2.rectangle(image, (x_1, y_1), (x_1+w_1, y_1+h_1), (0, 255, 0), 2)
         return image
@@ -187,7 +199,12 @@ class VisionManagement():
         t_threadRead.start()
        
     def GetMask(self, color_name, image):
+        print("1")
         color_range = event_manager.publish("request_get_colors")[0]
+        print(color_range)
+        print(color_name)
+
+        print(color_range[color_name])
 
         if color_name in color_range:
             if len(color_range[color_name]) == 2:

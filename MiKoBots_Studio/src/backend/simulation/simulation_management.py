@@ -367,7 +367,7 @@ class SimulationManagement(QObject):
         reached_end = False
 
         while not reached_end:
-            start_time = time.time()
+            #start_time = time.time()
 
             # get the speed so we can calculate the deg per step
             speed_percentage = float(event_manager.publish("request_get_speed")[0])
@@ -399,9 +399,9 @@ class SimulationManagement(QObject):
             delay_time = self.CalculateSpeed(Joints_increments)
             # print(f"time delay: {delay_time}")
 
-            end_time = time.time()
-            delay_calculations = end_time - start_time
-            time.sleep(delay_time - delay_calculations)
+            #end_time = time.time()
+            #delay_calculations = end_time - start_time
+            time.sleep(delay_time)
 
             # print(f"time needed for calculation = {start_time - end_time}")
             # print(f"delay time {delay_time}")
