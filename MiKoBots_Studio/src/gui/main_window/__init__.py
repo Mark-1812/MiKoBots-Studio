@@ -20,12 +20,9 @@ from backend.core.event_manager import event_manager
 
 
 from backend.robot_management.communication import close_robot, close_io
-
 from backend.vision import close_cam
-
 from backend.run_program import stop_script
-
-
+from backend.xbox import close_xbox
 
 import backend.core.variables as var
 
@@ -42,7 +39,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         
         file_management = FileManagement()
-        image_path = file_management.resource_path('mikobot.ico')
+        
         
         width_window = 1200 
         height_window = 855
@@ -50,6 +47,7 @@ class MainWindow(QMainWindow):
         self.screen_geometry = screen_geometry
            
         self.setWindowTitle("MiKoBots Studio")
+        image_path = file_management.resource_path('mikobot.ico')
         self.setWindowIcon(QIcon(image_path))
         self.setGeometry(100, 100, width_window, height_window)
         self.move_to_center(screen_geometry)
@@ -333,7 +331,7 @@ class MainWindow(QMainWindow):
         self.frame1 = QFrame()
         self.frame1.setStyleSheet(style_frame)
         self.frame1.setFixedWidth(150)
-        self.main_splitter.addWidget(self.frame1)#, 0, 0, 4, 1)
+        self.main_splitter.addWidget(self.frame1)
         
         
         
@@ -459,6 +457,7 @@ class MainWindow(QMainWindow):
         self.SimulationGUI.ClosePlotter()
         close_cam()
         stop_script()
+        close_xbox()
         
         close_program.run()
         

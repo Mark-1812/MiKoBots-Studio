@@ -7,7 +7,7 @@ from backend.robot_management import get_selected_robot, get_selected_tool
 from backend.vision import get_square_size_per
 
 def SaveSettings(file_management):
-    setting_file = [0] * 10
+    setting_file = [0] * 11
 
     # 0: get robot port -> not used any more
     # 1: get io port -> not used any more
@@ -33,6 +33,9 @@ def SaveSettings(file_management):
 
     # 9: Acceleration settings
     setting_file[9] = event_manager.publish("request_get_accel")[0]
+    
+    # 10: controller settings
+    setting_file[10] = event_manager.publish("request_get_controller_settings")[0]
 
 
     try:

@@ -47,74 +47,64 @@ class VisionSetup(QWidget):
         frame.setLayout(frame_layout)
         self.layout.addWidget(frame)
         
-        self.CamSettingsGUI(frame_layout)
-        
-        frame = QFrame()
-        frame_layout = QGridLayout()
-        frame_layout.setSpacing(5)
-        frame_layout.setContentsMargins(0, 0, 0, 0)
-        frame.setLayout(frame_layout)
-        self.layout.addWidget(frame)
-
-        space_widget = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self.layout.addItem(space_widget)  
-
-    def CamSettingsGUI(self, layout):
         self.checkbox_cam_tool = QCheckBox("Camera connected to the tool")
         self.checkbox_cam_tool.stateChanged.connect(self.cam_connec_tool)
         self.checkbox_cam_tool.setStyleSheet(style_checkbox)
-        layout.addWidget(self.checkbox_cam_tool,0,0,1,2)
+        frame_layout.addWidget(self.checkbox_cam_tool,0,0,1,2)
         
         self.checkbox_cal_square = QCheckBox("show calibration square")
         self.checkbox_cal_square.stateChanged.connect(self.show_square)
         self.checkbox_cal_square.setStyleSheet(style_checkbox)
-        layout.addWidget(self.checkbox_cal_square,1,0,1,2)
+        frame_layout.addWidget(self.checkbox_cal_square,1,0,1,2)
 
         label = QLabel("X postion (mm):")
         label.setStyleSheet(style_label)
         label.setFixedWidth(150)
-        layout.addWidget(label,2,0)
+        frame_layout.addWidget(label,2,0)
         self.entry_X_pos = QLineEdit()
         self.entry_X_pos.setStyleSheet(style_entry)
-        layout.addWidget(self.entry_X_pos,2,1)
+        frame_layout.addWidget(self.entry_X_pos,2,1)
 
         label = QLabel("Y position (mm):")
         label.setStyleSheet(style_label)
         label.setFixedWidth(150)
-        layout.addWidget(label,3,0)
+        frame_layout.addWidget(label,3,0)
         self.entry_Y_pos = QLineEdit()
         self.entry_Y_pos.setStyleSheet(style_entry)
-        layout.addWidget(self.entry_Y_pos,3,1)
+        frame_layout.addWidget(self.entry_Y_pos,3,1)
         
         label = QLabel("Rotation camera (deg):")
         label.setStyleSheet(style_label)
         label.setFixedWidth(150)
-        layout.addWidget(label,4,0)
+        frame_layout.addWidget(label,4,0)
         self.entry_rot = QLineEdit()
         self.entry_rot.setStyleSheet(style_entry)
-        layout.addWidget(self.entry_rot,4,1)
+        frame_layout.addWidget(self.entry_rot,4,1)
         
         label = QLabel("change the size of the calibration square")
         label.setStyleSheet(style_label)
-        layout.addWidget(label, 5,0,1,2)
+        frame_layout.addWidget(label, 5,0,1,2)
         
         label = QLabel("Square size (mm):")
         label.setStyleSheet(style_label)
         label.setFixedWidth(150)
-        layout.addWidget(label,6,0)
+        frame_layout.addWidget(label,6,0)
         self.entry_square_size = QLineEdit("160")
         self.entry_square_size.setStyleSheet(style_entry)
-        layout.addWidget(self.entry_square_size,6,1)
+        frame_layout.addWidget(self.entry_square_size,6,1)
         
         button = QPushButton("+")
         button.setStyleSheet(style_button_menu)
         button.clicked.connect(lambda: change_size_square(True))
-        layout.addWidget(button, 7, 0, 1, 2)
+        frame_layout.addWidget(button, 7, 0, 1, 2)
 
         button = QPushButton("-")
         button.setStyleSheet(style_button_menu)
         button.clicked.connect(lambda: change_size_square(False))
-        layout.addWidget(button, 8, 0, 1, 2)
+        frame_layout.addWidget(button, 8, 0, 1, 2)
+
+        space_widget = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.layout.addItem(space_widget)  
 
 
     def GetVisionSettings(self):
@@ -134,7 +124,6 @@ class VisionSetup(QWidget):
         self.entry_square_size.setText(str(data[3]))
         self.checkbox_cam_tool.setChecked(data[4])
         
-
     def GetOffsetCam(self):
         x = float(self.entry_X_pos.text())
         y = float(self.entry_Y_pos.text())

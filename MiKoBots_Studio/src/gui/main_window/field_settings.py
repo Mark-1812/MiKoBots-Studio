@@ -15,6 +15,7 @@ from backend.robot_management.communication  import send_settings_robot
 from gui.windows.robot_settings import RobotWindow
 from gui.windows.vision import VisionWindow
 from gui.windows.vision_settings import VisionSettingsWindow
+from gui.windows.xbox import XBoxWindow
 
 class SettingsField(QWidget):
     def __init__(self, frame):
@@ -23,6 +24,7 @@ class SettingsField(QWidget):
         self.VisionWindow = VisionWindow()
         self.VisionSettingsWindow = VisionSettingsWindow()
         self.file_management = FileManagement()
+        self.XboxWindow = XBoxWindow()
         
         self.frame = frame
    
@@ -144,6 +146,15 @@ class SettingsField(QWidget):
         self.controller_button.setIconSize(self.controller_button.size())
         self.controller_button.clicked.connect(xbox_on)
         layout_controller.addWidget(self.controller_button)
+        
+        image_path = self.file_management.resource_path('settings.png')
+        controller_settings = QPushButton()
+        controller_settings.setStyleSheet(style_button)
+        controller_settings.setFixedSize(20,20)
+        controller_settings.setIcon(QIcon(image_path))
+        controller_settings.setIconSize(self.controller_button.size())
+        controller_settings.clicked.connect(self.ShowXBoxWindow)
+        layout_controller.addWidget(controller_settings)        
 
                 
         self.controller_state = QLabel("")
@@ -183,6 +194,10 @@ class SettingsField(QWidget):
         
     def DeleteRobotCombo(self):
         self.combo_robot.clear()
+        
+    def ShowXBoxWindow(self):
+        self.XboxWindow.show()
+        self.XboxWindow.raise_()
         
     def ShowVisionWindows(self):
         self.VisionSettingsWindow.show()

@@ -180,7 +180,7 @@ style_button_3d = ("""
                 background-color: lightgray; 
                 color: black; 
                 border: 0px solid black; 
-                border-radius: 3px; 
+                border-radius: 0px; 
                 height: 20px; 
                 font-size: 14px;
                 font-family: "Segoe UI";
@@ -329,8 +329,8 @@ style_textedit = ("""
                 background-color: white;
                 border-top-right-radius: 5px;  
                 border-bottom-right-radius: 5px;  
-                border-bottom-left-radius: 0px;   
-                border-top-left-radius: 0px;      
+                border-bottom-left-radius: 5px;   
+                border-top-left-radius: 5px;      
             }
             QScrollBar:horizontal {
                 border: 0px; /* No border */

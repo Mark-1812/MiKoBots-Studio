@@ -1,12 +1,9 @@
-import sys
-import asyncio
-from PyQt5.QtCore import pyqtSignal, QThread
-from bleak import BleakScanner, BleakClient
 from PyQt5.QtWidgets import QLabel, QApplication, QPushButton, QListWidget, QMainWindow, QComboBox, QVBoxLayout, QWidget, QLineEdit
+from PyQt5.QtGui import QIcon
 from serial.tools import list_ports
 
 from backend.core.event_manager import event_manager
-
+from backend.file_managment.file_management import FileManagement
 
 from backend.robot_management.communication  import scan_for_io
 from backend.robot_management.communication import connect_io
@@ -24,8 +21,12 @@ class ConnectDevice(QWidget):
         self.type = type
 
         self.setWindowTitle("Connect " + type)
-        self.setGeometry(100, 100, 400, 300)
+        self.setFixedSize(300, 400)
         self.setStyleSheet(style_widget)
+        
+        file_management = FileManagement()
+        image_path = file_management.resource_path('mikobot.ico')
+        self.setWindowIcon(QIcon(image_path))
 
         layout = QVBoxLayout(self)
 
@@ -38,6 +39,7 @@ class ConnectDevice(QWidget):
         self.list_com = QListWidget(self)
         self.list_com.setStyleSheet(style_listwidget)
         label2 = QLabel("The com port of a webcam does not always show. Fill here 0 in if you have one camere, or 1 if it's your second cam")
+        label2.setWordWrap(True)
         label2.setStyleSheet(style_label)
         self.com_port_entry = QLineEdit()
         self.com_port_entry.setStyleSheet(style_entry)

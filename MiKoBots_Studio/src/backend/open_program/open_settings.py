@@ -18,7 +18,7 @@ def OpenSettings(file_mangement):
     except Exception as e:
         print(f"An error occurred: {e}")
         print("Error: could not open the settings file")
-        settings_file = [None] * 10
+        settings_file = [None] * 11
         
     
     
@@ -68,7 +68,13 @@ def OpenSettings(file_mangement):
 
     # 9: Acceleration settings
     try:
-        event_manager.publish("request_set_accel", settings_file[8])
+        event_manager.publish("request_set_accel", settings_file[9])
     except:
         event_manager.publish("request_set_accel", 50)
+        
+    # 10: Controller settings
+    try: 
+        event_manager.publish("request_set_controller_settings", settings_file[10])
+    except:
+        event_manager.publish("request_set_controller_settings", None)
 

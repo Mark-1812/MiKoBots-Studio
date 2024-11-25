@@ -1,8 +1,9 @@
 from PyQt5.QtWidgets import QMessageBox, QLabel, QSizePolicy, QCheckBox, QLineEdit, QSpacerItem, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog
 from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
-from PyQt5.QtGui import QImage, QPixmap, QColor, QDoubleValidator
+from PyQt5.QtGui import QImage, QPixmap, QIcon
 
 from backend.core.event_manager import event_manager
+from backend.file_managment.file_management import FileManagement
 
 from gui.style import *
 
@@ -13,6 +14,10 @@ class VisionWindow(QWidget):
         self.setWindowTitle("Vision")
         self.setGeometry(100, 100, 400, 300)
         self.setStyleSheet(style_widget)
+        
+        file_management = FileManagement()
+        image_path = file_management.resource_path('mikobot.ico')
+        self.setWindowIcon(QIcon(image_path))
         
         layout = QVBoxLayout(self)
         

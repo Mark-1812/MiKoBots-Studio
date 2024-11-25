@@ -9,9 +9,10 @@ import vtk
 
 from backend.core.event_manager import event_manager
 
+from backend.file_managment.file_management import FileManagement
+
 from backend.simulation.axis import Axis
 from backend.simulation.planes import Planes
-
 from backend.simulation.simulation_interaction import CustomInteractorStyle
 
 from backend.simulation.object import open_object_models
@@ -31,8 +32,12 @@ class SimulationObjectsGUI(QWidget):
         super().__init__(parent)
     
         self.setWindowTitle("Add item")
-        self.setWindowIcon(QIcon('mikobot.ico'))
+        
+        file_management = FileManagement()
+        image_path = file_management.resource_path('mikobot.ico')
+        self.setWindowIcon(QIcon(image_path))
         self.setFixedSize(1000, 700)
+        
 
         self.layout = QGridLayout()
         self.setLayout(self.layout)

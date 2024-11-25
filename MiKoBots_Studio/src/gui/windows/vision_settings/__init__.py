@@ -1,10 +1,13 @@
 from PyQt5.QtWidgets import QLabel, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog, QButtonGroup
 from PyQt5.QtCore import  Qt
+from PyQt5.QtGui import QIcon
 
 from .vision_setup import VisionSetup
 from .color_settings import ColorSettings
 
 from gui.style import *
+
+from backend.file_managment.file_management import FileManagement
 
 class VisionSettingsWindow(QWidget):
     def __init__(self):
@@ -12,6 +15,10 @@ class VisionSettingsWindow(QWidget):
         self.setWindowTitle("Vision settings")
         self.setFixedSize(800,750)
         self.setStyleSheet("background-color: #E8E8E8;")
+        
+        file_management = FileManagement()
+        image_path = file_management.resource_path('mikobot.ico')
+        self.setWindowIcon(QIcon(image_path))
         
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(10, 10, 10, 10) 

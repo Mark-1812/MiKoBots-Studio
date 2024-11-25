@@ -60,6 +60,7 @@ class MenuField(QWidget):
         frame = QFrame()
         layout = QVBoxLayout()
         layout.setSpacing(5)
+        layout.setContentsMargins(10, 10, 10, 10)
         frame.setLayout(layout)
         main_layout.addWidget(frame)
         self.FrameButtons(layout)  
@@ -70,6 +71,7 @@ class MenuField(QWidget):
         frame = QFrame()
         layout = QVBoxLayout()
         layout.setSpacing(5)
+        layout.setContentsMargins(10, 10, 10, 10)
         frame.setLayout(layout)
         main_layout.addWidget(frame) 
         self.SimButtons(layout)
@@ -80,6 +82,7 @@ class MenuField(QWidget):
         frame = QFrame()
         layout = QGridLayout()
         layout.setSpacing(5)
+        layout.setContentsMargins(10, 10, 10, 10)
         frame.setLayout(layout)
         main_layout.addWidget(frame) 
         self.RobotButtons(layout)
@@ -100,7 +103,7 @@ class MenuField(QWidget):
         image_path = self.file_management.resource_path('studio.png')
         
         button = QPushButton(self)
-        button.setFixedSize(125,125)
+        button.setFixedSize(130,130)
         button.setIcon(QIcon(image_path))
         button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("https://www.mikobots.com")))
         button.setStyleSheet("border-radius: 15px;")
@@ -108,21 +111,25 @@ class MenuField(QWidget):
         layout.addWidget(button)
         
         button = QPushButton("New file")
+        button.setFixedSize(130, 25)
         button.setStyleSheet(style_button_menu)
         button.pressed.connect(lambda: new_file())
         layout.addWidget(button)
 
         button = QPushButton("Save")
+        button.setFixedSize(130, 25)
         button.setStyleSheet(style_button_menu)
         button.pressed.connect(lambda: save_file())
         layout.addWidget(button)
 
         button = QPushButton("Save as")
+        button.setFixedSize(130, 25)
         button.setStyleSheet(style_button_menu)
         button.pressed.connect(lambda: save_as_file())
         layout.addWidget(button)
 
         button = QPushButton("Open")
+        button.setFixedSize(130, 25)
         button.setStyleSheet(style_button_menu)
         button.pressed.connect(lambda: open_file())
         layout.addWidget(button)
@@ -142,21 +149,25 @@ class MenuField(QWidget):
         simCheckbox.stateChanged.connect(lambda state: self.EnableSimulation(state))
         
         self.RunSim = QPushButton("Run simulation")
+        self.RunSim.setFixedSize(130, 25)
         self.RunSim.setStyleSheet(style_button_menu)
         self.RunSim.clicked.connect(lambda: run_script(True))
         layout.addWidget(self.RunSim)
         
         self.StopSim = QPushButton("Stop simulation")
+        self.StopSim.setFixedSize(130, 25)
         self.StopSim.setStyleSheet(style_button_menu)
         self.StopSim.clicked.connect(stop_script) 
         layout.addWidget(self.StopSim)
         
         button = QPushButton("add origin")
+        button.setFixedSize(130, 25)
         button.setStyleSheet(style_button_menu)
         button.clicked.connect(self.simulation_origin_gui.show)
         layout.addWidget(button) 
         
         button = QPushButton("Show / hide")
+        button.setFixedSize(130, 25)
         button.setStyleSheet(style_button_menu)
         button.clicked.connect(lambda: self.ShowHide())
         layout.addWidget(button)  
@@ -181,33 +192,39 @@ class MenuField(QWidget):
         title.setFixedHeight(30)
         layout.addWidget(title, 0, 0, 1, 2)
         
-        self.BUTTON_CONNECT_ROBOT = QPushButton("Connect robot")
-        self.BUTTON_CONNECT_ROBOT.setStyleSheet(style_button_menu)
-        self.BUTTON_CONNECT_ROBOT.pressed.connect(lambda: self.connect_robot())
-        layout.addWidget(self.BUTTON_CONNECT_ROBOT, 1, 0, 1, 2)
+        self.button_connect_robot = QPushButton("Connect robot")
+        self.button_connect_robot.setFixedSize(130, 25)
+        self.button_connect_robot.setStyleSheet(style_button_menu)
+        self.button_connect_robot.pressed.connect(lambda: self.connect_robot())
+        layout.addWidget(self.button_connect_robot, 1, 0, 1, 2)
 
-        self.BUTTON_CONNECT_IO = QPushButton("Connect IO robot")
-        self.BUTTON_CONNECT_IO.setStyleSheet(style_button_menu)
-        self.BUTTON_CONNECT_IO.pressed.connect(lambda: self.connect_io())
-        layout.addWidget(self.BUTTON_CONNECT_IO, 2, 0, 1, 2)
+        self.button_connect_io = QPushButton("Connect IO robot")
+        self.button_connect_io.setFixedSize(130, 25)
+        self.button_connect_io.setStyleSheet(style_button_menu)
+        self.button_connect_io.pressed.connect(lambda: self.connect_io())
+        layout.addWidget(self.button_connect_io, 2, 0, 1, 2)
         
-        self.BUTTON_CONNECT_CAM = QPushButton("Connect camera")
-        self.BUTTON_CONNECT_CAM.setStyleSheet(style_button_menu)
-        self.BUTTON_CONNECT_CAM.pressed.connect(lambda: self.connect_camera())
-        layout.addWidget(self.BUTTON_CONNECT_CAM, 3, 0, 1, 2)
+        self.button_connect_cam = QPushButton("Connect camera")
+        self.button_connect_cam.setFixedSize(130, 25)
+        self.button_connect_cam.setStyleSheet(style_button_menu)
+        self.button_connect_cam.pressed.connect(lambda: self.connect_camera())
+        layout.addWidget(self.button_connect_cam, 3, 0, 1, 2)
 
         button_send = QPushButton("Send to robot")
+        button_send.setFixedSize(130, 25)
         button_send.setStyleSheet(style_button_menu)
         button_send.pressed.connect(lambda: run_script(False))
         layout.addWidget(button_send, 4, 0, 1, 2)            
         
-        self.BUTTON_HOME_ROBOT = QPushButton("Home")
-        self.BUTTON_HOME_ROBOT.setStyleSheet(style_button_menu)
-        self.BUTTON_HOME_ROBOT.pressed.connect(lambda: run_single_line("robot.Home()"))
-        layout.addWidget(self.BUTTON_HOME_ROBOT, 5, 0, 1, 2)
+        self.button_home_robot = QPushButton("Home")
+        self.button_home_robot.setFixedSize(130, 25)
+        self.button_home_robot.setStyleSheet(style_button_menu)
+        self.button_home_robot.pressed.connect(lambda: run_single_line("robot.Home()"))
+        layout.addWidget(self.button_home_robot, 5, 0, 1, 2)
 
         image_path = self.file_management.resource_path('pauze.png')
         button_pauze = QPushButton()
+        button_pauze.setFixedSize(62, 25)
         button_pauze.setIcon(QIcon(image_path))
         button_pauze.setStyleSheet(style_button_menu)
         button_pauze.pressed.connect(lambda: self.pauze_robot())
@@ -215,6 +232,7 @@ class MenuField(QWidget):
 
         image_path = self.file_management.resource_path('play.png')
         button_play = QPushButton()
+        button_play.setFixedSize(62, 25)
         button_play.setIcon(QIcon(image_path))
         button_play.setStyleSheet(style_button_menu)
         button_play.pressed.connect(lambda: self.play_robot())
@@ -222,8 +240,8 @@ class MenuField(QWidget):
         
         image_path = self.file_management.resource_path('stop.png')
         button_stop = QPushButton()
+        button_stop.setFixedSize(130, 40)
         button_stop.setIcon(QIcon(image_path))
-        button_stop.setFixedHeight(40)
         button_stop.setStyleSheet(style_button_red)     
         button_stop.pressed.connect(lambda: self.stop_robot())
         layout.addWidget(button_stop, 7, 0, 1, 2)
@@ -267,47 +285,47 @@ class MenuField(QWidget):
 # disable buttons
     def ButtonConnectRobotDisable(self, state):
         if state:
-            self.BUTTON_CONNECT_ROBOT.setDisabled(True)
+            self.button_connect_robot.setDisabled(True)
         else:
-            self.BUTTON_CONNECT_ROBOT.setEnabled(True)
+            self.button_connect_robot.setEnabled(True)
 
     def ButtonConnectIODisable(self, state):
         if state:
-            self.BUTTON_CONNECT_IO.setDisabled(True)
+            self.button_connect_io.setDisabled(True)
         else:
-            self.BUTTON_CONNECT_IO.setEnabled(True)
+            self.button_connect_io.setEnabled(True)
             
     def ButtonConnectCamDisable(self, state):
         if state:
-            self.BUTTON_CONNECT_CAM.setDisabled(True)
+            self.button_connect_cam.setDisabled(True)
         else:
-            self.BUTTON_CONNECT_CAM.setEnabled(True)
+            self.button_connect_cam.setEnabled(True)
             
 # change color buttons
     def ButtonConnectRobotColor(self, connect):
         if connect:
-            self.BUTTON_CONNECT_ROBOT.setStyleSheet(style_button_pressed)
+            self.button_connect_robot.setStyleSheet(style_button_pressed)
             self.connect_robot_window.close()
         else:
-            self.BUTTON_CONNECT_ROBOT.setStyleSheet(style_button_menu)
+            self.button_connect_robot.setStyleSheet(style_button_menu)
 
     def ButtonConnectIOColor(self, connect):
         if connect:
-            self.BUTTON_CONNECT_IO.setStyleSheet(style_button_pressed)
+            self.button_connect_io.setStyleSheet(style_button_pressed)
             self.connect_io_window.close()
         else:
-            self.BUTTON_CONNECT_IO.setStyleSheet(style_button_menu)
+            self.button_connect_io.setStyleSheet(style_button_menu)
             
     def ButtonHomeRobotColor(self, home):
         if home:
-            self.BUTTON_HOME_ROBOT.setStyleSheet(style_button_pressed)
+            self.button_home_robot.setStyleSheet(style_button_pressed)
         else:
-            self.BUTTON_HOME_ROBOT.setStyleSheet(style_button_menu)
+            self.button_home_robot.setStyleSheet(style_button_menu)
             
     def ButtonConnectCamColor(self, connect):
         if connect:
-            self.BUTTON_CONNECT_CAM.setStyleSheet(style_button_pressed)
+            self.button_connect_cam.setStyleSheet(style_button_pressed)
             self.connect_cam_window.close()
         else:
-            self.BUTTON_CONNECT_CAM.setStyleSheet(style_button_menu)
+            self.button_connect_cam.setStyleSheet(style_button_menu)
       

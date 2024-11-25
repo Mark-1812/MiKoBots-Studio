@@ -33,15 +33,13 @@ class StartupScreen(QDialog):
         # Add a text label
         text_label = QLabel(f"Version V{current_version}", self)
         text_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(text_label)
 
         # Add a text label
         text_label = QLabel("The program is starting, please wait...", self)
         text_label.setAlignment(Qt.AlignCenter)
-
-        # Add widgets to the layout
         layout.addWidget(image_label)
-        layout.addWidget(text_label)
-
+        
         # Set layout
         self.setLayout(layout)
 

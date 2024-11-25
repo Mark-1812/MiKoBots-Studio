@@ -58,6 +58,7 @@ class SaveOpen:
                 ""
         ]
         self.SetProgram()
+        event_manager.publish("request_set_program_title", "New file")
             
     def SaveFile(self):
         if check_program_run():    

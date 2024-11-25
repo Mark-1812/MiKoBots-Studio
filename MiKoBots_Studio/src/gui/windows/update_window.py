@@ -1,21 +1,25 @@
 from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
 from PyQt5.QtWidgets import QDialog, QCheckBox, QDialog, QWidget, QMenu, QPushButton, QLabel, QScrollArea, QComboBox, QFrame, QGridLayout, QLineEdit, QFileDialog
-from PyQt5.QtGui import  QDesktopServices, QPixmap
+from PyQt5.QtGui import  QDesktopServices, QPixmap, QIcon
 from backend.core.event_manager import event_manager
 import os
 
 from gui.style import *
 from backend.file_managment.file_management import FileManagement
 
+from backend.file_managment.file_management import FileManagement
+
 class UpdateChecker(QDialog):
     def __init__(self, update_des, update_version, cur_version, parent = None):
         super(UpdateChecker, self).__init__(parent)
-        
-        
         layout = QGridLayout()
         self.setLayout(layout)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         self.setStyleSheet("background-color: lightgray;")
+        
+        file_management = FileManagement()
+        image_path = file_management.resource_path('mikobot.ico')
+        self.setWindowIcon(QIcon(image_path))
         
         self.setWindowTitle("Update Checker")
         #self.move_to_center(screen_geometry)

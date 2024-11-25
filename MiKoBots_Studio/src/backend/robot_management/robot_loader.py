@@ -260,6 +260,8 @@ class RobotLoader(QObject):
             
         os.rename(old_name, new_name)
 
+        # change the name in the robot oververiew
+        event_manager.publish("request_change_robot_name", self.selected_robot, robot_name)
 
         for i in range(len(var.ROBOT3D)):
             var.ROBOT3D[i][1] = var.ROBOT3D[i][1].replace(self.robots[self.selected_robot][0], robot_name)

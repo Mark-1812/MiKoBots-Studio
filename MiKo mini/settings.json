@@ -1,0 +1,226 @@
+{
+    "Name": "MiKo mini test",
+    "Settings": {
+        "Set_motor_pin": [
+            [
+                "32",
+                "33",
+                "18",
+                "19",
+                "17",
+                "5"
+            ],
+            ""
+        ],
+        "Set_switch_pin": [
+            [
+                "13",
+                "12",
+                "14"
+            ],
+            ""
+        ],
+        "Set_tools": [
+            [
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+            ],
+            "IO"
+        ],
+        "Set_io_pin": [
+            [
+                "32",
+                "33",
+                "4",
+                "2",
+                "15",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+            ],
+            "IO"
+        ],
+        "Set_max_pos": [
+            [
+                "-170",
+                "170",
+                "-180",
+                "180",
+                "-180",
+                "180"
+            ],
+            ""
+        ],
+        "Set_lim_pos": [
+            [
+                "-80",
+                "-32",
+                "-45"
+            ],
+            ""
+        ],
+        "Set_step_deg": [
+            [
+                "71.6667",
+                "56.6667",
+                "56.6667"
+            ],
+            ""
+        ],
+        "Set_dir_joints": [
+            [
+                "1",
+                "0",
+                "1"
+            ],
+            ""
+        ],
+        "Set_speed": [
+            [
+                "100",
+                "1000",
+                "100",
+                "1000",
+                "100",
+                "1000"
+            ],
+            ""
+        ],
+        "Set_home_settings": [
+            [
+                "1",
+                "0",
+                "2",
+                "0",
+                "3",
+                "0"
+            ],
+            ""
+        ],
+        "Set_dh_par": [
+            [
+                [
+                    "0",
+                    "90",
+                    "158",
+                    "0"
+                ],
+                [
+                    "90",
+                    "0",
+                    "0",
+                    "160"
+                ],
+                [
+                    "-90",
+                    "0",
+                    "0",
+                    "160"
+                ],
+                [
+                    "0",
+                    "0",
+                    "0",
+                    "55"
+                ]
+            ],
+            ""
+        ],
+        "Set_robot_name": [
+            "MiKo mini test",
+            ""
+        ],
+        "Set_number_of_joints": [
+            "3",
+            ""
+        ],
+        "Set_extra_joint": [
+            1,
+            ""
+        ]
+    },
+    "3Dfiles": [
+        [
+            "MiKo_mini_P001.STL",
+            "/Robot_library/MiKo mini test/ROBOT_STL/ORIGINAL_MiKo_mini_P001.STL",
+            "/Robot_library/MiKo mini test/ROBOT_STL/MiKo_mini_P001.STL",
+            "red",
+            [
+                -120.0,
+                -45.0,
+                0.0,
+                -90.0,
+                0.0,
+                180.0
+            ],
+            "Base"
+        ],
+        [
+            "MiKo_mini_P002.STL",
+            "/Robot_library/MiKo mini test/ROBOT_STL/ORIGINAL_MiKo_mini_P002.STL",
+            "/Robot_library/MiKo mini test/ROBOT_STL/MiKo_mini_P002.STL",
+            "blue",
+            [
+                -36.5,
+                -108.5,
+                -70.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "Link 1"
+        ],
+        [
+            "MiKo_mini_P011.STL",
+            "/Robot_library/MiKo mini test/ROBOT_STL/ORIGINAL_MiKo_mini_P011.STL",
+            "/Robot_library/MiKo mini test/ROBOT_STL/MiKo_mini_P011.STL",
+            "red",
+            [
+                -175.0,
+                -25.0,
+                -40.0,
+                0.0,
+                0.0,
+                -90.0
+            ],
+            "Link 2"
+        ],
+        [
+            "MiKo_mini_P012.STL",
+            "/Robot_library/MiKo mini test/ROBOT_STL/ORIGINAL_MiKo_mini_P012.STL",
+            "/Robot_library/MiKo mini test/ROBOT_STL/MiKo_mini_P012.STL",
+            "blue",
+            [
+                -155.0,
+                -15.0,
+                -20.0,
+                0.0,
+                0.0,
+                90.0
+            ],
+            "Link 3"
+        ],
+        [
+            "MiKo_mini_P013.STL",
+            "/Robot_library/MiKo mini test/ROBOT_STL/ORIGINAL_MiKo_mini_P013.STL",
+            "/Robot_library/MiKo mini test/ROBOT_STL/MiKo_mini_P013.STL",
+            "red",
+            [
+                -42.5,
+                -12.5,
+                -20.0,
+                0.0,
+                0.0,
+                -90.0
+            ],
+            "Link 4"
+        ]
+    ],
+    "Tools": [],
+    "IOSettings": "IOSettings"
+}

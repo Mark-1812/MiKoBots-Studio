@@ -1,8 +1,9 @@
 from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QSlider, QWidget, QMenu, QPushButton, QLabel, QScrollArea, QComboBox, QFrame, QGridLayout, QLineEdit, QFileDialog
-from PyQt5 import  QtGui
+from PyQt5.QtGui import QIcon
 
 from backend.core.event_manager import event_manager
+from backend.file_managment.file_management import FileManagement
 
 from backend.simulation.origins import add_origin
 from backend.simulation.origins import delete_origin
@@ -12,7 +13,15 @@ from gui.style import *
 
 class SimulationOriginGUI(QWidget):
     def __init__(self, parent=None):
-        super().__init__(parent)       
+        super().__init__(parent)    
+        self.setWindowTitle("Add Origin")
+        self.setFixedSize(500,200)
+        self.setStyleSheet("background-color: #E8E8E8;")
+        
+        file_management = FileManagement()
+        image_path = file_management.resource_path('mikobot.ico')
+        self.setWindowIcon(QIcon(image_path))
+           
         self.Origins = []
         self.widgets = []
         self.axes_lines = []
@@ -34,11 +43,7 @@ class SimulationOriginGUI(QWidget):
         self.layout.setContentsMargins(5, 5, 5, 5)
         self.layout.setSpacing(0)
         
-        self.setWindowTitle("Add Origin")
-        self.setWindowIcon(QtGui.QIcon('mikobot.ico'))
-        self.setFixedSize(500,200)
 
-        self.setStyleSheet("background-color: #E8E8E8;")
 
             
         frame = QFrame()

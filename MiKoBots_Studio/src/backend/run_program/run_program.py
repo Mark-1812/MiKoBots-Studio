@@ -25,7 +25,7 @@ class RunProgram():
 
         self.output_stream = OutputStream()
         self.output_stream.textWritten.connect(self.update_output)
-        #sys.stdout = self.output_stream
+        sys.stdout = self.output_stream
 
         
 

@@ -86,7 +86,7 @@ class SimulationGUI(QWidget):
         frame1.setLayout(self.layout1)
         
         # create a plotter
-        self.plotter = QVTKRenderWindowInteractor(frame1)       
+        self.plotter = QVTKRenderWindowInteractor(frame1)        
         self.renderer = vtkRenderer()
         self.renderer.SetBackground(1, 1, 1)
         self.plotter.GetRenderWindow().AddRenderer(self.renderer)

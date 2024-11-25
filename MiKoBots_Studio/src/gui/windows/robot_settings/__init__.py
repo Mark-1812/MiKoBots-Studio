@@ -1,10 +1,13 @@
-from PyQt5.QtWidgets import QLabel, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog, QButtonGroup
+from PyQt5.QtWidgets import QLabel, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog, QButtonGroup
 from PyQt5.QtCore import  Qt
+from PyQt5.QtGui import QIcon
 
 from .robot_settings import RobotSettings
 from .robot_overview import RobotOverview
 from .robot_tools import RobotTools
 from .robot_3d_model import Robot3DModel
+
+from backend.file_managment.file_management import FileManagement
 
 
 from gui.style import *
@@ -15,6 +18,10 @@ class RobotWindow(QWidget):
         self.setWindowTitle("Robot settings")
         self.setFixedSize(800,750)
         self.setStyleSheet("background-color: #E8E8E8;")
+        
+        file_management = FileManagement()
+        image_path = file_management.resource_path('mikobot.ico')
+        self.setWindowIcon(QIcon(image_path))
         
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(10, 10, 10, 10) 

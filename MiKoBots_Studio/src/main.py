@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QApplication, QDialog, QLabel, QVBoxLayout, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QApplication
 
 from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal
 from backend.core.event_manager import event_manager
@@ -12,10 +12,11 @@ from gui.main_window import MainWindow
 from gui.windows.start_up_screen import StartupScreen
 from backend.robot_management import setup_robot
 import blockly
-
 import backend.core.variables as var
 from gui.windows.update_window import UpdateChecker
 from backend.file_manager import open_file_from_path
+
+
 
 CURRENT_VERSION = 1.11
 
@@ -29,7 +30,6 @@ class StartupWorker(QThread):
         check_folders()
         load_languages()
         
-        ## later set style here
         
         self.version.emit(update_version, update_description)
     
@@ -43,7 +43,6 @@ def showMainWindow(file_path):
     main_window.show()  
     
     open_setting()
-    
     setup_robot()
     
     

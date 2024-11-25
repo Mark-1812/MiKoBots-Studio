@@ -43,21 +43,26 @@ class ColorSettings(QWidget):
         return self.color_ranges
     
     def SetColorRange(self, colors):
-        print(f"set color {colors}")
-
         if colors is None:
             self.color_ranges = self.color_ranges_init
-        else:
-            self.color_ranges = colors
+            return
+
+        self.color_ranges = colors
+        for color in colors:
+            self.colors_combo.addItem(color)
 
     def gui(self):
+        frame = QFrame()
+        frame.setFixedWidth(250)
+        frame_layout = QVBoxLayout()
+        frame_layout.setSpacing(5)
+        frame_layout.setContentsMargins(0, 0, 0, 0)
+        frame.setLayout(frame_layout)
+        self.layout.addWidget(frame,0,0)
+        
         label = QLabel("Colors HSV")        
         label.setStyleSheet(style_label_bold)
-        self.layout.addWidget(label, 0, 0) 
-        
-        self.image_label = QLabel(self)
-        self.image_label.setFixedWidth(300)
-        self.layout.addWidget(self.image_label, 0, 1, 11, 1)
+        frame_layout.addWidget(label) 
         
         self.color_ranges_init = {
             "RED": [[0, 50, 100], [25, 255, 255]],  #0, 10, 100, 255, 100, 255
@@ -73,37 +78,42 @@ class ColorSettings(QWidget):
         
         self.colors_combo = QComboBox()
         self.colors_combo.setStyleSheet(style_combo)
-        self.layout.addWidget(self.colors_combo, 2 , 0)
+        frame_layout.addWidget(self.colors_combo)
         
         
         button_show_image = QPushButton("Show image")
         button_show_image.clicked.connect(self.ShowImage)
         button_show_image.setStyleSheet(style_button_menu)
-        self.layout.addWidget(button_show_image, 1, 0)
+        frame_layout.addWidget(button_show_image)
         
         button_show_image = QPushButton("Update image")
         button_show_image.clicked.connect(self.UpdateImage)
         button_show_image.setStyleSheet(style_button_menu)
-        self.layout.addWidget(button_show_image, 3, 0)
+        frame_layout.addWidget(button_show_image)
         
         button_save_color = QPushButton("Save color")
         button_save_color.clicked.connect(self.SaveColor)
         button_save_color.setStyleSheet(style_button_menu)
-        self.layout.addWidget(button_save_color, 4, 0)
+        frame_layout.addWidget(button_save_color)
         
         button_restore_color = QPushButton("restore color")
         button_restore_color.clicked.connect(self.RestoreColor)
         button_restore_color.setStyleSheet(style_button_menu)
-        self.layout.addWidget(button_restore_color, 5, 0)
+        frame_layout.addWidget(button_restore_color)
         
         
         # Create sliders for HSV ranges
-        self.lower_hue_slider = CreateSlider(self.layout, 6, 'Lower Hue', 0, 179)
-        self.upper_hue_slider = CreateSlider(self.layout, 7, 'Upper Hue', 0, 179)
-        self.lower_sat_slider = CreateSlider(self.layout, 8, 'Lower Sat', 0, 255)
-        self.upper_sat_slider = CreateSlider(self.layout, 9, 'Upper Sat', 0, 255)
-        self.lower_val_slider = CreateSlider(self.layout, 10, 'Lower Val', 0, 255)
-        self.upper_val_slider = CreateSlider(self.layout, 11, 'Upper Val', 0, 255)
+        self.lower_hue_slider = CreateSlider(frame_layout, 'Lower Hue', 0, 179)
+        self.upper_hue_slider = CreateSlider(frame_layout, 'Upper Hue', 0, 179)
+        self.lower_sat_slider = CreateSlider(frame_layout, 'Lower Sat', 0, 255)
+        self.upper_sat_slider = CreateSlider(frame_layout, 'Upper Sat', 0, 255)
+        self.lower_val_slider = CreateSlider(frame_layout, 'Lower Val', 0, 255)
+        self.upper_val_slider = CreateSlider(frame_layout, 'Upper Val', 0, 255)
+        
+        
+        self.image_label = QLabel(self)
+        self.image_label.setFixedWidth(300)
+        self.layout.addWidget(self.image_label, 1,0)
         
         space_widget = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.layout.addItem(space_widget)          
@@ -183,7 +193,9 @@ class ColorSettings(QWidget):
         
         color = self.colors_combo.currentText()
         
+        print(color)
         initial_hsv_ranges = self.color_ranges.get(color)
+        print(self.color_ranges)
         
         
         self.lower_hue_slider.slider.setValue(initial_hsv_ranges[0][0])
@@ -264,7 +276,7 @@ class ColorSettings(QWidget):
             
         
 class CreateSlider():
-    def __init__(self, layout, row, name, min_val, max_val):
+    def __init__(self, layout, name, min_val, max_val):
         slider_layout = QGridLayout()
         
         self.current_val = 0
@@ -299,7 +311,7 @@ class CreateSlider():
         self.value_label.setFixedWidth(90)
         slider_layout.addWidget(self.value_label, 0, 1)        
 
-        layout.addLayout(slider_layout, row, 0)
+        layout.addLayout(slider_layout)
     
     def updateLabel(self, value):
         self.current_val = value

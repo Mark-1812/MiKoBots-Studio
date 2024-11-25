@@ -29,7 +29,7 @@ class RobotOverview(QWidget):
         event_manager.subscribe("request_delete_robot_buttons", self.DeleteButtons)
         
         event_manager.subscribe("request_set_robot_radio", self.setRobot)
-        event_manager.subscribe("request_get_robot_name", self.GetRobotName)
+        event_manager.subscribe("request_change_robot_name", self.ChangeRobotName)
 
     def GUI(self):
         main_layout = QGridLayout(self.frame)
@@ -99,13 +99,12 @@ class RobotOverview(QWidget):
         main_layout.addItem(space_widget, 2, 0, 1, 2)      
         
         
-    def GetRobotName(self, selected_robot):
-        name = self.Robots_buttons[selected_robot][0].text()
-        return name
+    def ChangeRobotName(self, selected_robot, name):
+        print(selected_robot)
+        print(name)
+        self.Robots_buttons[selected_robot].setText(name)
         
     def CreateButtons(self, item, robot_name):          
-
-               
         radio_button = QRadioButton(robot_name)
         radio_button.setChecked(False)
         radio_button.setStyleSheet(style_radiobutton)
@@ -132,14 +131,12 @@ class RobotOverview(QWidget):
         for i in range(len(self.Robots_buttons)):
             self.Robots_buttons[i].blockSignals(False)
 
-
     def ChangeRobot(self, btn, item):
         print
         if btn.isChecked():
             self.Robots_buttons[item].setReadOnly(True)
             change_robot(item)
             self.Robots_buttons[item].setReadOnly(False)
-
             
     def send_settings(self):
         send_settings_io()
