@@ -112,6 +112,8 @@ class TicTacToe():
                     
                     
         print_board_ttt(self.s)
+        
+        print("end finding move human")
 
         
     def GenerateMoveAi(self, board):
@@ -139,6 +141,8 @@ class TicTacToe():
                     
         Xobject_place = Place_X + (column_width * row)
         Yobject_place = Place_Y + (row_height * column)
+        
+        # print(f"X {Xobject_place}, Y {Yobject_place}")
                     
         return Xobject_place, Yobject_place
     

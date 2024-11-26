@@ -50,6 +50,7 @@ class TalkThroughCOM():
                 if self.ROBOT:
                     event_manager.publish("request_robot_connect_button_color", True)
                     self.SendSettingsRobot()
+                    self.SendToolFrame()
                 
                 if self.IO:
                     event_manager.publish("request_io_connect_button_color", True)
@@ -219,7 +220,7 @@ class TalkThroughCOM():
                 for i, setting in enumerate(var.SETTINGS):
                     settings = var.SETTINGS[category_names[i]]
 
-                    if settings[1] == "" and  category_names[i] != 'Set_extra_joint':
+                    if settings[1] == "" and  category_names[i] != 'Set_extra_joint' and  category_names[i] != 'Set_io_pin'and  category_names[i] != 'Set_robot_name' and  category_names[i] != "Set_tools":
                         command = make_line_ABC(settings[0], category_names[i])
                         self.SendLineCommand(command)
                                   
@@ -266,8 +267,6 @@ class TalkThroughCOM():
                 for i, setting in enumerate(var.SETTINGS):
                     settings = var.SETTINGS[category_names[i]]
                     if settings[1] == "IO":
-                        print("settings...." + category_names[i])
-                        print(settings[0])
                         command = make_line_ABC(settings[0], category_names[i])
                         
                         self.SendLineCommand(command)
@@ -284,6 +283,19 @@ class TalkThroughCOM():
             elif self.connect == 0:
                 print(var.LANGUAGE_DATA.get("message_io_not_connected"))
                 ErrorMessage(var.LANGUAGE_DATA.get("message_io_not_connected"))
+
+    def SendToolFrame(self, tool_frame):
+        command = "Set_tool_frame "
+        letters = ['A','B','C','D','E','F']
+        
+        for i in range(6):
+            command += str(letters[i])
+            command += str(tool_frame[i])
+            
+        command += "\n"
+            
+        self.SendLineCommand(command)
+
 
 ## play pauze stop the robot
     def StopProgram(self):

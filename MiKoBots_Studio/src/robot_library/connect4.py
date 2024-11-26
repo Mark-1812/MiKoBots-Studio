@@ -171,14 +171,10 @@ class Connect4():
         self.SolveConnect4.drop_piece(self.SolveConnect4.board, row, col, self.SolveConnect4.AI_PIECE)
         return col
                 
-    def CheckWinningMove(self, AI):
-        if AI == True:
-            if self.SolveConnect4.winning_move(self.SolveConnect4.board, self.SolveConnect4.AI_PIECE):
-                return True
-            else:
-                return False
-        elif AI == False:
-            if self.SolveConnect4.winning_move(self.SolveConnect4.board, self.SolveConnect4.PLAYER_PIECE):
-                return True
-            else:
-                return False
+    def CheckWinningMove(self):
+        if self.SolveConnect4.winning_move(self.SolveConnect4.board, self.SolveConnect4.AI_PIECE):
+            return True
+        elif self.SolveConnect4.winning_move(self.SolveConnect4.board, self.SolveConnect4.PLAYER_PIECE):
+            return True
+        else:
+            return False

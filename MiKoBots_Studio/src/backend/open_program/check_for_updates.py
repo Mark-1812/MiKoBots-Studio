@@ -46,8 +46,8 @@ class CheckUpdate():
             soup = self.fetch_and_parse(self.url)
             self.check_for_phrase_in_specific_section(soup)
             
-            print(self.update_version)
-            print(self.update_description)
+            # print(self.update_version)
+            # print(self.update_description)
             
             return self.update_version, self.update_description
             

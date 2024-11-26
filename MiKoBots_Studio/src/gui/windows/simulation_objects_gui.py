@@ -242,6 +242,8 @@ class SimulationObjectsGUI(QWidget):
             color = [1,0,0]
         elif self.combo.currentText() == "blue":
             color = [0,0,1]
+        elif self.combo.currentText() == "green":
+            color = [0,1,0]
         elif self.combo.currentText() == "black":
             color = [0,0,0]
         elif self.combo.currentText() == "white":

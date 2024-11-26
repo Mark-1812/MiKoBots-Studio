@@ -88,7 +88,6 @@ class XBoxWindow(QWidget):
                 
             self.settings[self.joysticks[i]] = action  
             
-        print(self.settings)
         return self.settings
      
     def SetControllerSettings(self, settings): 
@@ -97,7 +96,6 @@ class XBoxWindow(QWidget):
         
         for i in range(len(self.buttons)):
             action = settings[self.buttons[i]]
-            print(action)
             for j in range(4):
                 self.buttons_settings[i][j].blockSignals(True)
                 self.buttons_settings[i][j].setCurrentText(action[j])
@@ -105,7 +103,6 @@ class XBoxWindow(QWidget):
         
         for i in range(len(self.joysticks)):
             action = settings[self.joysticks[i]]
-            print(action)
             for j in range(4):
                 self.joystick_settings[i][j].blockSignals(True)
                 self.joystick_settings[i][j].setCurrentText(action[j])    

@@ -216,7 +216,7 @@ class Robot3DModel(QWidget):
             
         label = QLabel(robot_3d_data[item][0])
         label.setStyleSheet(style_label)
-        label.setMinimumWidth(60)
+        label.setFixedWidth(120)
         layout_model.addWidget(label)
         self.Robot_buttons[item][0] = label
         

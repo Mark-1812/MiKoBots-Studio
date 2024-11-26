@@ -185,18 +185,13 @@ class ColorSettings(QWidget):
         self.image_label.setPixmap(scaled_pixmap)
     
     def ShowImage(self):
-        print(f"check connection cam {cam_connected()}")
-        
         if not cam_connected():
             ErrorMessage(var.LANGUAGE_DATA.get("message_cam_not_connect"))
             return
         
         color = self.colors_combo.currentText()
         
-        print(color)
         initial_hsv_ranges = self.color_ranges.get(color)
-        print(self.color_ranges)
-        
         
         self.lower_hue_slider.slider.setValue(initial_hsv_ranges[0][0])
         self.lower_sat_slider.slider.setValue(initial_hsv_ranges[0][1])

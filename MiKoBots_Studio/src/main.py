@@ -16,8 +16,6 @@ import backend.core.variables as var
 from gui.windows.update_window import UpdateChecker
 from backend.file_manager import open_file_from_path
 
-
-
 CURRENT_VERSION = 1.11
 
            
@@ -30,11 +28,10 @@ class StartupWorker(QThread):
         check_folders()
         load_languages()
         
-        
         self.version.emit(update_version, update_description)
     
 def updateScreen(update_version, update_description):
-    if update_version >= CURRENT_VERSION:
+    if update_version > CURRENT_VERSION:
         update_window = UpdateChecker(update_description, update_version, CURRENT_VERSION)  # Create an instance of UpdateChecker as a dialog
         update_window.exec_()  # Show it as a modal dialog
             

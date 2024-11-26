@@ -154,7 +154,6 @@ class Move():
                 command += f"{var.NAME_JOINTS[i]}{pos[i]} "
             command += f"s{v} a{a}\n"
             
-            print(command)
             simulate_program(command)
             
         else:

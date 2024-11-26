@@ -4,11 +4,10 @@ from backend.robot_management.robot_loader import RobotLoader
 from backend.robot_management.tool_managment import ToolManagment
 from backend.robot_management.robot_3d_model import Robot3dModel
 
-
+from .communication import send_tool_frame
 
 robot_loader = RobotLoader()
 tool_management = ToolManagment()
-
 robot_3d_model = Robot3dModel()
 
 #### robot
@@ -23,17 +22,14 @@ def get_selected_robot_name():
     return robot_loader.robots[robot_loader.selected_robot][0]
 
 def set_selected_robot(robot):
-    print("set the selected robot")
-    print(robot)
     robot_loader.selected_robot = robot
-    print(get_selected_robot())
 
 def setup_robot():
     robot_loader.SetupRobot()
     robot_loader.ChangeRobot()
     robot_3d_model.setup()
     tool_management.SetupTool()
-    tool_management.changeTool(0)
+    change_tool(0)
     robot_loader.AddRobotToPlotter()
     robot_loader.CreateNewButtons()
     
@@ -43,7 +39,7 @@ def change_robot(robot = None):
     robot_loader.ChangeRobot(robot)
     robot_3d_model.setup()
     tool_management.SetupTool()
-    tool_management.changeTool(0)
+    change_tool(0)
     robot_loader.AddRobotToPlotter()
     robot_loader.CreateNewButtons()
 
@@ -53,7 +49,7 @@ def save_robot(info):
     robot_loader.ChangeRobot(robot)
     robot_3d_model.setup()
     tool_management.SetupTool()
-    tool_management.changeTool(0)
+    change_tool(0)
     robot_loader.AddRobotToPlotter()
     robot_loader.CreateNewButtons()
     
@@ -63,7 +59,7 @@ def create_new_robot():
     robot_loader.ChangeRobot(robot)
     robot_3d_model.setup()
     tool_management.SetupTool()
-    tool_management.changeTool(0)
+    change_tool(0)
     robot_loader.AddRobotToPlotter()
     robot_loader.CreateNewButtons()
     
@@ -73,7 +69,7 @@ def delete_robot():
     robot_loader.ChangeRobot(0)
     robot_3d_model.setup()
     tool_management.SetupTool()
-    tool_management.changeTool(0)
+    change_tool(0)
     robot_loader.AddRobotToPlotter()
     robot_loader.CreateNewButtons()
     
@@ -134,6 +130,13 @@ def delete_tool(tool):
     
 def change_tool(tool):
     tool_management.changeTool(tool)
+    # send tool frame settings to the robot
+    if (tool + 1) > len(var.TOOLS3D):
+        tool_frame = [0,0,0,0,0,0]
+        send_tool_frame(tool_frame)
+    elif len(var.TOOLS3D) > 0:
+        tool_frame = var.TOOLS3D[tool][5]
+        send_tool_frame(tool_frame)
 
 def get_tool_info():
     tool_info = tool_management.GetToolInfo()

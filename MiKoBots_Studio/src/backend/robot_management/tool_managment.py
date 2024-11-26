@@ -153,6 +153,10 @@ class ToolManagment(QObject):
         elif var.NUMBER_OF_JOINTS == 3:
             matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0])
             change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+            
+        # send settings to the robot
+        
+            
                     
     def ShowSettings(self, tool):
         self.selected_tool = tool
@@ -203,8 +207,7 @@ class ToolManagment(QObject):
         if self.selected_tool == None:
             return
         
-        data_tool = var.TOOLS3D[self.selected_tool]
-        
+        data_tool = var.TOOLS3D[self.selected_tool]     
         data = event_manager.publish("request_get_tool_data", data_tool)
         
         var.TOOLS3D[self.selected_tool] = data[0]

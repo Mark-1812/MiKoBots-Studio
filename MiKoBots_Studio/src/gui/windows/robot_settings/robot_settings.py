@@ -47,9 +47,6 @@ class RobotSettings(QWidget):
             settings = settings_file[self.settings_name[i+3]]
             setting.set_values(settings[0])
             setting.set_IOCheckbox(settings[1])
-
-
-        print(settings_file)
         
         self.robot_name.setText(str(settings_file[self.settings_name[0]][0]))
         self.entry_nr_joints.setText(str(settings_file[self.settings_name[1]][0]))
@@ -82,9 +79,6 @@ class RobotSettings(QWidget):
         settings_file[self.settings_name[0]] = [self.robot_name.text(), ""]
         settings_file[self.settings_name[1]] = [self.entry_nr_joints.text(), ""]
         settings_file[self.settings_name[2]] = [self.Extra_Linkage, ""]
-
-        print("return settings")
-        print(self.Extra_Linkage)
         
         return settings_file    
      

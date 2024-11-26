@@ -93,6 +93,8 @@ class solveTicTacToe():
         
         return action
 
+
+
     def print_board(self, s):
         def convert(num):
             if num == self.BOARD_PLAYER_X:
@@ -103,46 +105,11 @@ class solveTicTacToe():
 
         i = 0
         for _ in range(3):
+            line = ""
             for _ in range(3):
-                print(convert(s[i]), end=' ')
+                line += convert(s[i])
+                line += " "
                 i += 1
-            print()
-
-if __name__ == '__main__':
-    solve = solveTicTacToe()
-    
-    s = [solve.BOARD_EMPTY for _ in range(9)]
-    print('|------- WELCOME TO TIC TAC TOE -----------|')
-    print('You are X while the Computer is O')
-
-    while solve.terminal(s) is None:
-        play = solve.player(s)
-        
-        if play == solve.BOARD_PLAYER_X:
-            print('\n\nIt is your turn', end='\n\n')
-            x = int(input('Enter the x-coordinate [0-2]: '))
-            y = int(input('Enter the y-coordinate [0-2]: '))
-            index = 3 * x + y
-    
-            if not s[index] == solve.BOARD_EMPTY: 
-                print('That coordinate is already taken. Please try again.')
-                continue
-    
-            s = solve.GetResult(s, (1, index))
-            solve.print_board(s)
-        else:
-            print('\n\nThe is computer is playing its turn')
-            action = solve.minimax(s)
-            s = solve.GetResult(s, action[0])
-            solve.print_board(s)
-
-    winner = solve.utility(s, 1)[0]
-    if winner == solve.BOARD_PLAYER_X:
-        print("You have won!")
-    elif winner == solve.BOARD_PLAYER_O:
-        print("You have lost!")
-    else:
-        print("It's a tie.")
+            print(line)
             
             
-''''''

@@ -131,7 +131,6 @@ class RobotLoader(QObject):
             
         # set all the settings
         if not 'Set_robot_name' in var.SETTINGS:
-            print(" robot name not in settings")
             robot_name = {'Set_robot_name': [var.ROBOT_NAME,""]}
             
             var.SETTINGS = {**robot_name, **var.SETTINGS}
@@ -409,10 +408,6 @@ class RobotLoader(QObject):
             # Convert back to JSON
             modified_json_data = json.loads(json_str)
 
-            # Print the modified JSON
-            print(json.dumps(modified_json_data, indent=4))
-            
-                
             with open(json_file, 'w') as file:
                 json.dump(modified_json_data, file, indent=4)
         

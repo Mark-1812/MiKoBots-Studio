@@ -26,19 +26,23 @@ class StartupScreen(QDialog):
         image_path = file_management.resource_path('start_up.png')
         pixmap = QPixmap(image_path)
         
-        image_label = QLabel()      
-        image_label.setPixmap(pixmap)
-        image_label.setAlignment(Qt.AlignCenter)
+
 
         # Add a text label
         text_label = QLabel(f"Version V{current_version}", self)
         text_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(text_label)
+        
+        # add picture
+        image_label = QLabel()      
+        image_label.setPixmap(pixmap)
+        image_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(image_label)
 
         # Add a text label
         text_label = QLabel("The program is starting, please wait...", self)
         text_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(image_label)
+        layout.addWidget(text_label)
         
         # Set layout
         self.setLayout(layout)

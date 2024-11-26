@@ -72,7 +72,6 @@ class Floor():
     
     def HideShowFloor(self):
         # Add the plane and axes to the scene
-        print(f"Show floor {self.ShowFloor}")
         if self.ShowFloor:
             
             self.grid_actor.SetVisibility(False)  # Set to True to show

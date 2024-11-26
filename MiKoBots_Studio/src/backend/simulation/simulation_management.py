@@ -51,7 +51,7 @@ class SimulationManagement(QObject):
         elif words[0] == "OffsetJ": self.OffsetJ(self.program)
         elif words[0] == "OffsetL" or words[0] == "jogL": self.OffsetL(self.program)
         elif words[0] == "jogJ": self.jogJ(self.program)
-        #elif words[0] == "MoveJoint": self.MoveJont(self.program)
+        elif words[0] == "MoveJoint": self.MoveJoint(self.program)
         
         self.simulation_busy = False
 
@@ -294,6 +294,8 @@ class SimulationManagement(QObject):
             if abs(max(axis_pos_delta, key=abs)) < step_size:
                 step_size = abs(max(axis_pos_delta, key=abs))
                 reached_end = True
+                if step_size == 0:
+                    break
 
             # detemine the increment
             axis_increments = self.AxisIncrements(axis_pos_delta, step_size)
@@ -379,6 +381,9 @@ class SimulationManagement(QObject):
             if abs(max(Joint_angles_delta, key=abs)) < step_size:
                 step_size = abs(max(Joint_angles_delta, key=abs))
                 reached_end = True
+                if step_size == 0:
+                    break
+                
 
             Joints_increments = self.JointIncrements(Joint_angles_delta, step_size)
             # print(f"Joint increments: {Joints_increments}")

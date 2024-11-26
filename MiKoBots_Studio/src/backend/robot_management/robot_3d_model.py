@@ -173,7 +173,11 @@ class Robot3dModel(QObject):
         for i in range(len(var.ROBOT3D)):
             event_manager.publish("request_create_buttons_3d_model", i, var.ROBOT3D)
             
-        event_manager.publish("request_save_robot_tool")        
+        event_manager.publish("request_save_robot_tool")     
+        
+        # after delete show the first model
+        self.model_3d_item = 0
+        self.Show3dModelSettings(self.model_3d_item)   
                        
     def Show3dModelSettings(self, item):
         self.model_3d_item = item

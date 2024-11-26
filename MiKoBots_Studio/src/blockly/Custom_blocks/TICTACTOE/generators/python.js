@@ -23,7 +23,7 @@ python.pythonGenerator.forBlock['ttt_generate_move_ai'] = function(block, genera
 {
   const value_board = generator.valueToCode(block, 'board', python.Order.ATOMIC);
 
-  const code = `tictactoe.GenerateMoveAi("${value_board}")\n`;
+  const code = `tictactoe.GenerateMoveAi(${value_board})\n`;
   return [code, python.Order.NONE];
 }
 

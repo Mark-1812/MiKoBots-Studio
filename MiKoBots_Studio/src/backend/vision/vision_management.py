@@ -65,9 +65,7 @@ class VisionManagement():
         if self.is_valid_url(com_port_adress):    
             self.cap = cv2.VideoCapture(com_port_adress)
         else:
-            print(" try to connect")
             self.cap = cv2.VideoCapture(addres)
-            print(" test")
         
         
         if self.cap.isOpened():
@@ -82,9 +80,6 @@ class VisionManagement():
 
     def calculate_mm_per_pixel(self, image = None, Height = None):
         mm_per_pixel = 0
-
-        print(f"self.cam_tool {self.cam_tool}")
-
 
         if self.cam_tool:
 
@@ -115,14 +110,14 @@ class VisionManagement():
             mm_per_pixel = (size1 - (new_Zdelta * Ratio_height_width)) / square_width_pixel
         else:
             square_size_mm = event_manager.publish("request_get_square_size")[0]
-            print(f"percentage square = {self.square_size_per}")
+            # print(f"percentage square = {self.square_size_per}")
 
 
             h, w, ch = image.shape
 
-            print(f"square size mm {square_size_mm}")
+            # print(f"square size mm {square_size_mm}")
 
-            print(f"square height: {h}")
+            # print(f"square height: {h}")
 
             mm_per_pixel = square_size_mm / (self.square_size_per * h)
             # get square size
@@ -199,12 +194,7 @@ class VisionManagement():
         t_threadRead.start()
        
     def GetMask(self, color_name, image):
-        print("1")
         color_range = event_manager.publish("request_get_colors")[0]
-        print(color_range)
-        print(color_name)
-
-        print(color_range[color_name])
 
         if color_name in color_range:
             if len(color_range[color_name]) == 2:

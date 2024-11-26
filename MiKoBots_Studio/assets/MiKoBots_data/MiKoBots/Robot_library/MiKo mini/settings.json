@@ -3,12 +3,12 @@
     "Settings": {
         "Set_motor_pin": [
             [
+                "32",
+                "33",
                 "18",
                 "19",
-                "16",
                 "17",
-                "26",
-                "27"
+                "5"
             ],
             ""
         ],
@@ -22,7 +22,7 @@
         ],
         "Set_tools": [
             [
-                "0",
+                "26",
                 "0",
                 "0",
                 "0",
@@ -32,18 +32,18 @@
         ],
         "Set_io_pin": [
             [
-                "32",
-                "33",
+                "27",
+                "16",
                 "4",
                 "2",
-                "15",
+                "0",
                 "0",
                 "0",
                 "0",
                 "0",
                 "0"
             ],
-            ""
+            "IO"
         ],
         "Set_max_pos": [
             [
@@ -107,28 +107,32 @@
                 [
                     "0",
                     "90",
-                    "128.5",
+                    "161",
                     "0"
                 ],
                 [
                     "90",
                     "0",
                     "0",
-                    "150"
+                    "160"
                 ],
                 [
                     "-90",
                     "0",
                     "0",
-                    "140"
+                    "160"
                 ],
                 [
                     "0",
                     "0",
                     "0",
-                    "30"
+                    "53.71"
                 ]
             ],
+            ""
+        ],
+        "Set_robot_name": [
+            "MiKo mini",
             ""
         ],
         "Set_number_of_joints": [
@@ -142,29 +146,29 @@
     },
     "3Dfiles": [
         [
-            "MiKo_mini_P001.STL",
-            "/Robot_library/MiKo mini/ROBOT_STL/ORIGINAL_MiKo_mini_P001.STL",
-            "/Robot_library/MiKo mini/ROBOT_STL/MiKo_mini_P001.STL",
-            "red",
+            "base.STL",
+            "/Robot_library/MiKo mini/ROBOT_STL/ORIGINAL_base.STL",
+            "/Robot_library/MiKo mini/ROBOT_STL/base.STL",
+            "darkgray",
             [
-                -120.0,
-                -45.0,
+                -162.5,
+                -66.0,
                 0.0,
-                -90.0,
-                0.0,
-                180.0
+                90.0,
+                180.0,
+                0.0
             ],
             "Base"
         ],
         [
-            "MiKo_mini_P002.STL",
-            "/Robot_library/MiKo mini/ROBOT_STL/ORIGINAL_MiKo_mini_P002.STL",
-            "/Robot_library/MiKo mini/ROBOT_STL/MiKo_mini_P002.STL",
-            "blue",
+            "link1.STL",
+            "/Robot_library/MiKo mini/ROBOT_STL/ORIGINAL_link1.STL",
+            "/Robot_library/MiKo mini/ROBOT_STL/link1.STL",
+            "red",
             [
-                -36.5,
-                -108.5,
-                -70.0,
+                -41.0,
+                -101.0,
+                -88.0,
                 0.0,
                 0.0,
                 0.0
@@ -172,29 +176,29 @@
             "Link 1"
         ],
         [
-            "MiKo_mini_P011.STL",
-            "/Robot_library/MiKo mini/ROBOT_STL/ORIGINAL_MiKo_mini_P011.STL",
-            "/Robot_library/MiKo mini/ROBOT_STL/MiKo_mini_P011.STL",
-            "red",
+            "link2.STL",
+            "/Robot_library/MiKo mini/ROBOT_STL/ORIGINAL_link2.STL",
+            "/Robot_library/MiKo mini/ROBOT_STL/link2.STL",
+            "darkgray",
             [
-                -175.0,
-                -25.0,
+                -190.0,
+                -30.0,
                 -40.0,
                 0.0,
                 0.0,
-                -90.0
+                270.0
             ],
             "Link 2"
         ],
         [
-            "MiKo_mini_P012.STL",
-            "/Robot_library/MiKo mini/ROBOT_STL/ORIGINAL_MiKo_mini_P012.STL",
-            "/Robot_library/MiKo mini/ROBOT_STL/MiKo_mini_P012.STL",
-            "blue",
+            "link3.STL",
+            "/Robot_library/MiKo mini/ROBOT_STL/ORIGINAL_link3.STL",
+            "/Robot_library/MiKo mini/ROBOT_STL/link3.STL",
+            "darkgray",
             [
-                -155.0,
-                -15.0,
-                -20.0,
+                -172.0,
+                -12.0,
+                -19.0,
                 0.0,
                 0.0,
                 90.0
@@ -202,21 +206,62 @@
             "Link 3"
         ],
         [
-            "MiKo_mini_P013.STL",
-            "/Robot_library/MiKo mini/ROBOT_STL/ORIGINAL_MiKo_mini_P013.STL",
-            "/Robot_library/MiKo mini/ROBOT_STL/MiKo_mini_P013.STL",
+            "link4.STL",
+            "/Robot_library/MiKo mini/ROBOT_STL/ORIGINAL_link4.STL",
+            "/Robot_library/MiKo mini/ROBOT_STL/link4.STL",
             "red",
             [
-                -42.5,
-                -12.5,
-                -20.0,
+                -65.71,
+                -12.0,
+                -27.5,
                 0.0,
                 0.0,
-                -90.0
+                0.0
             ],
             "Link 4"
         ]
     ],
-    "Tools": [],
+    "Tools": [
+        [
+            "vacuum tool",
+            "/Robot_library/MiKo mini/TOOLS_STL/ORIGINAL_vacuum tool.STL",
+            "/Robot_library/MiKo mini/TOOLS_STL/vacuum tool.STL",
+            "red",
+            [
+                -12.5,
+                0.0,
+                -12.5,
+                180.0,
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                -30.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "Tool pin 1",
+            "Servo",
+            [
+                0.0,
+                0.0
+            ],
+            [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "0",
+            [
+                "0",
+                "0",
+                "0",
+                "0"
+            ]
+        ]
+    ],
     "IOSettings": "IOSettings"
 }

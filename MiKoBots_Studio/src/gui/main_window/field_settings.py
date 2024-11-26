@@ -42,7 +42,7 @@ class SettingsField(QWidget):
         event_manager.subscribe("request_set_speed", self.SetSpeed)
 
         event_manager.subscribe("request_get_accel", self.GetAccel)
-        event_manager.subscribe("request_set_speed", self.SetAccel)
+        event_manager.subscribe("request_set_accel", self.SetAccel)
         
         event_manager.subscribe("request_add_robot_combo", self.AddRobotCombo)
         event_manager.subscribe("request_delete_robot_combo", self.DeleteRobotCombo)

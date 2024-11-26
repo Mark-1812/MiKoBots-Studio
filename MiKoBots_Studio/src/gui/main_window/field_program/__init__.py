@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
-from PyQt5.QtGui import QCursor, QPixmap, QSyntaxHighlighter, QTextCharFormat, QColor, QTextCursor, QFont
+from PyQt5.QtGui import QCursor, QPixmap, QSyntaxHighlighter, QTextCharFormat,  QDesktopServices, QTextCursor, QFont
 from PyQt5.QtCore import Qt, QRegularExpression, QUrl, pyqtSignal, QStringListModel, pyqtSlot
 from PyQt5.QtWidgets import QCompleter, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QCheckBox, QComboBox, QSizePolicy, QApplication, QFileDialog, QFrame, QGridLayout, QTextEdit, QScrollBar, QLineEdit, QWidget
 
@@ -44,7 +44,7 @@ class ProgramField(QWidget):
 
 
 
-    def FrameProgramming(self, layout):
+    def FrameProgramming(self, layout): 
         self.PROGRAM_NAME = QLabel("Program: New file.miko")
         self.PROGRAM_NAME.setStyleSheet(style_label_title)
         self.PROGRAM_NAME.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
@@ -125,16 +125,6 @@ class ProgramField(QWidget):
         current_directory = os.path.dirname(__file__)
         blockly_path = os.path.abspath(os.path.join(current_directory, '../../..', 'blockly', 'blockly.html'))
         self.web_view.setUrl(QUrl.fromLocalFile(blockly_path))  # Make sure to set the correct path to your HTML file
-        # Read the HTML file and set it in the QWebEngineView
-        # with open(blockly_path, 'r', encoding='utf-8') as file:
-        #     blockly_html = file.read()
-        #     print(blockly_html)
-        #     self.web_view.setHtml(blockly_html)
-        #     self.web_view.page().runJavaScript("console.log('Page loaded')")
-            
-        # Print the absolute path to blockly.html
-        #blockly_path = blockly_path.replace('\\', '/')
-        
         layout.addWidget(self.web_view, 2, 0)
 
 
@@ -154,6 +144,17 @@ class ProgramField(QWidget):
         self.PROGRAM_TEXT_WIDGET.textChanged.connect(self.update_line_numbers)
        
         self.highlighter = HighlightText(self.PROGRAM_TEXT_WIDGET.document())
+        
+
+        layout_question = QHBoxLayout()
+        layout_question.setAlignment(Qt.AlignRight)
+        layout.addLayout(layout_question,0,0, alignment=Qt.AlignTop | Qt.AlignRight)
+        
+        button = QPushButton("?")
+        button.setStyleSheet(style_button_help)
+        button.setFixedSize(20,20)
+        button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("https://mikobots.com/mikobots-studio/help/program-field/")))
+        layout_question.addWidget(button)
 
     def change_font_size(self, size):
         new_size = self.highlighter.font_size + size  # Increase font size by 2

@@ -54,9 +54,8 @@ class RunProgram():
 
     def RunBlocklyCode(self, code):
         try:
-            program = "from robot_library import Move, Tool, Vision, IO, Connect4, TicTacToe\nrobot = Move()\nvision = Vision()\ntool = Tool()\nIO = IO()\nconnect4 = Connect4()\ntictactoe = TicTacToe()\n"
+            program = "from robot_library import Move, Tool, Vision, IO, Connect4, TicTacToe\nimport time\nrobot = Move()\nvision = Vision()\ntool = Tool()\nIO = IO()\nconnect4 = Connect4()\ntictactoe = TicTacToe()\n"
             program += code
-
             print(program)
             self.script_thread = threading.Thread(target=self.execute_script, args=(program,), name = "run script")
             self.script_thread.start() 

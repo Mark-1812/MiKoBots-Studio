@@ -259,10 +259,8 @@ class MenuField(QWidget):
 
     def connect_camera(self):
         if cam_connected():
-            print("camere connected")
             connect_cam()
         else:
-            print("camera not connected")
             self.connect_cam_window.show()
             self.connect_cam_window.raise_()
 

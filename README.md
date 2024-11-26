@@ -11,13 +11,13 @@ MiKoBots Studio is an opensource project, designed to control diy robot arms. So
 
 At the moment the following requirements are in place if you want to control your own robot arm.
 
-Requirements:
+**Requirements:**
 * 6 axis or 3 axis robot arm 
 * Type of motor: Stepper motors
 * Limit swithes: each joint should have a limit switch to set the home position
 * Microcontroller: ESP32
 
-Version:
+**Version:**
 The current released version and which can be donwloaded on https://mikobots.com/ is: V1.1
 
 Currently working on a new update, this update will atleast have the follwoing updates:
@@ -31,15 +31,15 @@ At the moment this update is in the test phase and will be released most likely 
 
 
 
-History:
-Version: 1.1
-Date: 9-11-2024
+**History:**<br>
+Version: 1.1<br>
+Date: 9-11-2024<br>
 A lot of new updates since version 1.0, the mostimportant updates are:
 * Connectivity with bluetooth
 * Blockly programming 
 * Seperate window for the robot settings
 * Available for macOS
 
-Version: 1.0
-Date: 1-10-2024
+Version: 1.0<br>
+Date: 1-10-2024<br>
 First official release of MiKoBots studio.

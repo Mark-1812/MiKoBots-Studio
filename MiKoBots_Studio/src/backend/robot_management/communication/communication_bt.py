@@ -155,6 +155,8 @@ class TalkThroughBT(QThread):
                 self.busy = False
                 #event_manager.publish("request_robot_connect_button_color", True)
                 self.SendSettingsRobot()    
+                self.SendToolFrame()
+                    
             if self.IO:
                 print(var.LANGUAGE_DATA.get("message_io_instead_of_robot"))
                 self.disconnect()
@@ -285,7 +287,7 @@ class TalkThroughBT(QThread):
 
                 for i, setting in enumerate(var.SETTINGS):
                     settings = var.SETTINGS[category_names[i]]
-                    if settings[1] == "" and  category_names[i] != 'Set_extra_joint' and  category_names[i] != 'Set_io_pin'and  category_names[i] != 'Set_robot_name':
+                    if settings[1] == "" and  category_names[i] != 'Set_extra_joint' and  category_names[i] != 'Set_io_pin'and  category_names[i] != 'Set_robot_name' and  category_names[i] != "Set_tools":
                         
                         command = make_line_ABC(settings[0], category_names[i])
                         self.SendLineCommand(command)
@@ -348,6 +350,17 @@ class TalkThroughBT(QThread):
             elif self.connect == 0:
                 print(var.LANGUAGE_DATA.get("message_io_not_connected"))
 
+    def SendToolFrame(self, tool_frame):
+        command = "Set_tool_frame "
+        letters = ['A','B','C','D','E','F']
+        
+        for i in range(6):
+            command += str(letters[i])
+            command += str(tool_frame[i])
+            
+        self.SendLineCommand(command)
+            
+        
 
 ## play pauze stop the robot
     def StopProgram(self):

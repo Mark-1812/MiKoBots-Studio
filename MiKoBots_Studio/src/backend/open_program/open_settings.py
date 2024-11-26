@@ -14,15 +14,12 @@ def OpenSettings(file_mangement):
     try:           
         with open(file_path, 'r') as file:
             settings_file = json.load(file)
-            print(settings_file)
     except Exception as e:
         print(f"An error occurred: {e}")
         print("Error: could not open the settings file")
         settings_file = [None] * 11
         
-    
-    
-    print(settings_file)
+
     
     # 0: get robot port -> not used any more
     # 1: get io port -> not used any more

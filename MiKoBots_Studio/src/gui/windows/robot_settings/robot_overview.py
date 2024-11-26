@@ -100,8 +100,6 @@ class RobotOverview(QWidget):
         
         
     def ChangeRobotName(self, selected_robot, name):
-        print(selected_robot)
-        print(name)
         self.Robots_buttons[selected_robot].setText(name)
         
     def CreateButtons(self, item, robot_name):          
@@ -132,7 +130,6 @@ class RobotOverview(QWidget):
             self.Robots_buttons[i].blockSignals(False)
 
     def ChangeRobot(self, btn, item):
-        print
         if btn.isChecked():
             self.Robots_buttons[item].setReadOnly(True)
             change_robot(item)

@@ -313,9 +313,14 @@ void InverseKinematic_3() {
 
 */
 
-  float X = robot[0].PosEnd;
-  float Y = robot[1].PosEnd;
-  float Z = robot[2].PosEnd;
+  float tool_X = TOOL_FRAME[0];
+  float tool_Y = TOOL_FRAME[1];
+  float tool_Z = TOOL_FRAME[2];
+
+
+  float X = robot[0].PosEnd - tool_X;
+  float Y = robot[1].PosEnd - tool_Z;
+  float Z = robot[2].PosEnd - tool_Y;
 
   float L1 = DHparams[0][2];
   float L2 = DHparams[1][3];

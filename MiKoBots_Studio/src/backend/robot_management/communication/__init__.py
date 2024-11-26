@@ -31,22 +31,17 @@ def connect_robot(addres = None, type = None):
     if not talk_with_robot_bt.connect and not talk_with_robot_com.connect: 
         # make a connection
         if type: # COM port connection
-            print("make com connection")
             talk_with_robot_com.Connect(addres)
         else: # Bluetooth connection
-            print("make bt connection")
             talk_with_robot_bt.Connect(addres)
     elif talk_with_robot_com.connect:
         # break the connection
-        print("break com connection")
         talk_with_robot_com.DisConnect()
 
     elif talk_with_robot_bt.connect:
-        print("break bt connection")
         talk_with_robot_bt.Disconnect()
     
 def send_line_to_robot(command, Home = False):
-
     if talk_with_robot_bt.stop or talk_with_robot_com.stop:
         print("Error: Stop mode, press first play")
         return
@@ -61,16 +56,16 @@ def send_line_to_robot(command, Home = False):
         elif not Home:
             talk_with_robot_bt.SendLineCommand(command)
         else:
-            print("Error the robot is not homed")
+            print("Error: the robot is not homed")
     elif talk_with_robot_com.connect:
         if Home and talk_with_robot_com.robot_home:
             talk_with_robot_com.SendLineCommand(command)
         elif not Home:
             talk_with_robot_com.SendLineCommand(command)
         else:
-            print("Error the robot is not homes")
+            print("Error: the robot is not homes")
     else:
-        print("Error robot is not connected")
+        print("Error: The robot is not connected")
     
 def send_settings_robot():
     if talk_with_robot_bt.connect:
@@ -88,6 +83,13 @@ def scan_for_robots():
     talk_with_robot_bt.ScanForDevice()
 
 
+def send_tool_frame(tool):
+    if talk_with_robot_bt.connect:
+        talk_with_robot_bt.SendToolFrame(tool)
+    elif talk_with_robot_com.connect:
+        talk_with_robot_com.SendToolFrame(tool)
+        
+        
 # play, pauze and stop the robot functions, also the IO??
 def pauze_robot():
     if talk_with_robot_bt.connect:

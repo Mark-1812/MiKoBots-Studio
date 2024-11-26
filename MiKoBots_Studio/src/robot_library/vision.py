@@ -35,7 +35,6 @@ class Vision():
         # get the contours of the color
         if color:
             mask_HSV = get_mask(color, image_HSV)
-            print(mask_HSV)
             kernel = np.ones((5, 5), np.uint8)
             mask_HSV = cv2.morphologyEx(mask_HSV, cv2.MORPH_OPEN, kernel)
             contours_HSV, _ = cv2.findContours(mask_HSV, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -171,6 +170,11 @@ class Vision():
                     Xobject_place = round(pos_x  + x_offset, 1)
                 
                 self.Objects.append([Xobject_place, Yobject_place, width, height, angle, color])
+                
+                
+        # check if there are no dounbles is the object list
+        
+        
 
         event_manager.publish("request_set_pixmap_image", image_RGB)
         

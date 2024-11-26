@@ -162,7 +162,7 @@ class RobotTools(QWidget):
         
    
     def ButtonsSettingsGUI(self, layout):
-        self.button_update = QPushButton("Update 3D model")
+        self.button_update = QPushButton("Update tool")
         self.button_update.setStyleSheet(style_button_menu)
         layout.addWidget(self.button_update)
         self.button_update.clicked.connect(lambda: update_tool_settings())
@@ -175,7 +175,7 @@ class RobotTools(QWidget):
         self.button_save_robot = QPushButton("Save robot")
         self.button_save_robot.setStyleSheet(style_button_menu)
         layout.addWidget(self.button_save_robot)
-        self.button_save_robot.clicked.connect(lambda: save_robot(True))
+        self.button_save_robot.clicked.connect(lambda: self.SaveRobot())
    
     def OriginSettingsGUI(self, layout):
         validator = QDoubleValidator()
@@ -407,9 +407,6 @@ class RobotTools(QWidget):
         checkbox_cal_square.setStyleSheet(style_checkbox)
         layout.addWidget(checkbox_cal_square, 8, 0, 1, 4) 
         checkbox_cal_square.stateChanged.connect(self.show_square)
-        
-
-
 
     def show_square(self, state):
         if state == 2:  # Checked (Qt.Checked)
@@ -455,7 +452,8 @@ class RobotTools(QWidget):
 
     def SaveRobot(self):
         save_robot(False)
-
+        show_tool_settings(0)
+        
     def CreateButtons(self, item, tool_data):
         self.Tools_robot_buttons.append([[],[],[],[]])
 
@@ -586,22 +584,28 @@ class RobotTools(QWidget):
         if self.stl_actor == None:
             return
         
+        # get the origin of the part
         for i in range(6):
             try:
                 data_tool[4][i] = float(self.entry_origin_pos[i].text())
             except:
                 data_tool[4][i] = 0
                 self.entry_origin_pos[i].setText("0.0")
-            
+                
+        # get the tool frame
+        for i in range(6):  
             try:
                 data_tool[5][i] = float(self.ToolFrame[i].text())
             except:
                 data_tool[5][i] = 0
-                self.ToolFrame[i].setText("0.0")       
+                self.ToolFrame[i].setText("0.0")      
+                
         
+        # get the pin number
         data_tool[6] = self.combobox_tool_pin.currentText() 
            
-           
+        
+        # get the type of tool
         if self.radio_button_relay.isChecked():
             data_tool[7] = "Relay"
         elif self.radio_button_servo.isChecked():
@@ -623,6 +627,8 @@ class RobotTools(QWidget):
         elif self.radio_button_no_con.isChecked():
             data_tool[7] = "None"
         
+        
+        # get the camera offset mm
         offset = []
         for i in range(3):
             try:
@@ -633,9 +639,10 @@ class RobotTools(QWidget):
             
         data_tool[9] = offset
         
+        # get the rotation offset of the camera
         data_tool[10] = self.camere_rotation_offset.text()
             
-            
+        # get the other cam settings
         cam_settings = ["0", "0", "0", "0"]
         cam_settings[0] = self.z_dis_big_square.text()
         cam_settings[1] = self.z_dis_small_square.text()

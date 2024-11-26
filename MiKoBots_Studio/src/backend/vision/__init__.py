@@ -21,7 +21,6 @@ def calculate_mm_per_pixel(image = None, Height = None):
     return vision_management.calculate_mm_per_pixel(image, Height)
     
 def cam_tool_connected(state):
-    print("change the state of the cam tool")
     vision_management.cam_tool = state
 
 def check_cam_tool_connect():

@@ -35,6 +35,7 @@ void set_TOOL(String command){
 
   if (tool_type == 1){
     pinMode(tool_pin, OUTPUT);
+    digitalWrite(tool_pin, HIGH);
   }
 
 
@@ -45,17 +46,25 @@ void set_TOOL(String command){
 void set_tool_frame(String command){
   int pos_setting[12];
 
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+  for(int i = 0; i < 6; i++){
     pos_setting[i] = command.indexOf(alphabet[i]);
   }
 
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    if (i < NUMBER_OF_JOINTS - 1){
+  for(int i = 0; i < 6; i++){
+    if (i < 6 - 1){
       TOOL_FRAME[i] = command.substring(pos_setting[i] + 1, pos_setting[i + 1]).toInt();
     } else{
       TOOL_FRAME[i] = command.substring(pos_setting[i] + 1).toInt();
     }
   }
+
+  String message = "";
+  for(int i = 0; i < 6; i++){
+    message += TOOL_FRAME[i];
+    message += ", ";
+  }
+
+  sent_message(message);
 
   sent_message("Tool frame is updated");
   sent_message("END");
@@ -69,10 +78,10 @@ void tool_state(String command){
   String state = command.substring(pos_1_TOOL + 1, pos_2_TOOL);
 
   if (state.equals("LOW")){
-    digitalWrite(tool_pin, LOW);
+    digitalWrite(tool_pin, HIGH);
   }
   else if (state.equals("HIGH")){
-    digitalWrite(tool_pin, HIGH);
+    digitalWrite(tool_pin, LOW);
   }
 
   String message = "Tool state " + state;
