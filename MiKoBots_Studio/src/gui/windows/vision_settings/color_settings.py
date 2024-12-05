@@ -17,11 +17,15 @@ from backend.vision import get_image_frame, cam_connected, show_square
 
 from gui.windows.message_boxes import ErrorMessage
 
-class ColorSettings(QWidget):
-    def __init__(self, frame):     
-        super().__init__()  
-        self.frame = frame
-        self.layout = QGridLayout(self.frame)
+class ColorSettings:
+    def __init__(self, parent_frame: QFrame):
+        self.parent_frame = parent_frame
+
+        if not self.parent_frame.layout():
+            self.layout = QGridLayout(self.parent_frame)
+        else:
+            self.layout = self.parent_frame.layout()
+
         self.layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         
         self.image_HSV = None
@@ -111,7 +115,7 @@ class ColorSettings(QWidget):
         self.upper_val_slider = CreateSlider(frame_layout, 'Upper Val', 0, 255)
         
         
-        self.image_label = QLabel(self)
+        self.image_label = QLabel()
         self.image_label.setFixedWidth(300)
         self.layout.addWidget(self.image_label, 1,0)
         

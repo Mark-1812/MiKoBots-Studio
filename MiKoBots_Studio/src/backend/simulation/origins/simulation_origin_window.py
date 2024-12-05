@@ -6,6 +6,7 @@ import numpy as np
 
 class SimulationOriginWindow(QObject):
     def __init__(self):
+        super().__init__()     
         self.ORIGIN = []
         self.plotter_axis = []
         
@@ -14,6 +15,7 @@ class SimulationOriginWindow(QObject):
         self.interactor = None
 
     def SetupRenderer(self, renderer, plotter, interactor):
+        print(plotter)
         self.renderer = renderer
         self.plotter = plotter
         self.interactor = interactor

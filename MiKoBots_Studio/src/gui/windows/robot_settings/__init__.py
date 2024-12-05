@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QLabel, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog, QButtonGroup
+from PyQt5.QtWidgets import QLabel, QWidget, QRadioButton, QGridLayout, QSpacerItem, QSizePolicy, QFrame, QComboBox, QFileDialog, QButtonGroup
 from PyQt5.QtCore import  Qt
 from PyQt5.QtGui import QIcon
 
@@ -19,6 +19,7 @@ class RobotWindow(QWidget):
         self.setFixedSize(800,750)
         self.setStyleSheet("background-color: #E8E8E8;")
         
+        # set icon
         file_management = FileManagement()
         image_path = file_management.resource_path('mikobot.ico')
         self.setWindowIcon(QIcon(image_path))
@@ -29,7 +30,7 @@ class RobotWindow(QWidget):
         self.CreateTabs()
         
         layout_menu = QGridLayout() 
-        menu_frame = QFrame()
+        menu_frame = QFrame(self)
         menu_frame.setStyleSheet(style_frame)
         menu_frame.setFixedWidth(150)
         menu_frame.setLayout(layout_menu)  
@@ -38,7 +39,7 @@ class RobotWindow(QWidget):
         
         row = 0
         
-        title = QLabel("Menus")
+        title = QLabel("Menus", self)
         title.setStyleSheet(style_label_title)
         title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         title.setFixedHeight(30)
@@ -56,20 +57,19 @@ class RobotWindow(QWidget):
             row += 1
 
         button_group.buttons()[0].setChecked(True)
-                 
-        spacer_widget = QWidget()
-        spacer_widget.setStyleSheet(style_widget)
-        layout_menu.addWidget(spacer_widget, layout_menu.rowCount(), 0, 1, 1) 
+        
+        space_widget = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        layout_menu.addItem(space_widget, layout_menu.rowCount(), 0) 
         
     def CreateTabs(self):
         self.show_frame_1 = 0
-        self.frame_1 = QFrame()
+        self.frame_1 = QWidget(self)
         self.frame_1.setStyleSheet(style_frame)
         self.layout.addWidget(self.frame_1, 0, 1)
         self.RobotOverview = RobotOverview(self.frame_1)
         
         self.show_frame_2 = 0
-        self.frame_2 = QFrame()
+        self.frame_2 = QWidget(self)
         self.frame_2.setStyleSheet(style_frame)
         self.layout.addWidget(self.frame_2, 0, 1)
         self.frame_2.hide()
@@ -77,14 +77,14 @@ class RobotWindow(QWidget):
         
         
         self.show_frame_3 = 0
-        self.frame_3 = QFrame()
+        self.frame_3 = QWidget(self)
         self.frame_3.setStyleSheet(style_frame)
         self.layout.addWidget(self.frame_3, 0, 1)
         self.frame_3.hide()  
         self.RobotSettings = RobotSettings(self.frame_3)   
         
         self.show_frame_4 = 0
-        self.frame_4 = QFrame()      
+        self.frame_4 = QWidget(self)      
         self.frame_4.setStyleSheet(style_frame)
         self.layout.addWidget(self.frame_4, 0, 1)
         self.frame_4.hide()

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QScrollArea, QSpacerItem, QPushButton, QLabel, QCheckBox, QComboBox, QSizePolicy, QApplication, QFileDialog, QFrame, QGridLayout, QTextEdit, QScrollBar, QLineEdit, QWidget
+from PyQt5.QtWidgets import QHBoxLayout, QScrollArea, QPushButton, QLabel, QCheckBox, QComboBox, QSizePolicy, QApplication, QFileDialog, QFrame, QGridLayout, QTextEdit, QScrollBar, QLineEdit, QWidget
 
 from gui.style import * 
 
@@ -10,83 +10,72 @@ from .control_joint import ControlJoint
 from .control_move import ControlMove
 from .control_tool import ControlTool
 
-class ControlField(QWidget):   
-    def __init__(self, frame):
-        super().__init__()
+class ControlField:   
+    def __init__(self, parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QHBoxLayout(self.parent_frame)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(0)
+
+        # Create a scroll area
+        scroll_area = QScrollArea(self.parent_frame)
+        scroll_area.setWidgetResizable(True) 
+
+        # Create the child widget and layout
+        scroll_widget = QWidget(scroll_area)
+        scroll_widget.setStyleSheet(style_widget)
+        self.scroll_layout = QHBoxLayout(scroll_widget)
+        self.scroll_layout.setContentsMargins(5, 0, 5, 0)
         
-        frame_layout = QGridLayout()
-        frame_layout.setContentsMargins(0, 0, 0, 0)
-        frame_layout.setSpacing(0)
-        frame.setLayout(frame_layout)
+
         
-        self.ButtonsJoint = []
-        self.ButtonsAxis = []
-        self.ButtonsMove = []
-        
-        self.space_widget_joint = None
-        self.space_widget_axis = None
-        self.space_widget_move = None
-        
-        self.simulation = False
-        
-        self.createFrames(frame_layout)
+        self.createFrames()
         self.subscribeToEvents()
+
+        scroll_area.setWidget(scroll_widget)
+        self.layout.addWidget(scroll_area)
+
+        self.parent_frame.setLayout(self.layout)
            
     def subscribeToEvents(self):
         event_manager.subscribe("request_change_labels_control", self.ChangeTitles)
             
-    def createFrames(self, layout):
-        frame_joint_jog = QFrame()
-        frame_joint_jog.setMinimumWidth(200)
-        frame_joint_jog.setStyleSheet(style_frame)
-        layout.addWidget(frame_joint_jog, 0, 0) 
+    def createFrames(self):
+        self.frame_joint_jog = QWidget()
+        self.frame_joint_jog.setMinimumWidth(200)
+        self.frame_joint_jog.setStyleSheet(style_frame)
+        self.FrameJointJog  = ControlJoint(self.frame_joint_jog)
+        self.scroll_layout.addWidget(self.frame_joint_jog) 
         
-        space = QFrame()
-        space.setFixedWidth(5)
-        space.setStyleSheet("background-color: #E8E8E8;")
-        layout.addWidget(space, 0, 1) 
 
-        frame_axis_jog = QFrame()
-        frame_axis_jog.setMinimumWidth(200)
-        frame_axis_jog.setStyleSheet(style_frame)
-        layout.addWidget(frame_axis_jog, 0, 2)  
+        self.frame_axis_jog = QWidget()
+        self.frame_axis_jog.setMinimumWidth(200)
+        self.frame_axis_jog.setStyleSheet(style_frame)
+        self.FrameAxisJog = ControlAxis(self.frame_axis_jog)
+        self.scroll_layout.addWidget(self.frame_axis_jog)  
         
-        space = QFrame()
-        space.setFixedWidth(5)
-        space.setStyleSheet("background-color: #E8E8E8;")
-        layout.addWidget(space, 0, 3) 
 
-        frame_move = QFrame()
-        frame_move.setFixedWidth(110)
-        frame_move.setStyleSheet(style_frame)
-        layout.addWidget(frame_move, 0, 4) 
+        self.frame_move = QWidget()
+        self.frame_move.setFixedWidth(110)
+        self.frame_move.setStyleSheet(style_frame)
+        self.frameMove = ControlMove(self.frame_move)
+        self.scroll_layout.addWidget(self.frame_move) 
         
-        space = QFrame()
-        space.setFixedWidth(5)
-        space.setStyleSheet("background-color: #E8E8E8;")
-        layout.addWidget(space, 0, 5) 
 
-        frame_tool = QFrame()
-        frame_tool.setMinimumWidth(180)
-        frame_tool.setStyleSheet(style_frame)
-        layout.addWidget(frame_tool, 0, 6) 
+        self.frame_tool = QWidget()
+        self.frame_tool.setMinimumWidth(180)
+        self.frame_tool.setStyleSheet(style_frame)
+        self.FrameTool = ControlTool(self.frame_tool)
+        self.scroll_layout.addWidget(self.frame_tool) 
         
-        space = QFrame()
-        space.setFixedWidth(5)
-        space.setStyleSheet("background-color: #E8E8E8;")
-        layout.addWidget(space, 0, 7) 
 
-        frame_io = QFrame()
-        frame_io.setMinimumWidth(180)
-        frame_io.setStyleSheet(style_frame)
-        layout.addWidget(frame_io, 0, 8) 
+        self.frame_io = QWidget()
+        self.frame_io.setMinimumWidth(180)
+        self.frame_io.setStyleSheet(style_frame)
+        self.FrameIo = ControlIO(self.frame_io) 
+        self.scroll_layout.addWidget(self.frame_io)
         
-        self.frameMove = ControlMove(frame_move)
-        self.FrameTool = ControlTool(frame_tool)
-        self.FrameJointJog  = ControlJoint(frame_joint_jog)
-        self.FrameAxisJog = ControlAxis(frame_axis_jog)
-        self.FrameIo = ControlIO(frame_io)    
- 
+
     def ChangeTitles(self, sim):
         if sim:
             self.simulation = True

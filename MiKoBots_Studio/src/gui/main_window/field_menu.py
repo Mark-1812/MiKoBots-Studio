@@ -38,23 +38,20 @@ from backend.vision import connect_cam, cam_connected
 
 
 
-class MenuField(QWidget):
-    def __init__(self, frame):
-        super().__init__()
-        
-        main_layout = QVBoxLayout(frame)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
+class MenuField:
+    def __init__(self, parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QVBoxLayout(self.parent_frame)
+
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(0)
         
         self.simulation_origin_gui = SimulationOriginGUI()
         self.simulation_objects_gui = SimulationObjectsGUI()
-
         self.connect_robot_window = ConnectDevice("ROBOT")
         self.connect_io_window = ConnectDevice("IO")
         self.connect_cam_window = ConnectDevice("CAMERA")
-        
         self.vision_window = VisionWindow()
-        
         self.file_management = FileManagement()
 
         frame = QFrame()
@@ -62,32 +59,34 @@ class MenuField(QWidget):
         layout.setSpacing(5)
         layout.setContentsMargins(10, 10, 10, 10)
         frame.setLayout(layout)
-        main_layout.addWidget(frame)
+        self.layout.addWidget(frame)
         self.FrameButtons(layout)  
 
         space_widget = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        main_layout.addItem(space_widget)      
+        self.layout.addItem(space_widget)      
 
         frame = QFrame()
         layout = QVBoxLayout()
         layout.setSpacing(5)
         layout.setContentsMargins(10, 10, 10, 10)
         frame.setLayout(layout)
-        main_layout.addWidget(frame) 
+        self.layout.addWidget(frame) 
         self.SimButtons(layout)
 
         space_widget = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        main_layout.addItem(space_widget)   
+        self.layout.addItem(space_widget)   
 
         frame = QFrame()
         layout = QGridLayout()
         layout.setSpacing(5)
         layout.setContentsMargins(10, 10, 10, 10)
         frame.setLayout(layout)
-        main_layout.addWidget(frame) 
+        self.layout.addWidget(frame) 
         self.RobotButtons(layout)
         
         self.subscribeToEvents()
+
+        self.parent_frame.setLayout(self.layout)
     
     def subscribeToEvents(self):
         event_manager.subscribe("request_robot_connect_button_color", self.ButtonConnectRobotColor)
@@ -102,7 +101,7 @@ class MenuField(QWidget):
     def FrameButtons(self, layout):
         image_path = self.file_management.resource_path('studio.png')
         
-        button = QPushButton(self)
+        button = QPushButton()
         button.setFixedSize(130,130)
         button.setIcon(QIcon(image_path))
         button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl("https://www.mikobots.com")))

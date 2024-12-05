@@ -48,7 +48,7 @@ def showMainWindow(file_path):
      
                   
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    app = QApplication([])
     
     file_path = sys.argv[1] if len(sys.argv) > 1 else None
     
@@ -64,4 +64,4 @@ if __name__ == "__main__":
     startup_worker.version.connect(lambda version, description: updateScreen(version, description))
     startup_worker.start()
     
-    sys.exit(app.exec_())
+    app.exec_()

@@ -4,6 +4,8 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QTimer
 import os
 
+from gui.style import *
+
 import backend.core.variables as var
 from backend.file_managment.file_management import FileManagement
 
@@ -31,6 +33,7 @@ class StartupScreen(QDialog):
         # Add a text label
         text_label = QLabel(f"Version V{current_version}", self)
         text_label.setAlignment(Qt.AlignCenter)
+        text_label.setStyleSheet(style_label)
         layout.addWidget(text_label)
         
         # add picture
@@ -42,6 +45,7 @@ class StartupScreen(QDialog):
         # Add a text label
         text_label = QLabel("The program is starting, please wait...", self)
         text_label.setAlignment(Qt.AlignCenter)
+        text_label.setStyleSheet(style_label)
         layout.addWidget(text_label)
         
         # Set layout

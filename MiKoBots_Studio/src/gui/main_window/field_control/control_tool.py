@@ -14,10 +14,10 @@ from backend.robot_management import get_tool_info, get_selected_tool
 from backend.run_program import run_single_line      
 
 
-class ControlTool(QWidget):
-    def __init__(self, frame, parent = None):
-        super().__init__(parent)
-        self.layout = QVBoxLayout(frame)
+class ControlTool:
+    def __init__(self, parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QVBoxLayout(self.parent_frame)
         self.layout.setContentsMargins(5, 3, 5, 3)
         self.layout.setSpacing(5)
         self.layout.setAlignment(Qt.AlignTop)
@@ -26,6 +26,8 @@ class ControlTool(QWidget):
 
         self.FrameTool()
         self.subscribeToEvents()
+
+        self.parent_frame.setLayout(self.layout)
            
     def subscribeToEvents(self):
         event_manager.subscribe("request_add_tool_combo", self.AddToolCombo)
@@ -48,7 +50,7 @@ class ControlTool(QWidget):
         label.setStyleSheet(style_label_bold)
         self.layout.addWidget(label)        
 
-        frame = QFrame()
+        frame = QWidget()
         layout_buttons = QHBoxLayout()
         layout_buttons.setContentsMargins(5, 0, 5, 5)
         frame.setLayout(layout_buttons)
@@ -88,14 +90,16 @@ class ControlTool(QWidget):
         label.setStyleSheet(style_label_bold)
         self.layout.addWidget(label) 
 
-        self.TOOL_COMBO = QComboBox(self)
+        self.TOOL_COMBO = QComboBox(self.parent_frame)
         self.TOOL_COMBO.setStyleSheet(style_combo)
         self.TOOL_COMBO.setMaximumWidth(150)
+        self.layout.addWidget(self.TOOL_COMBO)
         
         self.TOOL_COMBO.currentIndexChanged.connect(lambda index: change_tool(index))
         
-        self.layout.addWidget(self.TOOL_COMBO)
         
+
+ 
     def ChangeStateTool(self, state):
         if not self.simulation:
             tool_nr = get_selected_tool()
@@ -113,11 +117,13 @@ class ControlTool(QWidget):
         
 
     def DeleteToolsCombo(self):
+        print(f"self.TOOL_COMBO {self.TOOL_COMBO}")
         self.TOOL_COMBO.blockSignals(True)
         self.TOOL_COMBO.clear()
         self.TOOL_COMBO.blockSignals(False)
 
     def SetToolCombo(self, tool):
+        print(f"self.TOOL_COMBO {self.TOOL_COMBO}")
         self.TOOL_COMBO.blockSignals(True)
         self.TOOL_COMBO.setCurrentIndex(tool)
         self.TOOL_COMBO.blockSignals(False)

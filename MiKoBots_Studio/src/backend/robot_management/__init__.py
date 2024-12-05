@@ -6,6 +6,8 @@ from backend.robot_management.robot_3d_model import Robot3dModel
 
 from .communication import send_tool_frame
 
+from backend.core.event_manager import event_manager
+
 robot_loader = RobotLoader()
 tool_management = ToolManagment()
 robot_3d_model = Robot3dModel()
@@ -41,7 +43,7 @@ def change_robot(robot = None):
     tool_management.SetupTool()
     change_tool(0)
     robot_loader.AddRobotToPlotter()
-    robot_loader.CreateNewButtons()
+    robot_loader.CreateNewButtons() 
 
 def save_robot(info): 
     robot = robot_loader.SaveRobot(info)

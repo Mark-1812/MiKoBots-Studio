@@ -29,12 +29,13 @@ from backend.run_program import run_single_line
 
 import backend.core.variables as var
 
-class SimulationGUI(QWidget):
-    def __init__(self, frame):      
-        super().__init__()      
+class SimulationGUI:
+    def __init__(self, parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QGridLayout(self.parent_frame)   
+        self.layout.setContentsMargins(0, 0, 0, 0)
+
         self.file_management = FileManagement()  
-        
-        
         
         self.views = [
             [(1, 0, 0), (0, 0, 0), (0, 0, 1)], 
@@ -43,16 +44,12 @@ class SimulationGUI(QWidget):
             [(1, 1, 1), (0, 0, 0), (0, 0, 1)]
             ]
         
-        self.plotter_items = []
-        self.plotter_axis = []
-        self.plotter_robot = []
-        self.plotter_tool = [None, None, None, None]
-        
-        self.CreatePlotter(frame)
+
+        self.CreatePlotter()
         self.floor = Floor(self.renderer)
         self.axis = Axis(self.renderer, 500)
         
-        self.GUI(frame)
+        self.GUI()
         
         self.subscribeToEvents()
         self.floor.HideShowFloor()
@@ -62,20 +59,14 @@ class SimulationGUI(QWidget):
         setup_renderer_object(self.renderer, self.plotter, self.interactor)
         setup_renderer_origin(self.renderer, self.plotter, self.interactor)
         
+        self.parent_frame.setLayout(self.layout)
+
 
     def subscribeToEvents(self):
-        event_manager.subscribe("request_add_axis_to_plotter", self.AddAxisToPlotter)
-        event_manager.subscribe("request_change_pos_axis", self.ChangePosAxis)
-        event_manager.subscribe("request_delete_axis_plotter", self.DeleteAxisPlotter) 
-       
         event_manager.subscribe("set_camera_pos_plotter", self.SetCameraPlotter)
-
         event_manager.subscribe("request_close_plotter", self.ClosePlotter)
 
-    def CreatePlotter(self, frame):
-        self.layout = QGridLayout(frame)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        
+    def CreatePlotter(self):
         frame1 = QFrame()
         frame1.setStyleSheet(style_frame)  # Ensure style_frame is defined
         self.layout.addWidget(frame1, 0, 0)
@@ -99,7 +90,7 @@ class SimulationGUI(QWidget):
         self.camera = vtk.vtkCamera()
         # Set up mouse interaction
         
-    def GUI(self, frame):     
+    def GUI(self):     
 
         button_menu = QHBoxLayout()
         button_menu.setContentsMargins(10,10,10,10)
@@ -150,7 +141,6 @@ class SimulationGUI(QWidget):
         
 
         # Set the main layout for the frame
-        frame.setLayout(self.layout)  # Ensure the frame's layout is set
 
     def ShowFloor(self):
         self.floor.HideShowFloor()
@@ -226,101 +216,7 @@ class SimulationGUI(QWidget):
             self.interactor.Enable()
         except:
             print("Error rendering")
-        
-  
-    # add axis to plotter
-    
-    def AddAxisToPlotter(self, item):
-        pass
-        self.plotter_axis.append([[[],[],[]],[[],[],[]],[],[]])
-        
-        pointOrigin = np.array([0, 0, 0])
-        pointX = np.array([150, 0, 0])
-        pointY = np.array([0, 150, 0])
-        pointZ = np.array([0, 0, 150])
-        
-        line_x_source = vtk.vtkLineSource()
-        line_x_source.SetPoint1(pointOrigin)
-        line_x_source.SetPoint2(pointX)
-        
-        line_y_source = vtk.vtkLineSource()
-        line_y_source.SetPoint1(pointOrigin)
-        line_y_source.SetPoint2(pointY)
-        
-        line_z_source = vtk.vtkLineSource()
-        line_z_source.SetPoint1(pointOrigin)
-        line_z_source.SetPoint2(pointZ)
-        
-        # Store the VTK line objects
-        self.plotter_axis[item][0][0] = line_x_source
-        self.plotter_axis[item][0][1] = line_y_source
-        self.plotter_axis[item][0][2] = line_z_source
-
-        # Create mappers and actors for each line
-        mapper_x = vtk.vtkPolyDataMapper()
-        mapper_x.SetInputConnection(line_x_source.GetOutputPort())
-        actor_x = vtk.vtkActor()
-        actor_x.SetMapper(mapper_x)
-        actor_x.GetProperty().SetColor(1.0, 0.0, 0.0)  # Red color
-        actor_x.GetProperty().SetLineWidth(5)
-
-        mapper_y = vtk.vtkPolyDataMapper()
-        mapper_y.SetInputConnection(line_y_source.GetOutputPort())
-        actor_y = vtk.vtkActor()
-        actor_y.SetMapper(mapper_y)
-        actor_y.GetProperty().SetColor(0.0, 1.0, 0.0)  # Green color
-        actor_y.GetProperty().SetLineWidth(5)
-
-        mapper_z = vtk.vtkPolyDataMapper()
-        mapper_z.SetInputConnection(line_z_source.GetOutputPort())
-        actor_z = vtk.vtkActor()
-        actor_z.SetMapper(mapper_z)
-        actor_z.GetProperty().SetColor(0.0, 0.0, 1.0)  # Blue color
-        actor_z.GetProperty().SetLineWidth(5)
-        
-        # Add the actors to the renderer
-        self.plotter_axis[item][1][0] = actor_x
-        self.plotter_axis[item][1][1] = actor_y
-        self.plotter_axis[item][1][2] = actor_z
-
-        self.renderer.AddActor(actor_x)
-        self.renderer.AddActor(actor_y)
-        self.renderer.AddActor(actor_z)
-        
-        # Initialize the transformation matrixes
-        self.plotter_axis[item][2] = np.eye(4)  # Matrix for transformations
-        self.plotter_axis[item][3] = np.eye(4)  # Another matrix (identity) 
-        
-        self.rendering() 
-    
-    def DeleteAxisPlotter(self):
-        for axis in self.plotter_axis:
-            for actor in axis[1]:
-                if actor:
-                    self.renderer.RemoveActor(actor)
-
-        # Clear the list to release memory
-        self.plotter_axis.clear()
-        
-        self.rendering() 
-         
-    def ChangePosAxis(self, item, pos):
-        self.plotter_axis[item][2][0][3] = float(pos[1])
-        self.plotter_axis[item][2][1][3] = float(pos[2])
-        self.plotter_axis[item][2][2][3] = float(pos[3])
-
-        transform = vtk.vtkTransform()
-        transform.Translate(self.plotter_axis[item][2][0][3], self.plotter_axis[item][2][1][3], self.plotter_axis[item][2][2][3])
-
-        
-        self.plotter_axis[item][1][0].SetUserTransform(transform)
-        self.plotter_axis[item][1][1].SetUserTransform(transform)
-        self.plotter_axis[item][1][2].SetUserTransform(transform)
-
-        self.rendering()
-        
-
-                  
+           
     def SetCameraPlotter(self, view):
         self.camera.SetPosition(2000, -2000, 2000)
         self.camera.SetFocalPoint(0, 0, 0)

@@ -31,20 +31,25 @@ URL_HELP_PIN = "https://mikobots.com/mikobots-studio/help/tool/"
 URL_HELP_TOOL_FRAME = "https://mikobots.com/mikobots-studio/help/tool/setup-tool-frame/"
 URL_HELP_MODEL = "https://mikobots.com/mikobots-studio/help/tool/setup-3d-model/"
 
-class RobotTools(QWidget):
-    def __init__(self, frame):
-        super().__init__()
-        self.frame = frame
+class RobotTools:
+    def __init__(self, parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QGridLayout(self.parent_frame)
+
+        self.layout.setContentsMargins(3, 3, 3, 3)
+        self.layout.setSpacing(5)
                 
         self.Tools_robot_buttons = []
         self.stl_actor = None
-        
-        self.spacer_widget = None
+        self.frames = []
+
         self.plotter = None
         self.renderer = None
   
         self.GUI()
         self.subscribeToEvents()
+
+        self.parent_frame.setLayout(self.layout)
         
     def subscribeToEvents(self):
         event_manager.subscribe("request_create_buttons_tool", self.CreateButtons)
@@ -58,25 +63,21 @@ class RobotTools(QWidget):
         event_manager.subscribe("request_save_robot_tool", self.SaveRobot)
     
     def GUI(self):
-        self.main_layout = QGridLayout(self.frame)
-        self.main_layout.setContentsMargins(3, 3, 3, 3)
-        self.main_layout.setSpacing(5)
-
         # Frame with the stl files
-        title = QLabel("Tools:")
+        title = QLabel("Tools:", self.parent_frame)
         title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         title.setStyleSheet(style_label_bold)
         title.setFixedHeight(30)
-        self.main_layout.addWidget(title,0,0)
+        self.layout.addWidget(title,0,0)
         
         # create an area where the parts will be placed
-        scroll = QScrollArea()
+        scroll = QScrollArea(self.parent_frame)
         scroll.setStyleSheet(style_scrollarea)
         scroll.setWidgetResizable(True)
         scroll.setFixedWidth(330)
         scroll.setFixedHeight(300)
         
-        scroll_widget = QWidget()
+        scroll_widget = QWidget(scroll)
         scroll_widget.setStyleSheet(style_widget)
         self.layout_scroll = QVBoxLayout(scroll_widget)
         self.layout_scroll.setContentsMargins(0, 0, 0, 0)
@@ -84,22 +85,22 @@ class RobotTools(QWidget):
         self.layout_scroll.setAlignment(Qt.AlignTop)
         
         scroll.setWidget(scroll_widget)
-        self.main_layout.addWidget(scroll,1,0)    
+        self.layout.addWidget(scroll,1,0)    
         
         # create layout plotter
-        self.layout_plotter = QGridLayout()
+        self.layout_plotter = QGridLayout(self.parent_frame)
         frame_plotter = QFrame()
         frame_plotter.setFixedWidth(330)
-        self.main_layout.addWidget(frame_plotter, 2, 0)
+        self.layout.addWidget(frame_plotter, 2, 0)
         frame_plotter.setLayout(self.layout_plotter)
 
         # frame with change origin
         layout_options = QVBoxLayout()
         layout_options.setContentsMargins(0, 0, 0, 0)
         layout_options.setSpacing(0)
-        frame_options = QFrame()
+        frame_options = QFrame(self.parent_frame)
         frame_options.setFixedWidth(280)
-        self.main_layout.addWidget(frame_options,0,1,3,1)
+        self.layout.addWidget(frame_options,0,1,3,1)
         frame_options.setLayout(layout_options)     
 
         
@@ -157,7 +158,7 @@ class RobotTools(QWidget):
         # put everything on the left side of the screen
         spacer_widget = QWidget()
         spacer_widget.setStyleSheet(style_widget)
-        self.main_layout.addWidget(spacer_widget, 3, 0)
+        self.layout.addWidget(spacer_widget, 3, 0)
 
         
    
@@ -416,8 +417,10 @@ class RobotTools(QWidget):
 
     def open_plotter(self):
         if self.plotter is None:
+            print(" plottert")
             ## frame with the plotter
-            self.plotter = QVTKRenderWindowInteractor(self)
+            self.plotter = QVTKRenderWindowInteractor()
+            self.plotter.Initialize()
             self.plotter.setFixedHeight(200)
             self.plotter.setFixedWidth(330)
             
@@ -462,6 +465,7 @@ class RobotTools(QWidget):
         layout_tool.setContentsMargins(5,0,5,5)
         frame.setLayout(layout_tool)
         self.layout_scroll.addWidget(frame) 
+        self.frames.append(frame)
             
         label = QLabel(tool_data[item][0])
         label.setStyleSheet(style_label)
@@ -503,14 +507,13 @@ class RobotTools(QWidget):
             
     
     def DeleteButtons(self):
-        while self.layout_scroll.count():
-            item = self.layout_scroll.takeAt(0)  # Take the first item from the layout
-            widget = item.widget()   # If it's a widget, delete it
-            if widget is not None:
-                widget.deleteLater()  # This ensures the widget is properly deleted
-            else:
-                self.layout_scroll.removeItem(item)  # If it's not a widget, just remove it (e.g., a spacer item)
+        # for frame in self.frames:
+        #     self.layout_scroll.removeWidget(frame)
+        #     frame.deleteLater() 
+        #     frame = None
 
+        # self.frames = []
+        pass
 
     def ShowSettings(self, tool_settings): 
         if self.stl_actor == None:

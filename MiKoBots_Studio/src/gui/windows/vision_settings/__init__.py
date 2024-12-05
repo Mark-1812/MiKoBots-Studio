@@ -26,7 +26,7 @@ class VisionSettingsWindow(QWidget):
         self.CreateTabs()
         
         layout_menu = QGridLayout() 
-        menu_frame = QFrame()
+        menu_frame = QFrame(self)
         menu_frame.setStyleSheet(style_frame)
         menu_frame.setFixedWidth(150)
         menu_frame.setLayout(layout_menu)  
@@ -60,13 +60,13 @@ class VisionSettingsWindow(QWidget):
         
     def CreateTabs(self):
         self.show_frame_1 = 0
-        self.frame_1 = QFrame()
+        self.frame_1 = QFrame(self)
         self.frame_1.setStyleSheet(style_frame)
         self.layout.addWidget(self.frame_1, 0, 1)
         self.RobotOverview = VisionSetup(self.frame_1)
         
         self.show_frame_2 = 0
-        self.frame_2 = QFrame()
+        self.frame_2 = QFrame(self)
         self.frame_2.setStyleSheet(style_frame)
         self.layout.addWidget(self.frame_2, 0, 1)
         self.frame_2.hide()

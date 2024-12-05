@@ -23,7 +23,7 @@ from backend.simulation.robot import change_pos_robot, add_tool_sim, delete_tool
 
 from backend.run_program import run_single_line
 
-class ToolManagment(QObject):
+class ToolManagment:
     def __init__(self):
         super().__init__()
         self.InverseKinematics_6 = InverseKinmatics_6()

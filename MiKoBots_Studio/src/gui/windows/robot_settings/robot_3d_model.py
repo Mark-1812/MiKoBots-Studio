@@ -22,10 +22,13 @@ from backend.robot_management  import save_robot
 
 
 
-class Robot3DModel(QWidget): 
-    def __init__(self, frame):
-        super().__init__()
-        self.frame = frame
+class Robot3DModel: 
+    def __init__(self, parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QGridLayout(self.parent_frame)
+
+
+        self.layout.setContentsMargins(3, 3, 3, 3)
                 
         self.Robot_buttons = []
         
@@ -34,9 +37,12 @@ class Robot3DModel(QWidget):
         self.stl_actor = None
         self.plotter = None
         self.renderer = None
+        self.frames = []
         
         self.GUI()
         self.subscribeToEvents()
+
+        self.parent_frame.setLayout(self.layout)
         
     def subscribeToEvents(self):
         event_manager.subscribe("request_delete_buttons_3d_model", self.DeleteButtons)
@@ -47,24 +53,21 @@ class Robot3DModel(QWidget):
         event_manager.subscribe("request_get_origin_3d_model", self.GetOriginData)
     
     def GUI(self):
-        self.main_layout = QGridLayout(self.frame)
-        self.main_layout.setContentsMargins(3, 3, 3, 3)
-
         # Frame with the stl files
-        title = QLabel("3D files:")
+        title = QLabel("3D files:", self.parent_frame)
         title.setStyleSheet(style_label_bold)
         title.setFixedHeight(30)
         title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-        self.main_layout.addWidget(title,0,0)
+        self.layout.addWidget(title,0,0)
         
         
-        scroll = QScrollArea()
+        scroll = QScrollArea(self.parent_frame)
         scroll.setStyleSheet(style_scrollarea)
         scroll.setWidgetResizable(True)
         scroll.setFixedWidth(400)
         scroll.setFixedHeight(300)
         
-        scroll_widget = QWidget()
+        scroll_widget = QWidget(scroll)
         scroll_widget.setStyleSheet(style_widget)
         self.layout_scroll = QVBoxLayout(scroll_widget)
         self.layout_scroll.setContentsMargins(0, 0, 0, 0)
@@ -72,20 +75,20 @@ class Robot3DModel(QWidget):
         self.layout_scroll.setAlignment(Qt.AlignTop)
         
         scroll.setWidget(scroll_widget)
-        self.main_layout.addWidget(scroll,1,0)      
+        self.layout.addWidget(scroll,1,0)      
         
         # create layout plotter
         self.layout_plotter = QGridLayout()
         frame_plotter = QFrame()
         frame_plotter.setFixedWidth(400)
-        self.main_layout.addWidget(frame_plotter, 2, 0)
+        self.layout.addWidget(frame_plotter, 2, 0)
         frame_plotter.setLayout(self.layout_plotter)
         
         # frame with change origin
         layout_options = QGridLayout()
         frame_options = QFrame()
         frame_options.setMaximumWidth(250)
-        self.main_layout.addWidget(frame_options,0,1,3,1)
+        self.layout.addWidget(frame_options,0,1,3,1)
         frame_options.setLayout(layout_options)
         
         
@@ -140,8 +143,11 @@ class Robot3DModel(QWidget):
    
     def open_plotter(self):
         if self.plotter is None:
+            print(" plotter")
+
             ## frame with the plotter
-            self.plotter = QVTKRenderWindowInteractor(self)
+            self.plotter = QVTKRenderWindowInteractor()
+            self.plotter.Initialize()
             self.plotter.setFixedHeight(200)
             self.plotter.setFixedWidth(330)
             
@@ -207,12 +213,14 @@ class Robot3DModel(QWidget):
 
     def CreateButtons(self, item, robot_3d_data):
         self.Robot_buttons.append([[],[],[],[],[]])
+        
 
         frame = QFrame()
         layout_model = QHBoxLayout()
         layout_model.setContentsMargins(5,0,5,5)
         frame.setLayout(layout_model)
         self.layout_scroll.addWidget(frame) 
+        self.frames.append(frame)
             
         label = QLabel(robot_3d_data[item][0])
         label.setStyleSheet(style_label)
@@ -272,16 +280,18 @@ class Robot3DModel(QWidget):
         combo.currentIndexChanged.connect(lambda index, idx = item: on_linkage_change(idx))
         layout_model.addWidget(combo)
         self.Robot_buttons[item][4] = combo
+        pass
 
     def DeleteButtons(self):
-        while self.layout_scroll.count():
-            item = self.layout_scroll.takeAt(0)  # Take the first item from the layout
-            widget = item.widget()   # If it's a widget, delete it
-            if widget is not None:
-                widget.deleteLater()  # This ensures the widget is properly deleted
-            else:
-                self.layout_scroll.removeItem(item)  # If it's not a widget, just remove it (e.g., a spacer item)
+        # for frame in self.frames:
+        #     self.layout_scroll.removeWidget(frame)
+        #     frame.deleteLater() 
+        #     frame = None
 
+        # self.frames = []
+
+        pass
+    
     def SetOriginfields(self, data):
         for i in range(6):
             self.origin_pos[i].setText(str(data[i]))

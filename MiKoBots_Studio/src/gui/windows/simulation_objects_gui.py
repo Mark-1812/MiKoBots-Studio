@@ -260,8 +260,10 @@ class SimulationObjectsGUI(QWidget):
     # Create the plotter and load the list
     def openevent(self):
         if self.plotter is None:
+            print(" plottert")
             ## frame with the plotter
             self.plotter = QVTKRenderWindowInteractor(self)
+            self.plotter.Initialize()
             self.plotter.setFixedHeight(200)
             self.plotter.setFixedWidth(330)
             

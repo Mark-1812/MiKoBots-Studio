@@ -1,35 +1,44 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QComboBox
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QVBoxLayout, QLabel
 
-class MyWindow(QWidget):
+
+class ExtraWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("QComboBox Popup Width Adjustment")
-        self.setGeometry(100, 100, 300, 200)
+        self.setWindowTitle("Extra Window")
+        self.setGeometry(200, 200, 400, 300)
 
-        layout = QVBoxLayout(self)
+        # Set up layout
+        layout = QVBoxLayout()
+        label = QLabel("This is the extra window.")
+        layout.addWidget(label)
+        self.setLayout(layout)
 
-        # Create a QComboBox with items
-        self.combo_box = QComboBox(self)
-        self.combo_box.addItems([
-            "Short", 
-            "A bit longer text", 
-            "Much longer text that won't fit initially"
-        ])
-        self.combo_box.setMaximumWidth(100)
-        layout.addWidget(self.combo_box)
 
-        # Adjust popup width to fit contents
-        self.combo_box.view().setMinimumWidth(self.get_popup_width())
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Main Window")
+        self.setGeometry(100, 100, 600, 400)
 
-    def get_popup_width(self):
-        # Calculate the width needed for the longest item
-        font_metrics = self.combo_box.fontMetrics()
-        longest_item = max([font_metrics.width(self.combo_box.itemText(i)) for i in range(self.combo_box.count())])
-        # Add some padding for aesthetics
-        return longest_item + 20
+        # Button to open extra window
+        self.button = QPushButton("Open Extra Window")
+        self.button.clicked.connect(self.open_extra_window)
 
-# Create and run the application
-app = QApplication([])
-window = MyWindow()
-window.show()
-app.exec_()
+        # Set the central widget
+        self.setCentralWidget(self.button)
+
+        # Keep a reference to the extra window to avoid garbage collection
+        self.extra_window = None
+
+    def open_extra_window(self):
+        if self.extra_window is None:
+            self.extra_window = ExtraWindow()
+        self.extra_window.show()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    main_window = MainWindow()
+    main_window.show()
+    sys.exit(app.exec_())

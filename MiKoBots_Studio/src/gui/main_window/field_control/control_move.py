@@ -15,10 +15,12 @@ from backend.robot_management import send_pos_robot
 from backend.simulation import check_simulation_on
 from backend.run_program import run_single_line
 
-class ControlMove(QWidget):
-    def __init__(self, frame, parent = None):
-        super().__init__(parent)
-        self.layout = QGridLayout(frame)
+class ControlMove:
+    def __init__(self, parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QGridLayout(self.parent_frame)
+
+
         self.layout.setContentsMargins(5, 3, 5, 3)
         self.layout.setSpacing(5)
 
@@ -26,6 +28,8 @@ class ControlMove(QWidget):
 
         self.frameMove()
         self.subscribeToEvents()
+
+        self.parent_frame.setLayout(self.layout) 
            
     def subscribeToEvents(self):       
         event_manager.subscribe("request_create_buttons_move", self.CreateButtonsMove)
@@ -39,20 +43,20 @@ class ControlMove(QWidget):
         self.layout.addWidget(self.title, 0, 0)
  
         # create a scroll area
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setStyleSheet(style_scrollarea)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area = QScrollArea(self.parent_frame)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet(style_scrollarea)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         
-        scroll_widget = QWidget()
-        scroll_widget.setStyleSheet(style_widget)
-        self.layout_scroll = QVBoxLayout(scroll_widget)
+        self.scroll_widget = QWidget(scroll_area)
+        self.scroll_widget.setStyleSheet(style_widget)
+        self.layout_scroll = QVBoxLayout(self.scroll_widget)
         self.layout_scroll.setContentsMargins(0, 0, 0, 0)
         self.layout_scroll.setSpacing(0)
         self.layout_scroll.setAlignment(Qt.AlignTop)
         
-        scroll.setWidget(scroll_widget)
-        self.layout.addWidget(scroll, 3, 0) 
+        scroll_area.setWidget(self.scroll_widget)
+        self.layout.addWidget(scroll_area, 3, 0) 
          
         
         button = QPushButton("Go to pos")
@@ -72,23 +76,24 @@ class ControlMove(QWidget):
         self.name_joint = name_joint
         self.name_axis = name_axis
         self.nr_of_joints = nr
+        self.frames = []
 
         for i in range(self.nr_of_joints):
-            frame = QFrame()
+            frame = QWidget(self.scroll_widget)
             layout_move = QHBoxLayout()
             layout_move.setContentsMargins(5,0,5,5)
             frame.setLayout(layout_move)
             self.layout_scroll.addWidget(frame) 
+            self.frames.append(frame)
 
-
-            label = QLabel(f"{self.name_axis[i]}:", self)
+            label = QLabel(f"{self.name_axis[i]}:")
             label.setStyleSheet(style_label)
             label.setMaximumWidth(20)
             
             validator = QDoubleValidator()
             validator.setNotation(QDoubleValidator.StandardNotation)
             
-            entry = QLineEdit(self)
+            entry = QLineEdit()
             entry.setMaximumWidth(40)
             entry.setStyleSheet(style_entry)
             entry.setValidator(validator)
@@ -100,13 +105,10 @@ class ControlMove(QWidget):
             layout_move.addWidget(entry)
 
     def DeleteButtonsMove(self):
-        while self.layout_scroll.count():
-            item = self.layout_scroll.takeAt(0)  # Take the first item from the layout
-            widget = item.widget()   # If it's a widget, delete it
-            if widget is not None:
-                widget.deleteLater()  # This ensures the widget is properly deleted
-            else:
-                self.layout_scroll.removeItem(item)  # If it's not a widget, just remove it (e.g., a spacer item)
+        for frame in self.frames:
+            self.layout_scroll.removeWidget(frame)
+            frame.deleteLater() 
+            frame = None
  
     def SwitchJointAxis(self, state):
         if state:

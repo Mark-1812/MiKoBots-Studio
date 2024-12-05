@@ -1,10 +1,12 @@
 import numpy as np
 import vtk
+from PyQt5.QtCore import QObject
 
 
 
-class RobotSimulation():
+class RobotSimulation(QObject):
     def __init__(self):
+        super().__init__()     
         self.renderer = None
         self.plotter = None
         self.interactor = None
@@ -47,7 +49,7 @@ class RobotSimulation():
         self.plotter_robot[item][0] = vtk.vtkActor()
         self.plotter_robot[item][0].SetMapper(mapper)
         self.plotter_robot[item][0].GetProperty().SetColor(color)
-        self.plotter_robot[item][1] = self.renderer.AddActor(self.plotter_robot[item][0])#, data[1], show_edges=False)
+        self.plotter_robot[item][1] = self.renderer.AddActor(self.plotter_robot[item][0])
         self.plotter_robot[item][2] = data[2]
         self.plotter_robot[item][3] = data[3]  
         self.plotter_robot[item][4] = data[4] 

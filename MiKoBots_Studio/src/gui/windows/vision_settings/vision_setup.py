@@ -11,11 +11,15 @@ from backend.vision import show_square, change_size_square, cam_tool_connected
 
 from gui.windows.message_boxes import ErrorMessage
 
-class VisionSetup(QWidget):
-    def __init__(self, frame):     
-        super().__init__()  
-        self.frame = frame
-        self.layout = QVBoxLayout(self.frame)
+class VisionSetup:
+    def __init__(self, parent_frame: QFrame):
+        self.parent_frame = parent_frame
+
+        if not self.parent_frame.layout():
+            self.layout = QVBoxLayout(self.parent_frame)
+        else:
+            self.layout = self.parent_frame.layout()
+
         self.layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         
         self.image_HSV = None

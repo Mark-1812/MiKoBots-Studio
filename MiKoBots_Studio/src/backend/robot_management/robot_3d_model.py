@@ -16,19 +16,23 @@ import numpy as np
 
 
 
-class Robot3dModel(QObject):
+class Robot3dModel:
     def __init__(self):
         super().__init__()
         self.file_management = FileManagement()
         self.model_3d_item = None
 
     def setup(self):
+        print("request_delete_buttons_3d_model")
         event_manager.publish("request_delete_buttons_3d_model")
+        print("request_clear_plotter_3d_model")
         event_manager.publish("request_clear_plotter_3d_model")
         
         for i in range(len(var.ROBOT3D)):
+            print("request_create_buttons_3d_model")
             event_manager.publish("request_create_buttons_3d_model", i, var.ROBOT3D)  
 
+        print("end")
 
     def AddNewModel(self, robot, robot_name):
         # Select a new file with Qfiledialog

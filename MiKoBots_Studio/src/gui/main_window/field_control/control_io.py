@@ -8,15 +8,18 @@ from gui.style import *
 from backend.core.event_manager import event_manager
 
 
-class ControlIO(QWidget):
-    def __init__(self, frame):
-        self.layout = QGridLayout(frame)
+class ControlIO:
+    def __init__(self, parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QGridLayout(self.parent_frame)
         self.layout.setContentsMargins(5, 3, 5, 3)
 
         self.simulation = False
 
         self.FrameIo()
         self.subscribeToEvents()
+
+        self.parent_frame.setLayout(self.layout)
            
     def subscribeToEvents(self):
         event_manager.subscribe("request_check_io_state", self.CheckIOState)
@@ -25,7 +28,7 @@ class ControlIO(QWidget):
 
     # Frame IO 
     def FrameIo(self):
-        self.title = QLabel("IO")
+        self.title = QLabel("IO", self.parent_frame)
         self.title.setStyleSheet(style_label_title)
         self.title.setMaximumHeight(20)
         self.title.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
@@ -37,7 +40,7 @@ class ControlIO(QWidget):
         scroll.setStyleSheet(style_scrollarea)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         
-        scroll_widget = QWidget()
+        scroll_widget = QWidget(self.parent_frame)
         scroll_widget.setStyleSheet(style_widget)
         scroll_layout = QGridLayout(scroll_widget) 
         scroll_layout.setContentsMargins(0, 0, 0, 0)

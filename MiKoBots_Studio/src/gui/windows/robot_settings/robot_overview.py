@@ -15,14 +15,17 @@ from backend.robot_management  import import_robot
 from backend.robot_management  import delete_robot
 from backend.robot_management  import create_new_robot
 
-class RobotOverview(QWidget):   
-    def __init__(self, frame):
-        super().__init__()
-        self.frame = frame        
+class RobotOverview:   
+    def __init__(self, parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QGridLayout(self.parent_frame)
+
         self.Robots_buttons = []
         
         self.GUI()
         self.subscribeToEvents()
+
+        self.parent_frame.setLayout(self.layout)
         
     def subscribeToEvents(self):
         event_manager.subscribe("request_robot_buttons", self.CreateButtons)
@@ -32,12 +35,10 @@ class RobotOverview(QWidget):
         event_manager.subscribe("request_change_robot_name", self.ChangeRobotName)
 
     def GUI(self):
-        main_layout = QGridLayout(self.frame)
-
         title = QLabel("Robots:")
         title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
         title.setStyleSheet(style_label_bold)
-        main_layout.addWidget(title,0,0)
+        self.layout.addWidget(title,0,0)
 
         scroll = QScrollArea()
         scroll.setStyleSheet(style_scrollarea)
@@ -53,7 +54,7 @@ class RobotOverview(QWidget):
         self.layout_scroll.setAlignment(Qt.AlignTop)
 
         scroll.setWidget(scroll_widget)
-        main_layout.addWidget(scroll, 1, 0) 
+        self.layout.addWidget(scroll, 1, 0) 
         
         ## Create a frame for the buttons
         frame = QFrame()
@@ -62,7 +63,7 @@ class RobotOverview(QWidget):
         layout_buttons.setAlignment(Qt.AlignTop)
 
         frame.setMaximumWidth(250)
-        main_layout.addWidget(frame, 0, 1, 2, 1)
+        self.layout.addWidget(frame, 0, 1, 2, 1)
         frame.setLayout(layout_buttons)
         
         button = QPushButton("Add new robot")
@@ -96,7 +97,7 @@ class RobotOverview(QWidget):
         layout_buttons.addWidget(button)
  
         space_widget = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        main_layout.addItem(space_widget, 2, 0, 1, 2)      
+        self.layout.addItem(space_widget, 2, 0, 1, 2)      
         
         
     def ChangeRobotName(self, selected_robot, name):

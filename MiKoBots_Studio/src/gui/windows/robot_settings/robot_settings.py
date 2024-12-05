@@ -17,10 +17,11 @@ URL_HELP_JOINT_DIR = "https://mikobots.com/mikobots-studio/help/robot/robot-sett
 URL_HELP_DH_PARAM = "https://mikobots.com/mikobots-studio/help/robot/robot-settings/set-dh-parameters/"
 URL_HOME_ORDER = "https://mikobots.com/mikobots-studio/help/robot/robot-settings/homing-order/"
 
-class RobotSettings(QWidget):
-    def __init__(self, frame):
-        super().__init__()
-        self.frame = frame
+class RobotSettings:
+    def __init__(self,  parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QVBoxLayout(self.parent_frame)
+
         
         self.settings_name = [
             'Set_robot_name','Set_number_of_joints','Set_extra_joint','Set_motor_pin', 'Set_switch_pin', 'Set_tools', 
@@ -33,6 +34,8 @@ class RobotSettings(QWidget):
      
         self.GUI()
         self.subscribeToEvents()
+
+        self.parent_frame.setLayout(self.layout)
         
     def subscribeToEvents(self):
         event_manager.subscribe("request_set_robot_settings", self.LoadSettings)
@@ -102,24 +105,21 @@ class RobotSettings(QWidget):
             self.settings[i].DeleteFields()
     
     def GUI(self):
-        main_layout = QVBoxLayout(self.frame)
-
         # create a scroll area
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setStyleSheet(style_scrollarea)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area = QScrollArea(self.parent_frame)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet(style_scrollarea)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         
-        
-        scroll_widget = QWidget()
+        scroll_widget = QWidget(scroll_area)
         scroll_widget.setStyleSheet(style_widget)
         layout_scroll = QVBoxLayout(scroll_widget)
         layout_scroll.setContentsMargins(0, 0, 0, 0)
         layout_scroll.setSpacing(0)
         layout_scroll.setAlignment(Qt.AlignTop)
         
-        scroll.setWidget(scroll_widget)
-        main_layout.addWidget(scroll) 
+        scroll_area.setWidget(scroll_widget)
+        self.layout.addWidget(scroll_area) 
 
     
         
@@ -169,123 +169,98 @@ class RobotSettings(QWidget):
         
         
         ### settings
-        frame = QFrame()
+        frame = QWidget()
         frame.setMaximumWidth(300)
         layout_scroll.addWidget(frame)
-        layout_motor_pin = QGridLayout()
-        frame.setLayout(layout_motor_pin)
-        
         
         setting_names = ["PUL pin J1: ","DIR pin J1: ","PUL pin J2: ","DIR pin J2: ", "PUL pin J3: ","DIR pin J3: ",
                     "PUL pin J4: ","DIR pin J4: ", "PUL pin J5: ","DIR pin J5: ", "PUL pin J6: ","DIR pin J6: "]
-        self.settings.append(CreateFields(layout_motor_pin, rows=12, columns=1, row_names=setting_names, title="<b>Motor pin<b>", url = URL_HELP_PINS, times_nr_joints=2))
- 
-        spacer_widget = QWidget()
-        layout_motor_pin.addWidget(spacer_widget, layout_motor_pin.rowCount(), 0, 1, layout_motor_pin.columnCount())
- 
+        self.settings.append(CreateFields(frame, rows=12, columns=1, row_names=setting_names, title="<b>Motor pin<b>", url = URL_HELP_PINS, times_nr_joints=2))
        
-        frame = QFrame()
+        frame = QWidget()
         frame.setMaximumWidth(300)
-        layout_scroll.addWidget(frame)
-        layout_switch_pin = QGridLayout()
-        frame.setLayout(layout_switch_pin)        
+        layout_scroll.addWidget(frame)       
  
         setting_names = ["S1 pin: ","S2 pin: ","S3 pin: ","S4 pin: ","S5 pin: ","S6 pin: "]
-        self.settings.append(CreateFields(layout_switch_pin, rows=6, columns=1, row_names=setting_names, title="<b>Switch pin<b>", url = URL_HELP_PINS,  times_nr_joints=1))
+        self.settings.append(CreateFields(frame, rows=6, columns=1, row_names=setting_names, title="<b>Switch pin<b>", url = URL_HELP_PINS,  times_nr_joints=1))
        
-        frame = QFrame()
+        frame = QWidget()
         frame.setMaximumWidth(300)
-        layout_scroll.addWidget(frame)
-        layout_tool_pin = QGridLayout()
-        frame.setLayout(layout_tool_pin)   
+        layout_scroll.addWidget(frame) 
 
         setting_names = ["Tool 1: ","Tool 2: ","Tool 3: ","Tool 4: ", "Tool 5: "]
-        self.settings.append(CreateFields(layout_tool_pin, rows=5, columns=1, row_names=setting_names, title="<b>Tool pin<b>", url = URL_HELP_PINS, CheckBoxPin=True))
+        self.settings.append(CreateFields(frame, rows=5, columns=1, row_names=setting_names, title="<b>Tool pin<b>", url = URL_HELP_PINS, CheckBoxPin=True))
 
-        frame = QFrame()
+        frame = QWidget()
         frame.setMaximumWidth(300)
-        layout_scroll.addWidget(frame)
-        layout_io_pin = QGridLayout()
-        frame.setLayout(layout_io_pin)   
+        layout_scroll.addWidget(frame)   
         
         setting_names = ["IO 1: ","IO 2: ","IO 3: ","IO 4: ", "IO 5: ","IO 6: ","IO 7: ","IO 8: ","IO 9: ", "IO 10: "]
-        self.settings.append(CreateFields(layout_io_pin, rows=10, columns=1, row_names=setting_names, title="<b>IO pin<b>", url = URL_HELP_PINS, CheckBoxPin=True))
+        self.settings.append(CreateFields(frame, rows=10, columns=1, row_names=setting_names, title="<b>IO pin<b>", url = URL_HELP_PINS, CheckBoxPin=True))
            
-        frame = QFrame()
+        frame = QWidget()
         frame.setMaximumWidth(300)
         layout_scroll.addWidget(frame)
-        layout_max_movement = QGridLayout()
-        frame.setLayout(layout_max_movement)  
            
         setting_names = ["J1 min: ", "J1 max: ", "J2 min: ", "J2 max: ", "J3 min: ", "J3 max: ", 
                             "J4 min: ", "J4 max: ", "J5 min: ", "J5 max: ", "J6 min: ", "J6 max: ",]
-        self.settings.append(CreateFields(layout_max_movement, rows=12, columns=1, row_names=setting_names, title="<b>Max movement joints<b>", url = URL_HELP_MAX_MOVE, times_nr_joints=2))
+        self.settings.append(CreateFields(frame, rows=12, columns=1, row_names=setting_names, title="<b>Max movement joints<b>", url = URL_HELP_MAX_MOVE, times_nr_joints=2))
 
-        frame = QFrame()
+        frame = QWidget()
         frame.setMaximumWidth(300)
         layout_scroll.addWidget(frame)
-        layout_pos_switch = QGridLayout()
-        frame.setLayout(layout_pos_switch)  
         
         setting_names = ["Pos S1: ", "Pos S2: ", "Pos S3: ", "Pos S4: ", "Pos S5: ", "Pos S6: "]
-        self.settings.append(CreateFields(layout_pos_switch, rows=6, columns=1, row_names=setting_names, title="<b>Posistion switch<b>", url = URL_HELP_LIM_POS, times_nr_joints=1))
+        self.settings.append(CreateFields(frame, rows=6, columns=1, row_names=setting_names, title="<b>Posistion switch<b>", url = URL_HELP_LIM_POS, times_nr_joints=1))
 
-        frame = QFrame()
+        frame = QWidget()
         frame.setMaximumWidth(300)
         layout_scroll.addWidget(frame)
-        layout_step_deg = QGridLayout()
-        frame.setLayout(layout_step_deg)
         
         setting_names = ["step_deg_J1: ", "step_deg_J2: ", "step_deg_J3: ", "step_deg_J4: ", "step_deg_J5: ", "step_deg_J6: "]
-        self.settings.append(CreateFields(layout_step_deg, rows=6, columns=1, row_names=setting_names, title="<b>step deg<b>", url = URL_HELP_STEPS_SPEED, times_nr_joints=1))
+        self.settings.append(CreateFields(frame, rows=6, columns=1, row_names=setting_names, title="<b>step deg<b>", url = URL_HELP_STEPS_SPEED, times_nr_joints=1))
 
-        frame = QFrame()
+        frame = QWidget()
         frame.setMaximumWidth(300)
-        layout_scroll.addWidget(frame)
-        layout_dir_joint = QGridLayout()
-        frame.setLayout(layout_dir_joint)          
+        layout_scroll.addWidget(frame)       
                 
         setting_names = ["Direction J1: ", "Direction J2: ", "Direction J3: ", "Direction J4: ", "Direction J5: ", "Direction J6: ",]
-        self.settings.append(CreateFields(layout_dir_joint, rows=6, columns=1, row_names=setting_names, title="direction of the joints<b>", url = URL_HELP_JOINT_DIR, times_nr_joints=1))
+        self.settings.append(CreateFields(frame, rows=6, columns=1, row_names=setting_names, title="direction of the joints<b>", url = URL_HELP_JOINT_DIR, times_nr_joints=1))
          
-        frame = QFrame()
+        frame = QWidget()
         frame.setMaximumWidth(300)
         layout_scroll.addWidget(frame)
-        layout_max_speed = QGridLayout()
-        frame.setLayout(layout_max_speed)  
                         
         setting_names = ["J1 max vel (deg/s)", "J1 max acc","J2 max vel (deg/s)", "J2 max acc","J3 max vel (deg/s)", "J3 max acc",
                                  "J4 max vel (deg/s)", "J4 max acc","J5 max vel (deg/s)", "J5 max acc","J6 max vel (deg/s)", "J6 max acc",]
-        self.settings.append(CreateFields(layout_max_speed, rows=12, columns=1, row_names=setting_names, title="max speed/ acceleration", url = URL_HELP_STEPS_SPEED, times_nr_joints=2))
+        self.settings.append(CreateFields(frame, rows=12, columns=1, row_names=setting_names, title="max speed/ acceleration", url = URL_HELP_STEPS_SPEED, times_nr_joints=2))
                    
-        frame = QFrame()
+        frame = QWidget()
         frame.setMaximumWidth(300)
         layout_scroll.addWidget(frame)
-        layout_home = QGridLayout()
-        frame.setLayout(layout_home)  
                         
         setting_names = ["Joint 1","Move to","Joint 2","Move to","Joint 3","Move to","Joint 4","Move to","Joint 5","Move to","Joint 6","Move to"] 
-        self.settings.append(CreateFields(layout_home, rows=12, columns=1, row_names=setting_names, title="<b>Homing order<b>", url = URL_HOME_ORDER, times_nr_joints=2))
+        self.settings.append(CreateFields(frame, rows=12, columns=1, row_names=setting_names, title="<b>Homing order<b>", url = URL_HOME_ORDER, times_nr_joints=2))
                        
                      
-        frame = QFrame()
+        frame = QWidget()
         frame.setMaximumWidth(600)
         layout_scroll.addWidget(frame)
-        layout_dh_param = QGridLayout()
-        frame.setLayout(layout_dh_param)  
                         
         setting_names_Y = ["Joint 1","Joint 2","Joint 3","Joint 4","Joint 5","Joint 6","Joint 7"] 
         setting_names_X = ["a", "alfpa", "d", "delta"]
-        self.settings.append(CreateFields(layout_dh_param, rows=6, columns=4, row_names=setting_names_Y, title="<b>DH - parameters<b>", url = URL_HELP_DH_PARAM, column_names=setting_names_X, times_nr_joints=1))
+        self.settings.append(CreateFields(frame, rows=6, columns=4, row_names=setting_names_Y, title="<b>DH - parameters<b>", url = URL_HELP_DH_PARAM, column_names=setting_names_X, times_nr_joints=1))
 
                           
         
 
 
     
-class CreateFields():
-    def __init__ (self, layout, rows, columns, row_names,  title, url=None ,column_names=None, CheckBoxPin=None, times_nr_joints=None):
-        self.layout = layout
+class CreateFields:
+    def __init__ (self, parent_frame: QWidget, rows, columns, row_names,  title, url=None ,column_names=None, CheckBoxPin=None, times_nr_joints=None):
+        self.parent_frame = parent_frame
+        self.layout = QGridLayout(self.parent_frame)
+
         self.title = title
         self.rows = rows
         self.columns = columns
@@ -304,7 +279,7 @@ class CreateFields():
         self.IOCheckBox = False
 
         if title != "":
-            frame = QFrame()
+            frame = QWidget(self.parent_frame)
             layout_title = QHBoxLayout()
             frame.setLayout(layout_title)
             self.layout.addWidget(frame, 0, 0, 1, 2)
@@ -326,8 +301,9 @@ class CreateFields():
                 self.checkbox.setChecked(False)  # Set the initial state of the checkbox
                 layout_title.addWidget(self.checkbox)
                 
-                
-            self.row_index += 1             
+            self.row_index += 1     
+
+        self.parent_frame.setLayout(self.layout)        
 
     def get_values(self):
         # Retrieve values from entry boxes

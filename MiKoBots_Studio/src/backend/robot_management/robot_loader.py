@@ -1,4 +1,3 @@
-from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QFileDialog
 
 import json
@@ -22,7 +21,7 @@ from gui.windows.message_boxes import InfoMessage, ErrorMessage, WarningMessageR
 
 from backend.simulation.robot import add_robot_sim, change_pos_robot, delete_robot_sim
 
-class RobotLoader(QObject):
+class RobotLoader:
 
     def __init__(self):
         super().__init__()
@@ -75,11 +74,12 @@ class RobotLoader(QObject):
             
     def CloseCurrentRobot(self):
         delete_robot_sim()
-        
+        print("delete buttons")
         event_manager.publish("request_delete_buttons_joint")
         event_manager.publish("request_delete_buttons_axis")
         event_manager.publish("request_delete_buttons_move")
         event_manager.publish("request_delete_settings_fields")
+        print("end deleting")
         
     def CreateNewButtons(self):
         event_manager.publish("request_create_buttons_joint", var.NUMBER_OF_JOINTS)

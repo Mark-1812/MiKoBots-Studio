@@ -18,8 +18,8 @@ from gui.windows.message_boxes import WarningMessageRe
 
 import backend.core.variables as var
 
-class SimulationObjectWindow(QObject):
-    def __init__(self):
+class SimulationObjectWindow:
+    def __init__(self):  
         self.file_management = FileManagement()
         self.pos_onject_nt = None
         self.origin_object_nr = None
@@ -35,6 +35,10 @@ class SimulationObjectWindow(QObject):
         self.renderer = renderer
         self.plotter = plotter
         self.interactor = interactor
+
+        print(f"self.renderer {self.renderer}")
+        print(f"self.plotter {self.plotter}")
+        print(f"self.interactor {self.interactor}")
   
     def AddNewObjectModel(self):
         # Select a new file with Qfiledialog

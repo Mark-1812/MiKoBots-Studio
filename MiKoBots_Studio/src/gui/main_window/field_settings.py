@@ -17,16 +17,17 @@ from gui.windows.vision import VisionWindow
 from gui.windows.vision_settings import VisionSettingsWindow
 from gui.windows.xbox import XBoxWindow
 
-class SettingsField(QWidget):
-    def __init__(self, frame):
-        super().__init__()
+class SettingsField:
+    def __init__(self, parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QGridLayout(self.parent_frame)
+        self.layout.setSpacing(5)
+
         self.RobotWindow = RobotWindow()
         self.VisionWindow = VisionWindow()
         self.VisionSettingsWindow = VisionSettingsWindow()
         self.file_management = FileManagement()
         self.XboxWindow = XBoxWindow()
-        
-        self.frame = frame
    
         self.GUI()
         self.subscribeToEvents()
@@ -51,14 +52,10 @@ class SettingsField(QWidget):
         
                 
     def GUI(self):
-        layout = QGridLayout(self.frame)
-        layout.setSpacing(5)
-
-        
         title = QLabel("Settings")
         title.setStyleSheet(style_label_title)
         title.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        layout.addWidget(title, 0,0)
+        self.layout.addWidget(title, 0,0)
         
         validator = QDoubleValidator()
         validator.setNotation(QDoubleValidator.StandardNotation)
@@ -69,7 +66,7 @@ class SettingsField(QWidget):
         layout_robot.setAlignment(Qt.AlignLeft)
         layout_robot.setSpacing(5)
         frame.setLayout(layout_robot)
-        layout.addWidget(frame, 1, 0) 
+        self.layout.addWidget(frame, 1, 0) 
             
         self.combo_robot = QComboBox()
         self.combo_robot.currentIndexChanged.connect(lambda index: change_robot(index))
@@ -78,7 +75,7 @@ class SettingsField(QWidget):
         layout_robot.addWidget(self.combo_robot)
         
         image_path = self.file_management.resource_path('settings.png')
-        self.button_settings_robot = QPushButton(self)
+        self.button_settings_robot = QPushButton()
         self.button_settings_robot.setToolTip('Settings robot')  
         self.button_settings_robot.setFixedSize(20,20)
         self.button_settings_robot.setIcon(QIcon(image_path))
@@ -104,14 +101,14 @@ class SettingsField(QWidget):
         layout_vision.setAlignment(Qt.AlignLeft)
         layout_vision.setSpacing(5)
         frame.setLayout(layout_vision)
-        layout.addWidget(frame, 2, 0) 
+        self.layout.addWidget(frame, 2, 0) 
 
         label = QLabel("Vision")
         label.setStyleSheet(style_label)
         layout_vision.addWidget(label)
 
         image_path = self.file_management.resource_path('settings.png')
-        button = QPushButton(self)
+        button = QPushButton()
         button.setToolTip('Settings vision')  
         button.setFixedSize(20,20)
         button.setIcon(QIcon(image_path))
@@ -136,7 +133,7 @@ class SettingsField(QWidget):
         layout_controller.setAlignment(Qt.AlignLeft)
         layout_controller.setSpacing(5)
         frame.setLayout(layout_controller)
-        layout.addWidget(frame, 3, 0) 
+        self.layout.addWidget(frame, 3, 0) 
 
         image_path = self.file_management.resource_path('controller.png')
         self.controller_button = QPushButton()
@@ -165,7 +162,7 @@ class SettingsField(QWidget):
 
         spacer_widget = QWidget()
         spacer_widget.setStyleSheet(style_widget)
-        layout.addWidget(spacer_widget, 0, 1, 3, 1)
+        self.layout.addWidget(spacer_widget, 0, 1, 3, 1)
 
 
         
@@ -174,7 +171,7 @@ class SettingsField(QWidget):
         layout_sliders = QVBoxLayout()
         layout_sliders.setSpacing(5)
         frame.setLayout(layout_sliders)
-        layout.addWidget(frame, 0, 2, 3, 1)
+        self.layout.addWidget(frame, 0, 2, 3, 1)
 
         self.slider_speed = SettingSlider(layout_sliders, 150, "Jog speed") 
         self.slider_accel = SettingSlider(layout_sliders, 150, "Jog accel")

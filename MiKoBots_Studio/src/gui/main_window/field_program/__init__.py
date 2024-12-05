@@ -60,9 +60,8 @@ class ProgramField(QWidget):
         self.h_layout.setContentsMargins(0, 0, 1, 2)  # Set margins to zero
         self.h_layout.setSpacing(0)  # Set spacing to zer 
 
-        self.frame = QFrame()
+        self.frame = QWidget()
         self.frame.setStyleSheet(style_frame)
-        self.frame.setFrameStyle(QFrame.NoFrame)
         self.frame.setLayout(self.h_layout)
 
         # Create line numbers text area (non-editable)

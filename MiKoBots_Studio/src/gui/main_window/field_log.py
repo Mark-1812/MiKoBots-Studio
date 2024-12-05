@@ -12,36 +12,34 @@ from datetime import datetime
 
 from gui.style import *
    
-class LogField(QWidget):
+class LogField:
     log_signal = pyqtSignal(str)
-    
-    def __init__(self, frame):
-        super().__init__()
+    def __init__(self, parent_frame: QWidget):
+        self.parent_frame = parent_frame
+        self.layout = QGridLayout(self.parent_frame)
         
-        frame_layout = QGridLayout()
-        frame.setLayout(frame_layout)
-        
-        self.FrameLog(frame_layout) 
-        
-        self.subscribeToEvents()   
+        self.FrameLog() 
+        self.subscribeToEvents()  
+
+        self.parent_frame.setLayout(self.layout)
         
     def subscribeToEvents(self):
         event_manager.subscribe("request_insert_new_log", self.InsertLog)        
     
-    def FrameLog(self, layout):       
+    def FrameLog(self):       
         title = QtWidgets.QLabel("Log")
         title.setStyleSheet(style_label_title)
         title.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-        layout.addWidget(title, 0, 0, 1, 2)
+        self.layout.addWidget(title, 0, 0, 1, 2)
         
         self.LOG_TEXT_WIDGET = QTextEdit()
         self.LOG_TEXT_WIDGET.setReadOnly(True)
         self.LOG_TEXT_WIDGET.setStyleSheet(style_textedit)
-        layout.addWidget(self.LOG_TEXT_WIDGET, 1,0)
+        self.layout.addWidget(self.LOG_TEXT_WIDGET, 1,0)
         self.highlighter = HighlightText(self.LOG_TEXT_WIDGET.document())
         
         self.log_text_scrollbar = QScrollBar()
-        layout.addWidget(self.log_text_scrollbar, 1,1)
+        self.layout.addWidget(self.log_text_scrollbar, 1,1)
 
         self.LOG_TEXT_WIDGET.setVerticalScrollBar(self.log_text_scrollbar)
         
