@@ -1,0 +1,23 @@
+# Ignore Python bytecode files
+*.pyc
+__pycache__/
+
+main.spec
+setup.py
+
+dist/
+Output/
+build/
+program/
+myenv/
+vscode/
+.vscode/
+venvmac/
+.venvmac/
+venvlaptop/
+.venvlaptop/
+venv/
+.venv/
+
+
+.DS_Store
