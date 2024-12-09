@@ -1,12 +1,11 @@
 from PyQt5.QtWidgets import QPushButton, QLabel, QSizePolicy, QLineEdit, QMessageBox, QTabWidget, QWidget, QRadioButton, QGridLayout, QScrollArea, QVBoxLayout, QFrame, QComboBox, QFileDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_image_path
 
 def WarningMessageRe(text, text_info = None):
     msg = QMessageBox()
-    file_management = FileManagement()
-    image_path = file_management.resource_path('mikobot.ico')
+    image_path = get_image_path('mikobot.ico')
     msg.setWindowIcon(QIcon(image_path))
         
     msg.setIcon(QMessageBox.Warning)
@@ -28,8 +27,7 @@ def WarningMessageRe(text, text_info = None):
     
 def InfoMessage(title, text, text_info = None):
     msg = QMessageBox()
-    file_management = FileManagement()
-    image_path = file_management.resource_path('mikobot.ico')
+    image_path = get_image_path('mikobot.ico')
     msg.setWindowIcon(QIcon(image_path))
     msg.setIcon(QMessageBox.Information)
     msg.setWindowTitle(title)
@@ -43,8 +41,7 @@ def InfoMessage(title, text, text_info = None):
 
 def ErrorMessage(text, text_info = None):
     msg = QMessageBox()
-    file_management = FileManagement()
-    image_path = file_management.resource_path('mikobot.ico')
+    image_path = get_image_path('mikobot.ico')
     msg.setWindowIcon(QIcon(image_path))
     msg.setIcon(QMessageBox.Critical)  # Set the icon to Critical for error messages
     msg.setWindowTitle("Error")  # Set the title of the dialog
@@ -56,8 +53,7 @@ def ErrorMessage(text, text_info = None):
 
 def SaveProgramMessage(text, text_info = None):
     msg = QMessageBox()
-    file_management = FileManagement()
-    image_path = file_management.resource_path('mikobot.ico')
+    image_path = get_image_path('mikobot.ico')
     msg.setWindowIcon(QIcon(image_path))
     msg.setIcon(QMessageBox.Critical)  # Set the icon to Critical for error messages
     msg.setWindowTitle("Save")  # Set the title of the dialog
@@ -75,8 +71,7 @@ def SaveProgramMessage(text, text_info = None):
 
 def CloseProgramMessage(title, text, text_info = None):
     msg_box = QMessageBox()
-    file_management = FileManagement()
-    image_path = file_management.resource_path('mikobot.ico')
+    image_path = get_image_path('mikobot.ico')
     msg_box.setWindowIcon(QIcon(image_path))
     msg_box.setText("Do you want to save the program?")
     msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)

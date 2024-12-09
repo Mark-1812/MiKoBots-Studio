@@ -30,34 +30,7 @@ extern int check_for_error();
 //CONSTRUCT DH MATRICES FORWARD KINEMATICS
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-void DH_Matrices_3() {
-
-  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    if (robot[i].PosJEnd == 0) {
-      robot[i].PosJEnd = .001;
-    }    
-  }
-
-  for(int i = 0; i < 4; i++){
-    JointMatrix[i][0][0] = cos(radians(robot[i].PosJEnd + DHparams[i][0]));
-    JointMatrix[i][0][1] = -sin(radians(robot[i].PosJEnd + DHparams[i][0])) * cos(radians(DHparams[i][1]));
-    JointMatrix[i][0][2] = sin(radians(robot[i].PosJEnd + DHparams[i][0])) * sin(radians(DHparams[i][1]));
-    JointMatrix[i][0][3] = DHparams[i][3] * cos(radians(robot[i].PosJEnd + DHparams[i][0]));
-    JointMatrix[i][1][0] = sin(radians(robot[i].PosJEnd + DHparams[i][0]));
-    JointMatrix[i][1][1] = cos(radians(robot[i].PosJEnd + DHparams[i][0])) * cos(radians(DHparams[i][1]));
-    JointMatrix[i][1][2] = -cos(radians(robot[i].PosJEnd + DHparams[i][0])) * sin(radians(DHparams[i][1]));
-    JointMatrix[i][1][3] = DHparams[i][3] * sin(radians(robot[i].PosJEnd + DHparams[i][0]));
-    JointMatrix[i][2][0] = 0;
-    JointMatrix[i][2][1] = sin(radians(DHparams[i][1]));
-    JointMatrix[i][2][2] = cos(radians(DHparams[i][1]));
-    JointMatrix[i][2][3] = DHparams[i][2];
-    JointMatrix[i][3][0] = 0;
-    JointMatrix[i][3][1] = 0;
-    JointMatrix[i][3][2] = 0;
-    JointMatrix[i][3][3] = 1;
-  }
-
+void tool_matrix() {
   toolFrame[0][0] = cos(radians(TOOL_FRAME[3])) * cos(radians(TOOL_FRAME[4]));
   toolFrame[0][1] = cos(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[4])) * sin(radians(TOOL_FRAME[5]));
   toolFrame[0][2] = cos(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[4])) * cos(radians(TOOL_FRAME[5])) + sin(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[5]));
@@ -76,216 +49,130 @@ void DH_Matrices_3() {
   toolFrame[3][3] = 1;
 }
 
+float T_i[4][4] = {
+  {1, 0, 0, 1},
+  {0, 1, 0, 2},
+  {0, 0, 1, 3},
+  {0, 0, 0, 1}
+};
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//CONSTRUCT ROTATION MATRICES FORWARD KINEMATICS
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+float T[4][4] = {
+  {1, 0, 0, 0},
+  {0, 1, 0, 0},
+  {0, 0, 1, 0},
+  {0, 0, 0, 1}
+  };
+
+float result[4][4];
+
+void matrixMultiply(float A[4][4], float B[4][4], float C[4][4]) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            C[i][j] = 0;
+            for (int k = 0; k < 4; k++) {
+                C[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+}
+
+void resetMatrix(float T[4][4]) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            T[i][j] = (i == j) ? 1 : 0;  // Set diagonal elements to 1, others to 0
+        }
+    }
+}
 
 void FwdMatrices_3() {
-  int i, j, k = 0;
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      R02matrix[j][i] = 0;
-    }
-  }
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      R03matrix[j][i] = 0;
-    }
-  }
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      R04matrix[j][i] = 0;
-    }
-  }
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      R0Tmatrix[j][i] = 0;
-    }
+
+  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+    if (robot[i].PosJEnd == 0) {
+      robot[i].PosJEnd = .001;
+    }    
   }
 
-  for (int k = 0; k < 4; k++) {
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        R02matrix[k][i] = R02matrix[k][i] + (JointMatrix[0][k][j] * JointMatrix[1][j][i]);
-      }
-    }
-  }
+  resetMatrix(T);  
 
 
 
-  for (int k = 0; k < 4; k++) {
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        R03matrix[k][i] = R03matrix[k][i] + (R02matrix[k][j] * JointMatrix[2][j][i]);
-      }
-    }
-  }
-
-
-
-  for (int k = 0; k < 4; k++) {
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        R04matrix[k][i] = R04matrix[k][i] + (R03matrix[k][j] * JointMatrix[3][j][i]);
-      }
-    }
-  }
-
-
-
-  for (int k = 0; k < 4; k++) {
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        R0Tmatrix[k][i] = R0Tmatrix[k][i] + (R04matrix[k][j] * toolFrame[j][i]);
-      }
-    }
-  }
-  /*
-  Serial.println("R02matrix");
   for(int i = 0; i < 4; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    for(int j = 0; j < 4; j++){
-      Serial.print(R02matrix[i][j]);
-      Serial.print(", ");
+    float dh_param[4] = {DHparams[i][0], DHparams[i][1], DHparams[i][2], DHparams[i][3]};
+
+    if (i == 3){
+      dh_param[0] = dh_param[0] - ((DHparams[1][0] + robot[1].PosJEnd) + (DHparams[2][0] + robot[2].PosJEnd));
     }
-    Serial.println("");
+    else if (i == 2){
+      dh_param[0] = dh_param[0] + robot[i].PosJEnd;// J3 = 90 - degrees(J3) + J2;
+    }
+    else{
+      dh_param[0] = dh_param[0] + robot[i].PosJEnd;
+    }
+
+    
+
+    T_i[0][0] = cos(radians(dh_param[0]));
+    T_i[0][1] = -sin(radians(dh_param[0])) * cos(radians(dh_param[1]));
+    T_i[0][2] = sin(radians(dh_param[0])) * sin(radians(dh_param[1]));
+    T_i[0][3] = dh_param[3] * cos(radians(dh_param[0]));
+    T_i[1][0] = sin(radians(dh_param[0]));
+    T_i[1][1] = cos(radians(dh_param[0])) * cos(radians(dh_param[1]));
+    T_i[1][2] = -cos(radians(dh_param[0])) * sin(radians(dh_param[1]));
+    T_i[1][3] = dh_param[3] * sin(radians(dh_param[0]));
+    T_i[2][0] = 0;
+    T_i[2][1] = sin(radians(dh_param[1]));
+    T_i[2][2] = cos(radians(dh_param[1]));
+    T_i[2][3] = dh_param[2];
+    T_i[3][0] = 0;
+    T_i[3][1] = 0;
+    T_i[3][2] = 0;
+    T_i[3][3] = 1;
+
+    matrixMultiply(T, T_i, result);
+
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            T[i][j] = result[i][j];
+        }
+    }
+
   }
 
-  Serial.println("R03matrix");
-  for(int i = 0; i < 4; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    for(int j = 0; j < 4; j++){
-      Serial.print(R03matrix[i][j]);
-      Serial.print(", ");
+  tool_matrix();
+  
+  matrixMultiply(T, toolFrame, result);
+
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      T[i][j] = result[i][j];
     }
-    Serial.println("");
   }
 
-  Serial.println("R04matrix");
-  for(int i = 0; i < 4; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    for(int j = 0; j < 4; j++){
-      Serial.print(R04matrix[i][j]);
-      Serial.print(", ");
-    }
-    Serial.println("");
-  }
 
-  Serial.println("R0Tmatrix");
-  for(int i = 0; i < 4; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    for(int j = 0; j < 4; j++){
-      Serial.print(R0Tmatrix[i][j]);
-      Serial.print(", ");
-    }
-    Serial.println("");
-  }
-*/
+
 }
 
 void ForwardKinematic_3_PosEnd() {
-
-
-  DH_Matrices_3();
-  
-  /*
-  Serial.println("Forward kinematics 3");
-
-  for(int i = 0; i < 4; i++){
-    Serial.print(robot[i].PosJEnd);
-    Serial.print(", ");
-  }
-  Serial.println("");
-
-  Serial.println("DH param");
-  for(int i = 0; i < 4; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    for(int j = 0; j < 4; j++){
-      Serial.print(DHparams[i][j]);
-      Serial.print(", ");
-    }
-    Serial.println("");
-  }
-
-  for(int i = 0; i < 4; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    for(int j = 0; j < 4; j++){
-      Serial.print(JointMatrix[0][i][j]);
-      Serial.print(", ");
-    }
-    Serial.println("");
-  }
-
-  for(int i = 0; i < 4; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    for(int j = 0; j < 4; j++){
-      Serial.print(JointMatrix[1][i][j]);
-      Serial.print(", ");
-    }
-    Serial.println("");
-  }
-
-  for(int i = 0; i < 4; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    for(int j = 0; j < 4; j++){
-      Serial.print(JointMatrix[2][i][j]);
-      Serial.print(", ");
-    }
-    Serial.println("");
-  }
-
-  for(int i = 0; i < 4; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    for(int j = 0; j < 4; j++){
-      Serial.print(JointMatrix[3][i][j]);
-      Serial.print(", ");
-    }
-    Serial.println("");
-  }
-
-
-  for(int i = 0; i < 4; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    for(int j = 0; j < 4; j++){
-      Serial.print(toolFrame[i][j]);
-      Serial.print(", ");
-    }
-    Serial.println("");
-  }
-  */
   FwdMatrices_3();
 
-  robot[0].PosEnd = R0Tmatrix[0][3];
-  robot[1].PosEnd = R0Tmatrix[1][3];
-  robot[2].PosEnd = R0Tmatrix[2][3];
-  robot[4].PosEnd = atan2(-R0Tmatrix[2][0], pow((pow(R0Tmatrix[2][1], 2) + pow(R0Tmatrix[2][2], 2)), 0.5));
-  robot[3].PosEnd = degrees(atan2(R0Tmatrix[1][0] / cos(robot[4].PosEnd), R0Tmatrix[0][0] / cos(robot[4].PosEnd)));
-  robot[5].PosEnd = degrees(atan2(R0Tmatrix[2][1] / cos(robot[4].PosEnd), R0Tmatrix[2][2] / cos(robot[4].PosEnd)));
+  robot[0].PosEnd = T[0][3];
+  robot[1].PosEnd = T[1][3];
+  robot[2].PosEnd = T[2][3];
+  robot[4].PosEnd = atan2(-T[2][0], pow((pow(T[2][1], 2) + pow(T[2][2], 2)), 0.5));
+  robot[3].PosEnd = degrees(atan2(T[1][0] / cos(robot[4].PosEnd), T[0][0] / cos(robot[4].PosEnd)));
+  robot[5].PosEnd = degrees(atan2(T[2][1] / cos(robot[4].PosEnd), T[2][2] / cos(robot[4].PosEnd)));
   robot[4].PosEnd = degrees(robot[4].PosEnd);
 }
 
 void ForwardKinematic_3_PosStart() {
-
-  DH_Matrices_3();
   FwdMatrices_3();
 
-  robot[0].PosStart = R0Tmatrix[0][3];
-  robot[1].PosStart = R0Tmatrix[1][3];
-  robot[2].PosStart = R0Tmatrix[2][3];
-  robot[4].PosStart = atan2(-R0Tmatrix[2][0], pow((pow(R0Tmatrix[2][1], 2) + pow(R0Tmatrix[2][2], 2)), 0.5));
-  robot[3].PosStart = degrees(atan2(R0Tmatrix[1][0] / cos(robot[4].PosStart), R0Tmatrix[0][0] / cos(robot[4].PosStart)));
-  robot[5].PosStart = degrees(atan2(R0Tmatrix[2][1] / cos(robot[4].PosStart), R0Tmatrix[2][2] / cos(robot[4].PosStart)));
+  robot[0].PosStart = T[0][3];
+  robot[1].PosStart = T[1][3];
+  robot[2].PosStart = T[2][3];
+  robot[4].PosStart = atan2(-T[2][0], pow((pow(T[2][1], 2) + pow(T[2][2], 2)), 0.5));
+  robot[3].PosStart = degrees(atan2(T[1][0] / cos(robot[4].PosStart), T[0][0] / cos(robot[4].PosStart)));
+  robot[5].PosStart = degrees(atan2(T[2][1] / cos(robot[4].PosStart), T[2][2] / cos(robot[4].PosStart)));
   robot[4].PosStart = degrees(robot[4].PosStart);
 }
 

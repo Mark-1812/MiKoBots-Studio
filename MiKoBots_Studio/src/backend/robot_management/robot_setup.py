@@ -2,14 +2,12 @@ import backend.core.variables as var
 import os
 from pathlib import Path
 
-from backend.file_managment.file_management import FileManagement
-
+from backend.file_managment import get_file_path
 from backend.core.event_manager import event_manager
 
 
 def SetupRobot():
-    file_management = FileManagement()
-    folder_path = file_management.GetFilePath("/Robot_library") 
+    folder_path = get_file_path("/Robot_library") 
     folders = []
     
 

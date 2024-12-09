@@ -5,7 +5,7 @@ from backend.core.event_manager import event_manager
 import os
 
 from backend.robot_management.communication  import send_line_to_io, connect_io_check
-from backend.robot_management.communication  import send_line_to_robot, connect_robot_check
+from backend.robot_management.communication  import send_line_to_robot, connect_robot_check, send_tool_frame
 from backend.simulation import check_simulation_on
 
 
@@ -43,15 +43,7 @@ class Tool():
                      
                 settings_tool = ("Set_tools A" + str(tool_pin) + "B" + str(type_tool) + "C" + str(self.servo_values[0]) + "D" + str(self.servo_values[1]) + "\n")      
                          
-                tool_frame_command = "Set_tool_frame "
-                letters = ['A','B','C','D','E','F']
-                
-                tool_frame = var.TOOL_FRAME
-                for i in range(6):
-                    tool_frame_command += str(letters[i])
-                    tool_frame_command += str(tool_frame[i])
-                    
-                tool_frame_command += "\n"
+
                     
                 # send settings to IO if this is given in settings
                 if var.ROBOT_SETTINGS['Set_tools'][1] == "IO" and connect_io_check():
@@ -65,7 +57,7 @@ class Tool():
                            
                 # send always the tool frame only to the robot
                 if connect_robot_check():
-                    send_line_to_robot(tool_frame_command)
+                    send_tool_frame()
                 
         if self.tool_number is None:
             print(var.LANGUAGE_DATA.get("message_tool_not_regonized"))

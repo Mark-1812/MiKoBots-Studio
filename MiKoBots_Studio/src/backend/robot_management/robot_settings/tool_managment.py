@@ -9,7 +9,7 @@ import os
 from stl import mesh
 from pathlib import Path
 
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_file_path
 
 from backend.core.event_manager import event_manager
 
@@ -19,8 +19,7 @@ from gui.windows.message_boxes import WarningMessageRe
 class ToolManagment:
     def __init__(self):
         super().__init__()
-
-        self.file_management = FileManagement()     
+  
         self.selected_tool = None
 
         self.settings_tools = []
@@ -80,8 +79,8 @@ class ToolManagment:
         self.settings_tools[i][11] = [0,0,0,0,0] 
 
         # Get the name of the folder of the current robot
-        file_path_1 = self.file_management.GetFilePath(self.settings_tools[i][1])
-        file_path_2 = self.file_management.GetFilePath(self.settings_tools[i][2])
+        file_path_1 = get_file_path(self.settings_tools[i][1])
+        file_path_2 = get_file_path(self.settings_tools[i][2])
         
         item = mesh.Mesh.from_file(file_path_tool)
         item.save(file_path_1)
@@ -98,7 +97,7 @@ class ToolManagment:
         event_manager.publish("request_show_tool_settings", tool_settings)
         event_manager.publish("request_clear_plotter_tool")
         
-        file_path = self.file_management.GetFilePath(tool_settings[2])
+        file_path = get_file_path(tool_settings[2])
         event_manager.publish("request_show_tool", file_path)
                        
     def DeleteTool(self, item):
@@ -108,8 +107,8 @@ class ToolManagment:
             return
         
         # Get the right path for the platform
-        file_path_1 = self.file_management.GetFilePath(self.settings_tools[item][1])
-        file_path_2 = self.file_management.GetFilePath(self.settings_tools[item][2])
+        file_path_1 = get_file_path(self.settings_tools[item][1])
+        file_path_2 = get_file_path(self.settings_tools[item][2])
 
         file_path_1 = Path(file_path_1)
         file_path_2 = Path(file_path_2)
@@ -143,7 +142,7 @@ class ToolManagment:
         self.settings_tools[self.selected_tool] = data
         var.TOOL_FRAME = self.settings_tools[self.selected_tool][5]
         
-        file_path = self.file_management.GetFilePath(self.settings_tools[self.selected_tool][1])      
+        file_path = get_file_path(self.settings_tools[self.selected_tool][1])      
                     
         your_mesh = mesh.Mesh.from_file(file_path)
 
@@ -194,7 +193,7 @@ class ToolManagment:
         your_mesh.vectors[:, :, 2] += translation_z
 
         # Get the right path for the platform
-        file_path = self.file_management.GetFilePath(self.settings_tools[self.selected_tool][2])   
+        file_path = get_file_path(self.settings_tools[self.selected_tool][2])   
 
         your_mesh.save(file_path)  
         

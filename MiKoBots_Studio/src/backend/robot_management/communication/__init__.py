@@ -1,6 +1,3 @@
-import asyncio
-import backend.core.variables as var
-
 from .communication_com import TalkThroughCOM
 from .communication_bt import TalkThroughBT
 
@@ -152,7 +149,7 @@ def connect_io_check():
     
     return False
 
-def connect_io(addres = None, settings = list,type = None):
+def connect_io(addres = None, type = None):
     # if type is True than COM
     # address is com port or bluetooth addres
 
@@ -160,10 +157,10 @@ def connect_io(addres = None, settings = list,type = None):
         # make a connection
         if type: # COM port connection
             print("make com connection")
-            talk_with_io_com.Connect(addres, settings)
+            talk_with_io_com.Connect(addres)
         else: # Bluetooth connection
             print("make bt connection")
-            talk_with_io_bt.Connect(addres, settings)
+            talk_with_io_bt.Connect(addres)
     elif talk_with_io_com.connect:
         # break the connection
         print("break com connection")

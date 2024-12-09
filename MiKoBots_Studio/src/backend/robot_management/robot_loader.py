@@ -14,7 +14,7 @@ from backend.calculations.kinematics_6_axis import ForwardKinematics_6, InverseK
 from backend.calculations.kinematics_3_axis import ForwardKinematics_3, InverseKinematics_3
 from backend.calculations.convert_matrix import MatrixToXYZ
 
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_file_path
 
 from backend.core.event_manager import event_manager
 
@@ -33,7 +33,6 @@ class RobotLoader(QObject):
         self.ForwardKinematics_3 = ForwardKinematics_3()
         self.InverseKinematics_6 = InverseKinmatics_6()
         self.InverseKinematics_3 = InverseKinematics_3()
-        self.file_management = FileManagement()
         
         #a list with all the robots that exsist
         self.robotFile = []    
@@ -78,7 +77,7 @@ class RobotLoader(QObject):
         event_manager.publish("request_set_robot_combo", var.ROBOT_NAME)
  
         # Platform for file path
-        file = self.file_management.GetFilePath("/Robot_library/" + var.ROBOT_NAME + "/settings.json") 
+        file = get_file_path("/Robot_library/" + var.ROBOT_NAME + "/settings.json") 
         
         # if the robot already exsist open the file of the robot
         try:
@@ -134,7 +133,7 @@ class RobotLoader(QObject):
 
 
         for i in range(len(settings_3d_model)):
-            file_path = self.file_management.GetFilePath(settings_3d_model[i][2])   
+            file_path = get_file_path(settings_3d_model[i][2])   
             data = [file_path, settings_3d_model[i][3], np.eye(4), np.eye(4), settings_3d_model[i][5]]
             add_robot_sim(data)
             
@@ -180,7 +179,7 @@ class RobotLoader(QObject):
     
     
         if len(var.TOOL_SETTINGS) > 0:
-            file_path = self.file_management.GetFilePath(var.TOOL_SETTINGS[tool][2])
+            file_path = get_file_path(var.TOOL_SETTINGS[tool][2])
             data = [file_path, var.TOOL_SETTINGS[tool][3], np.eye(4), np.eye(4)]
 
             add_tool_sim(data)

@@ -13,7 +13,7 @@ import numpy as np
 from backend.core.event_manager import event_manager
 from vtkmodules.vtkRenderingCore import vtkRenderer
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_image_path
 import vtk
 
 from backend.simulation.floor import Floor
@@ -32,8 +32,6 @@ class SimulationGUI(QWidget):
         self.setStyleSheet(style_widget)
         self.layout.setSpacing(5)
         self.layout.setContentsMargins(0, 0, 0, 0)
-
-        self.file_management = FileManagement()  
         
         self.views = [
             [(1, 0, 0), (0, 0, 0), (0, 0, 1)], 
@@ -107,7 +105,7 @@ class SimulationGUI(QWidget):
         button_menu = QHBoxLayout()
         button_menu.setContentsMargins(10,10,10,10)
         
-        image_path = self.file_management.resource_path('3d view.png')
+        image_path = get_image_path('3d view.png')
        
         self.button_view = QPushButton()
         self.button_view.setFixedSize(20,20)
@@ -117,7 +115,7 @@ class SimulationGUI(QWidget):
         self.button_view.clicked.connect(partial(self.change_view))
         self.button_view.setFixedSize(40,20)
         
-        image_path = self.file_management.resource_path('Assen_kruis.png')
+        image_path = get_image_path('Assen_kruis.png')
         
         self.button_axis = QPushButton()
         self.button_axis.setFixedSize(20,20)
@@ -127,7 +125,7 @@ class SimulationGUI(QWidget):
         self.button_axis.clicked.connect(self.ShowAxis)
         self.button_axis.setFixedSize(40,20)
         
-        image_path = self.file_management.resource_path('floor.png')
+        image_path = get_image_path('floor.png')
         
         self.button_floor = QPushButton()
         self.button_floor.setFixedSize(20,20)

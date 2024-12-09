@@ -7,11 +7,10 @@ import os
 from gui.style import *
 
 import backend.core.variables as var
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_image_path
 
 class StartupScreen(QDialog):
     def __init__(self, screen_geometry, current_version):
-        file_management = FileManagement()
         
         super().__init__()
         self.setWindowTitle("Starting Up")
@@ -24,8 +23,7 @@ class StartupScreen(QDialog):
         layout = QVBoxLayout()
 
 
-        file_management = FileManagement()
-        image_path = file_management.resource_path('start_up.png')
+        image_path = get_image_path('start_up.png')
         pixmap = QPixmap(image_path)
         
 

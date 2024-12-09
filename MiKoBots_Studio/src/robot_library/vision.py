@@ -20,7 +20,7 @@ class Vision():
         self.move = Move()
         self.Objects = None
 
-    def FindObject(self, color = None):       
+    def FindObject(self, color = None, Area = None):       
         self.frame = get_image_frame()
         image_RGB = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB) 
         image_GRAY = cv2.cvtColor(image_RGB, cv2.COLOR_RGB2GRAY) 
@@ -173,9 +173,21 @@ class Vision():
                     Yobject_place = round(pos_y  + y_offset, 1)          
                     Xobject_place = round(pos_x  + x_offset, 1)
                 
+                
                 print(f"x {Xobject_place}, y {Yobject_place}, height {height}, width {width}")
+                
+                
 
-                self.Objects.append([Xobject_place, Yobject_place, width, height, angle, color])
+                if Area:
+                    area_X = Area[0]
+                    area_Y = Area[1]
+                    width_area = Area[2]
+                    height_area = Area[3]
+                    if Xobject_place > area_X and Xobject_place < (area_X + width_area) and Yobject_place > area_Y and Yobject_place < (area_Y + height_area):
+                        print(f"in serach area x {Xobject_place}, y {Yobject_place}, height {height}, width {width}")
+                        self.Objects.append([Xobject_place, Yobject_place, width, height, angle, color])
+                else:
+                    self.Objects.append([Xobject_place, Yobject_place, width, height, angle, color])
                 
                 
         # check if there are no dounbles is the object list

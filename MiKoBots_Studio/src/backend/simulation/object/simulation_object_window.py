@@ -6,7 +6,7 @@ from stl import mesh
 
 from backend.core.event_manager import event_manager
 from backend.calculations.convert_matrix import XYZToMatrix, MatrixToXYZ
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_file_path
 
 import vtk
 
@@ -20,7 +20,6 @@ import backend.core.variables as var
 
 class SimulationObjectWindow:
     def __init__(self):  
-        self.file_management = FileManagement()
         self.pos_onject_nt = None
         self.origin_object_nr = None
         self.Objects_stl1 = []
@@ -62,8 +61,8 @@ class SimulationObjectWindow:
         self.Objects_stl1[i][4] = [0,0,0,0,0,0] # Position origin
         
         # Get the right path for the platform
-        file_path_1 = self.file_management.GetFilePath(self.Objects_stl1[i][1])
-        file_path_2 = self.file_management.GetFilePath(self.Objects_stl1[i][2]) 
+        file_path_1 = get_file_path(self.Objects_stl1[i][1])
+        file_path_2 = get_file_path(self.Objects_stl1[i][2]) 
         
         item = mesh.Mesh.from_file(file_path)
         item.save(file_path_1)
@@ -78,7 +77,7 @@ class SimulationObjectWindow:
     ## open and save the settings
     def OpenObjectModels(self):
         # Get the right path for the platform
-        file_path = self.file_management.GetFilePath("/Simulation_library/settings.json")
+        file_path = get_file_path("/Simulation_library/settings.json")
 
         try:
             with open(file_path, 'r') as file:
@@ -93,7 +92,7 @@ class SimulationObjectWindow:
         settings_file = self.Objects_stl1
     
         # Change the name of the folder, if the name of the robot is changed
-        file_path = self.file_management.GetFilePath("/Simulation_library/settings.json")
+        file_path = get_file_path("/Simulation_library/settings.json")
         
         try:
             with open(file_path, 'w') as file:
@@ -110,7 +109,7 @@ class SimulationObjectWindow:
         event_manager.publish("request_set_data_origin_object", origin)
 
         # Get the right path for the platform
-        file_path = self.file_management.GetFilePath(self.Objects_stl1[item][2])
+        file_path = get_file_path(self.Objects_stl1[item][2])
 
         event_manager.publish("request_object_plotter_preview", file_path)
         
@@ -123,7 +122,7 @@ class SimulationObjectWindow:
         self.Objects_stl1[self.origin_object_nr][4] = data[0]
 
         # Get the right path for the platform
-        file_path = self.file_management.GetFilePath(self.Objects_stl1[self.origin_object_nr][1])
+        file_path = get_file_path(self.Objects_stl1[self.origin_object_nr][1])
 
         your_mesh = mesh.Mesh.from_file(file_path)
 
@@ -174,7 +173,7 @@ class SimulationObjectWindow:
         your_mesh.vectors[:, :, 2] += translation_z
         
         # Get the right path for the platform
-        file_path = self.file_management.GetFilePath(self.Objects_stl1[self.origin_object_nr][2])
+        file_path = get_file_path(self.Objects_stl1[self.origin_object_nr][2])
 
         your_mesh.save(file_path)
         
@@ -207,8 +206,8 @@ class SimulationObjectWindow:
 
       
         # Get the right path for the platform
-        file_path_1 = self.file_management.GetFilePath(self.Objects_stl1[item][1])
-        file_path_2 = self.file_management.GetFilePath(self.Objects_stl1[item][2])
+        file_path_1 = get_file_path(self.Objects_stl1[item][1])
+        file_path_2 = get_file_path(self.Objects_stl1[item][2])
 
         file_path_1 = Path(file_path_1)
         file_path_2 = Path(file_path_2)
@@ -298,7 +297,7 @@ class SimulationObjectWindow:
         item = len(self.plotter_items) - 1
 
         # Add stl to plotter
-        file_path = self.file_management.GetFilePath(self.Objects_stl2[item][1])
+        file_path = get_file_path(self.Objects_stl2[item][1])
         reader = vtk.vtkSTLReader()
         reader.SetFileName(file_path)
         reader.Update()

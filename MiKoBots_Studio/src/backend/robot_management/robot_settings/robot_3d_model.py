@@ -4,7 +4,7 @@ from PyQt5.QtCore import QObject
 from backend.core.event_manager import event_manager
 import backend.core.variables as var
 
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_file_path
 from backend.calculations.kinematics_6_axis import ForwardKinematics_6, InverseKinmatics_6
 from backend.calculations.kinematics_3_axis import ForwardKinematics_3, InverseKinematics_3
 
@@ -29,7 +29,6 @@ class Robot3dModel:
         self.InverseKinematics_6 = InverseKinmatics_6()
         self.InverseKinematics_3 = InverseKinematics_3()
 
-        self.file_management = FileManagement()
         self.model_3d_item = None
 
         self.settings_3d_models = []
@@ -80,8 +79,8 @@ class Robot3dModel:
 
 
         # Get the name of the folder of the current robot
-        file_path_1 = self.file_management.GetFilePath(self.settings_3d_models[i][1])
-        file_path_2 = self.file_management.GetFilePath(self.settings_3d_models[i][2])
+        file_path_1 = get_file_path(self.settings_3d_models[i][1])
+        file_path_2 = get_file_path(self.settings_3d_models[i][2])
         
         item = mesh.Mesh.from_file(file_path)
         item.save(file_path_1)
@@ -110,7 +109,7 @@ class Robot3dModel:
            
             
         # Get the name of the folder of the current robot
-        file_path = self.file_management.GetFilePath(self.settings_3d_models[self.model_3d_item][1])               
+        file_path = get_file_path(self.settings_3d_models[self.model_3d_item][1])               
         your_mesh = mesh.Mesh.from_file(file_path)
 
         rx = np.radians(self.settings_3d_models[self.model_3d_item][4][3])
@@ -160,7 +159,7 @@ class Robot3dModel:
         your_mesh.vectors[:, :, 2] += translation_z
 
         # Get the name of the folder of the current robot
-        file_path = self.file_management.GetFilePath(self.settings_3d_models[self.model_3d_item][2])
+        file_path = get_file_path(self.settings_3d_models[self.model_3d_item][2])
         
         your_mesh.save(file_path)
         
@@ -174,8 +173,8 @@ class Robot3dModel:
             return
 
         # Get the name of the folder of the current robot
-        file_path_1 = self.file_management.GetFilePath(self.settings_3d_models[item][1])
-        file_path_2 = self.file_management.GetFilePath(self.settings_3d_models[item][2])
+        file_path_1 = get_file_path(self.settings_3d_models[item][1])
+        file_path_2 = get_file_path(self.settings_3d_models[item][2])
                 
         file_path_1 = Path(file_path_1)
         file_path_2 = Path(file_path_2)
@@ -217,7 +216,7 @@ class Robot3dModel:
 
         # Get the name of the folder of the current robot
         event_manager.publish("request_clear_plotter_3d_model")
-        file_path = self.file_management.GetFilePath(self.settings_3d_models[item][2])
+        file_path = get_file_path(self.settings_3d_models[item][2])
         event_manager.publish("request_show_3d_model", file_path)
 
         
@@ -231,7 +230,7 @@ class Robot3dModel:
             extra_joint = 1
 
         for i in range(len(settings_3d_model)):
-            file_path = self.file_management.GetFilePath(settings_3d_model[i][2])   
+            file_path = get_file_path(settings_3d_model[i][2])   
             data = [file_path, settings_3d_model[i][3], np.eye(4), np.eye(4), settings_3d_model[i][5]]
             add_robot_preview(data)
             

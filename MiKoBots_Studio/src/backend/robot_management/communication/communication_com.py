@@ -6,7 +6,6 @@ from backend.core.event_manager import event_manager
 
 from gui.windows.message_boxes import ErrorMessage
 
-
 class TalkThroughCOM():
     pause_event = threading.Event()
 
@@ -26,11 +25,11 @@ class TalkThroughCOM():
         self.pause_event.clear()
 
         self.settings = None
-        self.robot_home = False
 
 # Connect the robot
-    def Connect(self, com_port = None):
+    def Connect(self, com_port = None, settings = None):
         try:        
+            print(com_port)
             self.com_port = com_port
             self.com_ser = serial.Serial(self.com_port, baudrate=115200)#, timeout=1)
             self.com_ser .dtr = False   # Ensure DTR is inactive
@@ -51,14 +50,13 @@ class TalkThroughCOM():
                     break
 
             if self.connect: 
-                self.busy = False
+                self.settings = settings
                 if self.ROBOT:
                     event_manager.publish("request_robot_connect_button_color", True)
-                    self.SendSettingsRobot()
                     self.SendToolFrame()
+                    self.SendSettingsRobot()
                 
                 if self.IO:
-
                     event_manager.publish("request_io_connect_button_color", True)
                     self.SendSettingsIO()
 
@@ -70,7 +68,7 @@ class TalkThroughCOM():
         
         except serial.SerialException:
             print(var.LANGUAGE_DATA.get("message_failed_connection_com"))
-
+        
 # disconnect the robot
     def DisConnect(self):
         self.robot_home = False  
@@ -96,6 +94,7 @@ class TalkThroughCOM():
 # read data
     def ReadDate(self):
         while self.com_ser.is_open:
+
             try:
                 data = self.com_ser.readline().decode('latin-1').rstrip()  # Read a line
             except:
@@ -106,10 +105,18 @@ class TalkThroughCOM():
                     self.pause_event.set()
                 elif data.strip() == "go":
                     self.pause_event.clear()
-                elif data.strip() == "ROBOT_CONNECTED":
+                elif data.strip() == "ROBOT_CONNECTED" and self.ROBOT:
+                    self.connect = True
+                    self.busy = False
+                elif data.strip() == "ROBOT_CONNECTED" and self.IO:
+                    self.DisConnect()
+                    print(var.LANGUAGE_DATA.get("message_robot_instead_of_io"))
+                    
+                elif data.strip() == "IO_CONNECTED" and self.IO:
                     self.connect = True
                     self.busy = False
                 elif data.strip() == "IO_CONNECTED" and self.ROBOT:
+                    self.DisConnect()
                     print(var.LANGUAGE_DATA.get("message_robot_instead_of_io"))
 
                 elif data.strip() == "home":
@@ -155,9 +162,10 @@ class TalkThroughCOM():
                         event_manager.publish("request_label_pos_axis", var.POS_AXIS, var.NAME_AXIS, var.UNIT_AXIS)
 
                 else:
+                    pass
                     data_text = "ROBOT: " + data
                     print(data_text) 
-                    
+                        
                 data = None
 
 
@@ -171,9 +179,7 @@ class TalkThroughCOM():
             time.sleep(0.1)
         
         self.busy = 1   
-
         try:
-            #print(command)
             self.com_ser.write(command.encode())
         except:
             self.DisConnect()
@@ -297,18 +303,19 @@ class TalkThroughCOM():
                 ErrorMessage(var.LANGUAGE_DATA.get("message_io_not_connected"))
 
     def SendToolFrame(self):
-        tool_frame = var.TOOL_FRAME
-        command = "Set_tool_frame "
-        letters = ['A','B','C','D','E','F']
-        
+        if not self.busy and self.connect:
+            tool_frame = var.TOOL_FRAME
+            command = "Set_tool_frame "
+            letters = ['A','B','C','D','E','F']
+            
 
-        for i in range(6):
-            command += str(letters[i])
-            command += str(tool_frame[i])
-            
-        command += "\n"
-            
-        self.SendLineCommand(command)
+            for i in range(6):
+                command += str(letters[i])
+                command += str(tool_frame[i])
+                
+            command += "\n"
+                
+            self.SendLineCommand(command)
 
 
 ## play pauze stop the robot
@@ -337,4 +344,5 @@ class TalkThroughCOM():
             self.com_ser.write(command.encode())
 
         self.pauze = True
+
 

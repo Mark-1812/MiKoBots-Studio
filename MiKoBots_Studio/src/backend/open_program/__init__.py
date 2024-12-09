@@ -5,7 +5,6 @@ from .load_language import LoadLanguage
 from .open_settings import OpenSettings
 from .check_for_updates import CheckUpdate
 
-file_mangement = FileManagement()
 update_checker = CheckUpdate()
 
 def check_updates():
@@ -14,10 +13,10 @@ def check_updates():
     
 
 def check_folders():
-    FolderCheck(file_mangement)
+    FolderCheck()
 
 def open_setting():
-    OpenSettings(file_mangement)
+    OpenSettings()
 
 def load_languages():
-    LoadLanguage(file_mangement)
+    LoadLanguage()

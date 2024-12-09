@@ -12,8 +12,7 @@ from pathlib import Path
 from backend.calculations.kinematics_6_axis import ForwardKinematics_6, InverseKinmatics_6
 from backend.calculations.kinematics_3_axis import ForwardKinematics_3, InverseKinematics_3
 
-from backend.file_managment.file_management import FileManagement
-
+from backend.file_managment import get_file_path, get_platform
 from backend.core.event_manager import event_manager
 
 from gui.windows.message_boxes import ErrorMessage, WarningMessageRe
@@ -27,8 +26,6 @@ class RobotSettings:
         self.ForwardKinematics_3 = ForwardKinematics_3()
         self.InverseKinematics_6 = InverseKinmatics_6()
         self.InverseKinematics_3 = InverseKinematics_3()
-
-        self.file_management = FileManagement()
         
         #a list with all the robots that exsist
         self.robotFile = []    
@@ -42,7 +39,7 @@ class RobotSettings:
     # function reletad to settings of the robot
     def GetRobotSettings(self):
         # Platform for file path
-        file = self.file_management.GetFilePath("/Robot_library/" + self.robots[self.selected_robot][0] + "/settings.json") 
+        file = get_file_path("/Robot_library/" + self.robots[self.selected_robot][0] + "/settings.json") 
         
         # if the robot already exsist open the file of the robot
         try:
@@ -104,9 +101,9 @@ class RobotSettings:
         self.robots.append([robot_name, settings_robot, [], [], "IO settings"])
         
         # make a new folder structure for the robot
-        new_folder_robot = self.file_management.GetFilePath("/Robot_library/" + self.robots[item][0])
-        new_folder_robot = self.file_management.GetFilePath("/Robot_library/" + self.robots[item][0] + "/ROBOT_STL")
-        new_folder_tools = self.file_management.GetFilePath("/Robot_library/" + self.robots[item][0] + "/TOOLS_STL")
+        new_folder_robot = get_file_path("/Robot_library/" + self.robots[item][0])
+        new_folder_robot = get_file_path("/Robot_library/" + self.robots[item][0] + "/ROBOT_STL")
+        new_folder_tools = get_file_path("/Robot_library/" + self.robots[item][0] + "/TOOLS_STL")
                
         os.makedirs(new_folder_robot, exist_ok=True)
         os.makedirs(new_folder_robot, exist_ok=True)
@@ -123,7 +120,7 @@ class RobotSettings:
             settings_file[setting_names[i]] = self.robots[item][i]
 
         # Change the name of the folder, if the name of the robot is changed
-        file = self.file_management.GetFilePath("/Robot_library/" + self.robots[item][0] + "/settings.json")
+        file = get_file_path("/Robot_library/" + self.robots[item][0] + "/settings.json")
         
         with open(file, 'w') as file:
             json.dump(settings_file, file, indent=4)  
@@ -142,8 +139,8 @@ class RobotSettings:
         robot_name = settings_robot['Set_robot_name'][0]
 
         # Change the name of the folder, if the name of the robot is changed
-        old_name = self.file_management.GetFilePath("/Robot_library/" + self.robots[self.selected_robot][0]) 
-        new_name = self.file_management.GetFilePath("/Robot_library/" + robot_name)
+        old_name = get_file_path("/Robot_library/" + self.robots[self.selected_robot][0]) 
+        new_name = get_file_path("/Robot_library/" + robot_name)
 
         os.rename(old_name, new_name)
 
@@ -173,7 +170,7 @@ class RobotSettings:
             settings_file[setting_names[i]] = self.robots[self.selected_robot][i]
 
         # Change the name of the folder, if the name of the robot is changed
-        file = self.file_management.GetFilePath("/Robot_library/" + self.robots[self.selected_robot][0] + "/settings.json")
+        file = get_file_path("/Robot_library/" + self.robots[self.selected_robot][0] + "/settings.json")
         
         with open(file, 'w') as file:
             json.dump(settings_file, file, indent=4)    
@@ -209,7 +206,7 @@ class RobotSettings:
         folder_name =  self.robots[ROBOT_DELETE][0]
         
         # Platform for file path
-        folder = self.file_management.GetFilePath("/Robot_library/" + folder_name)
+        folder = get_file_path("/Robot_library/" + folder_name)
         
         # Remove the folder and its contents
         try:
@@ -245,7 +242,7 @@ class RobotSettings:
         if not file_path_zip:
             return
         
-        folder_robots = self.file_management.GetFilePath("/Robot_library")
+        folder_robots = get_file_path("/Robot_library")
         zip_file = os.path.basename(file_path_zip)
         robot_name = os.path.splitext(zip_file)[0]
         robot_name_old = robot_name
@@ -259,9 +256,9 @@ class RobotSettings:
              
                 
         robot_folder = os.path.join(folder_robots, robot_name)
-        os.makedirs(folder_robots, exist_ok=True)
+        os.makedirs(robot_folder, exist_ok=True)
 
-        # Create a temporary folder to extract the original folder contents
+        #Create a temporary folder to extract the original folder contents
         with zipfile.ZipFile(file_path_zip, 'r') as zip_ref:
             temp_folder = os.path.join(folder_robots, 'temp_extracted')
             os.makedirs(temp_folder, exist_ok=True)
@@ -277,31 +274,27 @@ class RobotSettings:
             # Remove the temporary directory
             shutil.rmtree(temp_folder)
 
-            macosx_folder = os.path.join(robot_folder, "__MACOSX")
-            if os.path.exists(macosx_folder):
-                shutil.rmtree(macosx_folder)  
 
         # if there is a duplicate also change the name in the settings
-        if duplicate:
-            json_file = self.file_management.GetFilePath("/Robot_library/" + robot_name + "/settings.json")
+        json_file = get_file_path("/Robot_library/" + robot_name + "/settings.json")
 
-            with open(json_file, 'r') as file:
-                json_data = json.load(file)
-                
-            json_data['Name'] = robot_name
-            json_data["Settings"]["Set_robot_name"][0] = robot_name
+        with open(json_file, 'r') as file:
+            json_data = json.load(file)
+            
+        json_data['Name'] = robot_name
+        json_data["Settings"]["Set_robot_name"][0] = robot_name
 
-            # Convert JSON data to string for replacement
-            json_str = json.dumps(json_data)
+        # Convert JSON data to string for replacement
+        json_str = json.dumps(json_data)
 
-            # Replace all instances of "/MiKo/" with "/MiKo_1/"
-            json_str = json_str.replace("/" + robot_name_old + "/", "/" + robot_name + "/")
+        # Replace all instances of "/MiKo/" with "/MiKo_1/"
+        json_str = json_str.replace("/" + robot_name_old + "/", "/" + robot_name + "/")
 
-            # Convert back to JSON
-            modified_json_data = json.loads(json_str)
+        # Convert back to JSON
+        modified_json_data = json.loads(json_str)
 
-            with open(json_file, 'w') as file:
-                json.dump(modified_json_data, file, indent=4)
+        with open(json_file, 'w') as file:
+            json.dump(modified_json_data, file, indent=4)
         
         item = len(self.robots)
                 
@@ -317,14 +310,12 @@ class RobotSettings:
             event_manager.publish("request_add_robot_combo", robot_name)
 
 
-
-
         
     def ExportRobot(self):
         # make a zip file of the selected robot
         
         
-        folder_robot = self.file_management.GetFilePath("/Robot_library/" + self.robots[self.selected_robot][0])
+        folder_robot = get_file_path("/Robot_library/" + self.robots[self.selected_robot][0])
         # Set options to disable the native dialog
        
         folder_output = QFileDialog.getExistingDirectory(None, "Select Output Folder")

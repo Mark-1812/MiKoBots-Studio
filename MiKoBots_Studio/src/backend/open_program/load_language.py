@@ -1,14 +1,15 @@
 import json
 import backend.core.variables as var
 from pathlib import Path
+from backend.file_managment import get_language_path
 
-def LoadLanguage(file_mangement):
+def LoadLanguage():
     
-    path = file_mangement.LanguagePath('en')
+    path = get_language_path('en')
     # print(path)
 
     # path = '/Users/markkleinjan/Library/CloudStorage/OneDrive-MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/Language'
-    path = 'C:/Users/MarkKleinJan/OneDrive - MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/Language/en'
+    # path = 'C:/Users/MarkKleinJan/OneDrive - MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/Language/en'
     #path = 'C:/Users/klein/OneDrive - MiKoBots/Documenten - MiKoBots/General/Besturing/software/Mikobots studio/MiKoBots_Studio/assets/Language/en'
     lan_path = Path(path+".json")
     

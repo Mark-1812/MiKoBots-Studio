@@ -1,7 +1,7 @@
 #include "variables.h"
 
 //DECLARE TOOL FRAME
-double toolFrame[4][4];
+float toolFrame[4][4];
 float toolFrameRev[4][4];
 
 

@@ -7,7 +7,7 @@ from .color_settings import ColorSettings
 
 from gui.style import *
 
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_image_path
 
 class VisionSettingsWindow(QWidget):
     def __init__(self):
@@ -16,8 +16,7 @@ class VisionSettingsWindow(QWidget):
         self.setFixedSize(800,750)
         self.setStyleSheet("background-color: #E8E8E8;")
         
-        file_management = FileManagement()
-        image_path = file_management.resource_path('mikobot.ico')
+        image_path = get_image_path('mikobot.ico')
         self.setWindowIcon(QIcon(image_path))
         
         self.layout = QGridLayout(self)

@@ -2,7 +2,7 @@
 #define VARIABLES_H
 
 //DECLARE TOOL FRAME
-extern double toolFrame[4][4];
+extern float toolFrame[4][4];
 extern float toolFrameRev[4][4];
 
 

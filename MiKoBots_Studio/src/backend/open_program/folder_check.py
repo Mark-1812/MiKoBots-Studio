@@ -1,12 +1,12 @@
 import os
 import json
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_file_path, get_path_folder
 import zipfile
 import sys
 import platform
 
-def FolderCheck(file_mangement):
-    file_path = file_mangement.GetFilePath("")
+def FolderCheck():
+    file_path = get_file_path("")
 
     if not os.path.isdir(file_path):
         # get the file path of the zip file with the data
@@ -28,7 +28,7 @@ def FolderCheck(file_mangement):
             zip_file_path = os.path.join(current_directory, '..', 'assets', 'MiKoBots_data', 'MiKoBots.zip')
             zip_file_path = os.path.normpath(zip_file_path)
 
-        file_path = file_mangement.GetPathFolder()
+        file_path = get_path_folder()
         os.makedirs(file_path, exist_ok=True)
         
         with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
@@ -42,29 +42,29 @@ def FolderCheck(file_mangement):
     
     
     ## settings folder
-    folder_path = file_mangement.GetFilePath("/settings")
+    folder_path = get_file_path("/settings")
     if not (os.path.exists(folder_path) and os.path.isfile(folder_path)):
         os.makedirs(folder_path, exist_ok=True)
         
-    file_path = file_mangement.GetFilePath("/settings/settings.json")
+    file_path = get_file_path("/settings/settings.json")
     if not (os.path.exists(file_path) and os.path.isfile(file_path)):
         setting_file = ["0", "0", "0", "0", "0"]
         with open(file_path, 'w') as file:
             json.dump(setting_file, file, indent=4)
                     
     # simulation folder
-    folder_path = file_mangement.GetFilePath("/Simulation_library")
+    folder_path = get_file_path("/Simulation_library")
     if not (os.path.exists(folder_path) and os.path.isfile(folder_path)):
         os.makedirs(folder_path, exist_ok=True)
     
-    file_path = file_mangement.GetFilePath("/Simulation_library/settings.json")
+    file_path = get_file_path("/Simulation_library/settings.json")
     if not (os.path.exists(file_path) and os.path.isfile(file_path)):
         setting_file = []
         with open(file_path, 'w') as file:
             json.dump(setting_file, file, indent=4)
             
     # robot folder
-    folder_path = file_mangement.GetFilePath("/Robot_library")
+    folder_path = get_file_path("/Robot_library")
     if not (os.path.exists(folder_path) and os.path.isfile(folder_path)):
         os.makedirs(folder_path, exist_ok=True)
     

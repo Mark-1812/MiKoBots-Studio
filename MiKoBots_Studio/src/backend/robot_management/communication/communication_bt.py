@@ -73,8 +73,8 @@ class TalkThroughBT(QThread):
         
         if self.ROBOT and self.connect:
             event_manager.publish("request_robot_connect_button_color", self.connect)
+            # self.SendToolFrame()
             self.SendSettingsRobot()    
-            self.SendToolFrame()
         if self.IO and self.connect:
             event_manager.publish("request_io_connect_button_color", self.connect)
 
@@ -107,7 +107,7 @@ class TalkThroughBT(QThread):
             return False
 
         if self.IO and (SERVICE_UUID_IO not in characteristic_uuids):
-            #print(var.LANGUAGE_DATA.get("message_wrong_device")) 
+            print(var.LANGUAGE_DATA.get("message_wrong_device")) 
             return False
 
         return True
@@ -154,30 +154,19 @@ class TalkThroughBT(QThread):
             self.pause_event.set()
         elif data_text.strip() == "go":
             self.pause_event.clear()
-        elif data_text.strip() == "ROBOT_CONNECTED":            
-            if self.ROBOT:
-                self.connect = True
-                self.busy = False
-                #event_manager.publish("request_robot_connect_button_color", True)
-                
-                    
-            if self.IO:
-                print(var.LANGUAGE_DATA.get("message_io_instead_of_robot"))
-                self.disconnect()
-
-
-        elif data_text.strip() == "IO_CONNECTED":
-            if self.ROBOT:
-                #print(var.LANGUAGE_DATA.get("message_robot_instead_of_io"))
-                print(" error")
-                self.disconnect()
+        elif data_text.strip() == "ROBOT_CONNECTED" and self.ROBOT:
+            self.connect = True
+            self.busy = False
+        elif data_text.strip() == "ROBOT_CONNECTED" and self.IO:
+            self.Disconnect()
+            print(var.LANGUAGE_DATA.get("message_robot_instead_of_io"))
             
-            if self.IO:
-                self.connect = True
-                self.busy = False
-                event_manager.publish("request_robot_connect_button_color", True)
-                self.SendSettingsIO()   
-
+        elif data_text.strip() == "IO_CONNECTED" and self.IO:
+            self.connect = True
+            self.busy = False
+        elif data_text.strip() == "IO_CONNECTED" and self.ROBOT:
+            self.Disconnect()
+            print(var.LANGUAGE_DATA.get("message_robot_instead_of_io"))
 
         elif data_text.strip() == "home":
             self.robot_home = True
@@ -222,10 +211,8 @@ class TalkThroughBT(QThread):
                 event_manager.publish("request_label_pos_axis", var.POS_AXIS, var.NAME_AXIS, var.UNIT_AXIS)
 
         else:
-            if data_text != "":
-                pass
-        data_text = "ROBOT: " + data_text
-        print(data_text) 
+            data_text = "ROBOT: " + data_text
+            print(data_text) 
         
         data_text = None
 
@@ -245,7 +232,7 @@ class TalkThroughBT(QThread):
 
     async def _SendLineCommand(self, message):
         if self.ROBOT and self.client_bt.is_connected:
-            print(f"sent: {message}")
+            # print(f"sent: {message}")
             await self.client_bt.write_gatt_char(CHARACTERISTIC_UUID_ROBOT, message.encode())
         elif self.IO and self.client_bt.is_connected:
             # print(f"sent: {message}")
@@ -257,6 +244,9 @@ class TalkThroughBT(QThread):
 # send settings
     def SendSettingsRobot(self):
         if not self.busy and self.connect:
+            self.SendToolFrame()
+            
+            
             category_names = []
 
             def make_line_ABC(settings_values, command_name):

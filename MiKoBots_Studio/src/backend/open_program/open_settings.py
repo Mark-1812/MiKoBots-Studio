@@ -6,9 +6,11 @@ from backend.core.event_manager import event_manager
 
 from backend.vision import set_square_size_per
 
-def OpenSettings(file_mangement):
+from backend.file_managment import get_file_path
+
+def OpenSettings():
     ## open the file with settings
-    file_path = file_mangement.GetFilePath("/settings/settings.json")   
+    file_path = get_file_path("/settings/settings.json")   
     
     try:           
         with open(file_path, 'r') as file:

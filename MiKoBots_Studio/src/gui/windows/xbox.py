@@ -3,7 +3,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QUrl, QFile, Qt
 from PyQt5.QtGui import QImage, QPixmap, QIcon
 
 from backend.core.event_manager import event_manager
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_image_path
 from gui.style import *
 
 class XBoxWindow(QWidget):
@@ -14,8 +14,7 @@ class XBoxWindow(QWidget):
         self.setStyleSheet(style_widget)
         self.setStyleSheet("background-color: #E8E8E8;")
         
-        file_management = FileManagement()
-        image_path = file_management.resource_path('mikobot.ico')
+        image_path = get_image_path('mikobot.ico')
         self.setWindowIcon(QIcon(image_path))
         
         self.buttons_settings = []
@@ -54,8 +53,7 @@ class XBoxWindow(QWidget):
         controller_frame.setLayout(layout_controller)  
         layout.addWidget(controller_frame)       
         
-        file_management = FileManagement()
-        image_path = file_management.resource_path('controller_info.png')
+        image_path = get_image_path('controller_info.png')
         pixmap = QPixmap(image_path)
         
         label = QLabel()

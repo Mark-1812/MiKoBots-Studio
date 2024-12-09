@@ -9,7 +9,7 @@ import vtk
 
 from backend.core.event_manager import event_manager
 
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_image_path
 
 from backend.simulation.axis import Axis
 from backend.simulation.planes import Planes
@@ -33,8 +33,7 @@ class SimulationObjectsGUI(QWidget):
     
         self.setWindowTitle("Add item")
         
-        file_management = FileManagement()
-        image_path = file_management.resource_path('mikobot.ico')
+        image_path = get_image_path('mikobot.ico')
         self.setWindowIcon(QIcon(image_path))
         self.setFixedSize(1000, 700)
         

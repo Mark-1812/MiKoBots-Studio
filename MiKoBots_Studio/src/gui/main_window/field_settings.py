@@ -17,6 +17,8 @@ from gui.windows.vision import VisionWindow
 from gui.windows.vision_settings import VisionSettingsWindow
 from gui.windows.xbox import XBoxWindow
 
+from backend.file_managment import get_image_path
+
 class SettingsField(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -26,7 +28,6 @@ class SettingsField(QFrame):
 
         self.RobotWindow = RobotWindow()
         self.VisionWindow = VisionWindow()
-        self.file_management = FileManagement()
         self.XboxWindow = XBoxWindow()
         self.VisionSettingsWindow = VisionSettingsWindow()
    
@@ -75,7 +76,7 @@ class SettingsField(QFrame):
         self.combo_robot.setFixedWidth(150)
         layout_robot.addWidget(self.combo_robot)
         
-        image_path = self.file_management.resource_path('settings.png')
+        image_path = get_image_path('settings.png')
         self.button_settings_robot = QPushButton()
         self.button_settings_robot.setToolTip('Settings robot')  
         self.button_settings_robot.setFixedSize(20,20)
@@ -85,7 +86,7 @@ class SettingsField(QFrame):
         layout_robot.addWidget(self.button_settings_robot)
         
         
-        image_path = self.file_management.resource_path('upload.png')
+        image_path = get_image_path('upload.png')
         self.button_settings_send = QPushButton() 
         self.button_settings_send.setToolTip('Upload settings')  
         self.button_settings_send.setFixedSize(20,20)
@@ -108,7 +109,7 @@ class SettingsField(QFrame):
         label.setStyleSheet(style_label)
         layout_vision.addWidget(label)
 
-        image_path = self.file_management.resource_path('settings.png')
+        image_path = get_image_path('settings.png')
         button = QPushButton()
         button.setToolTip('Settings vision')  
         button.setFixedSize(20,20)
@@ -117,7 +118,7 @@ class SettingsField(QFrame):
         button.setStyleSheet(style_button)
         layout_vision.addWidget(button)
   
-        image_path = self.file_management.resource_path('vision.png')
+        image_path = get_image_path('vision.png')
         self.vision_button = QPushButton()
         self.vision_button.setStyleSheet(style_button)
         self.vision_button.setFixedSize(20,20)
@@ -136,7 +137,7 @@ class SettingsField(QFrame):
         frame.setLayout(layout_controller)
         self.layout.addWidget(frame, 3, 0) 
 
-        image_path = self.file_management.resource_path('controller.png')
+        image_path = get_image_path('controller.png')
         self.controller_button = QPushButton()
         self.controller_button.setStyleSheet(style_button)
         self.controller_button.setFixedSize(20,20)
@@ -145,7 +146,7 @@ class SettingsField(QFrame):
         self.controller_button.clicked.connect(xbox_on)
         layout_controller.addWidget(self.controller_button)
         
-        image_path = self.file_management.resource_path('settings.png')
+        image_path = get_image_path('settings.png')
         controller_settings = QPushButton()
         controller_settings.setStyleSheet(style_button)
         controller_settings.setFixedSize(20,20)

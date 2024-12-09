@@ -2,74 +2,8 @@
 extern int check_for_error();
 
 
-// // //DECLARE TOOL FRAME
-// extern double toolFrame[4][4];
-// extern float toolFrameRev[4][4];
 
-
-// extern float R06_neg_matrix[4][4]{};
-
-
-// // //DECLARE JOINT MATRICES
-// extern double JointMatrix[6][4][4];
-
-// extern float J1matrix_rev[4][4];
-// extern float J2matrix_rev[4][4];
-// extern float J3matrix_rev[4][4];
-
-// extern double R02matrix[4][4];
-// extern double R03matrix[4][4];
-// extern double R04matrix[4][4];
-// extern double R05matrix[4][4];
-// extern double R06matrix[4][4];
-// extern double R0Tmatrix[4][4];
-
-// extern float R02matrix_rev[4][4];
-// extern float R03matrix_rev[4][4];
-
-// extern float R0T_rev_matrix[4][4];
-// extern float InvtoolFrame[4][4];
-// extern float R06_rev_matrix[4][4];
-// extern float R05_rev_matrix[4][4];
-// extern float InvR03matrix_rev[4][4];
-// extern float R03_6matrix[4][4];
-
-// extern float blank[4][4];
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//CONSTRUCT DH MATRICES FORWARD KINEMATICS
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-void DH_Matrices_6() {
-  for(int i = 0; i < 6; i++){
-    if (robot[i].PosJEnd == 0) {
-      robot[i].PosJEnd = .001;
-    }    
-  }
-
-  
-
-  for(int i = 0; i < 6; i++){
-    JointMatrix[i][0][0] = cos(radians(robot[i].PosJEnd + DHparams[i][0]));
-    JointMatrix[i][0][1] = -sin(radians(robot[i].PosJEnd + DHparams[i][0])) * cos(radians(DHparams[i][1]));
-    JointMatrix[i][0][2] = sin(radians(robot[i].PosJEnd + DHparams[i][0])) * sin(radians(DHparams[i][1]));
-    JointMatrix[i][0][3] = DHparams[i][3] * cos(radians(robot[i].PosJEnd + DHparams[i][0]));
-    JointMatrix[i][1][0] = sin(radians(robot[i].PosJEnd + DHparams[i][0]));
-    JointMatrix[i][1][1] = cos(radians(robot[i].PosJEnd + DHparams[i][0])) * cos(radians(DHparams[i][1]));
-    JointMatrix[i][1][2] = -cos(radians(robot[i].PosJEnd + DHparams[i][0])) * sin(radians(DHparams[i][1]));
-    JointMatrix[i][1][3] = DHparams[i][3] * sin(radians(robot[i].PosJEnd + DHparams[i][0]));
-    JointMatrix[i][2][0] = 0;
-    JointMatrix[i][2][1] = sin(radians(DHparams[i][1]));
-    JointMatrix[i][2][2] = cos(radians(DHparams[i][1]));
-    JointMatrix[i][2][3] = DHparams[i][2];
-    JointMatrix[i][3][0] = 0;
-    JointMatrix[i][3][1] = 0;
-    JointMatrix[i][3][2] = 0;
-    JointMatrix[i][3][3] = 1;
-  }
-
-
+void tool_matrix() {
   toolFrame[0][0] = cos(radians(TOOL_FRAME[3])) * cos(radians(TOOL_FRAME[4]));
   toolFrame[0][1] = cos(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[4])) * sin(radians(TOOL_FRAME[5]));
   toolFrame[0][2] = cos(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[4])) * cos(radians(TOOL_FRAME[5])) + sin(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[5]));
@@ -88,84 +22,96 @@ void DH_Matrices_6() {
   toolFrame[3][3] = 1;
 }
 
+float T_i[4][4] = {
+  {1, 0, 0, 1},
+  {0, 1, 0, 2},
+  {0, 0, 1, 3},
+  {0, 0, 0, 1}
+};
+
+float T[4][4] = {
+  {1, 0, 0, 0},
+  {0, 1, 0, 0},
+  {0, 0, 1, 0},
+  {0, 0, 0, 1}
+  };
+
+float result[4][4];
+
+void matrixMultiply(float A[4][4], float B[4][4], float C[4][4]) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            C[i][j] = 0;
+            for (int k = 0; k < 4; k++) {
+                C[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+}
+
+void resetMatrix(float T[4][4]) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            T[i][j] = (i == j) ? 1 : 0;  // Set diagonal elements to 1, others to 0
+        }
+    }
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //CONSTRUCT ROTATION MATRICES FORWARD KINEMATICS
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void FwdMatrices_6() {
-  int i, j, k = 0;
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      R02matrix[j][i] = 0;
-    }
-  }
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      R03matrix[j][i] = 0;
-    }
-  }
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      R04matrix[j][i] = 0;
-    }
-  }
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      R05matrix[j][i] = 0;
-    }
-  }
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      R06matrix[j][i] = 0;
-    }
-  }
-  for (int j = 0; j < 4; j++) {
-    for (int i = 0; i < 4; i++) {
-      R0Tmatrix[j][i] = 0;
-    }
+
+  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+    if (robot[i].PosJEnd == 0) {
+      robot[i].PosJEnd = .001;
+    }    
   }
 
-  for (int k = 0; k < 4; k++) {
+  resetMatrix(T);  
+
+  for(int i = 0; i < 6; i++){
+    float dh_param[4] = {DHparams[i][0], DHparams[i][1], DHparams[i][2], DHparams[i][3]};
+
+    dh_param[0] = dh_param[0] + robot[i].PosJEnd;
+
+    T_i[0][0] = cos(radians(dh_param[0]));
+    T_i[0][1] = -sin(radians(dh_param[0])) * cos(radians(dh_param[1]));
+    T_i[0][2] = sin(radians(dh_param[0])) * sin(radians(dh_param[1]));
+    T_i[0][3] = dh_param[3] * cos(radians(dh_param[0]));
+    T_i[1][0] = sin(radians(dh_param[0]));
+    T_i[1][1] = cos(radians(dh_param[0])) * cos(radians(dh_param[1]));
+    T_i[1][2] = -cos(radians(dh_param[0])) * sin(radians(dh_param[1]));
+    T_i[1][3] = dh_param[3] * sin(radians(dh_param[0]));
+    T_i[2][0] = 0;
+    T_i[2][1] = sin(radians(dh_param[1]));
+    T_i[2][2] = cos(radians(dh_param[1]));
+    T_i[2][3] = dh_param[2];
+    T_i[3][0] = 0;
+    T_i[3][1] = 0;
+    T_i[3][2] = 0;
+    T_i[3][3] = 1;
+
+    matrixMultiply(T, T_i, result);
+
     for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        R02matrix[k][i] = R02matrix[k][i] + (JointMatrix[0][k][j] * JointMatrix[1][j][i]);
-      }
+        for (int j = 0; j < 4; j++) {
+            T[i][j] = result[i][j];
+        }
     }
+
   }
-  for (int k = 0; k < 4; k++) {
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        R03matrix[k][i] = R03matrix[k][i] + (R02matrix[k][j] * JointMatrix[2][j][i]);
-      }
-    }
-  }
-  for (int k = 0; k < 4; k++) {
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        R04matrix[k][i] = R04matrix[k][i] + (R03matrix[k][j] * JointMatrix[3][j][i]);
-      }
-    }
-  }
-  for (int k = 0; k < 4; k++) {
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        R05matrix[k][i] = R05matrix[k][i] + (R04matrix[k][j] * JointMatrix[4][j][i]);
-      }
-    }
-  }
-  for (int k = 0; k < 4; k++) {
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        R06matrix[k][i] = R06matrix[k][i] + (R05matrix[k][j] * JointMatrix[5][j][i]);
-      }
-    }
-  }
-  for (int k = 0; k < 4; k++) {
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        R0Tmatrix[k][i] = R0Tmatrix[k][i] + (R06matrix[k][j] * toolFrame[j][i]);
-      }
+
+  tool_matrix();
+  
+  matrixMultiply(T, toolFrame, result);
+
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      T[i][j] = result[i][j];
     }
   }
 }
@@ -173,30 +119,26 @@ void FwdMatrices_6() {
 
 
 void ForwardKinematic_6_PosEnd() {
-
-  DH_Matrices_6();
   FwdMatrices_6();
 
-  robot[0].PosEnd = R0Tmatrix[0][3];
-  robot[1].PosEnd = R0Tmatrix[1][3];
-  robot[2].PosEnd = R0Tmatrix[2][3];
-  robot[4].PosEnd = atan2(-R0Tmatrix[2][0], pow((pow(R0Tmatrix[2][1], 2) + pow(R0Tmatrix[2][2], 2)), 0.5));
-  robot[3].PosEnd = degrees(atan2(R0Tmatrix[1][0] / cos(robot[4].PosEnd), R0Tmatrix[0][0] / cos(robot[4].PosEnd)));
-  robot[5].PosEnd = degrees(atan2(R0Tmatrix[2][1] / cos(robot[4].PosEnd), R0Tmatrix[2][2] / cos(robot[4].PosEnd)));
+  robot[0].PosEnd = T[0][3];
+  robot[1].PosEnd = T[1][3];
+  robot[2].PosEnd = T[2][3];
+  robot[4].PosEnd = atan2(-T[2][0], pow((pow(T[2][1], 2) + pow(T[2][2], 2)), 0.5));
+  robot[3].PosEnd = degrees(atan2(T[1][0] / cos(robot[4].PosEnd), T[0][0] / cos(robot[4].PosEnd)));
+  robot[5].PosEnd = degrees(atan2(T[2][1] / cos(robot[4].PosEnd), T[2][2] / cos(robot[4].PosEnd)));
   robot[4].PosEnd = degrees(robot[4].PosEnd);
 }
 
 void ForwardKinematic_6_PosStart() {
-
-  DH_Matrices_6();
   FwdMatrices_6();
 
-  robot[0].PosStart = R0Tmatrix[0][3];
-  robot[1].PosStart = R0Tmatrix[1][3];
-  robot[2].PosStart = R0Tmatrix[2][3];
-  robot[4].PosStart = atan2(-R0Tmatrix[2][0], pow((pow(R0Tmatrix[2][1], 2) + pow(R0Tmatrix[2][2], 2)), 0.5));
-  robot[3].PosStart = degrees(atan2(R0Tmatrix[1][0] / cos(robot[4].PosStart), R0Tmatrix[0][0] / cos(robot[4].PosStart)));
-  robot[5].PosStart = degrees(atan2(R0Tmatrix[2][1] / cos(robot[4].PosStart), R0Tmatrix[2][2] / cos(robot[4].PosStart)));
+  robot[0].PosStart = T[0][3];
+  robot[1].PosStart = T[1][3];
+  robot[2].PosStart = T[2][3];
+  robot[4].PosStart = atan2(-T[2][0], pow((pow(T[2][1], 2) + pow(T[2][2], 2)), 0.5));
+  robot[3].PosStart = degrees(atan2(T[1][0] / cos(robot[4].PosStart), T[0][0] / cos(robot[4].PosStart)));
+  robot[5].PosStart = degrees(atan2(T[2][1] / cos(robot[4].PosStart), T[2][2] / cos(robot[4].PosStart)));
   robot[4].PosStart = degrees(robot[4].PosStart);
 }
 

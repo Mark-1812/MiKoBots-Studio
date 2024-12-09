@@ -4,8 +4,9 @@ import backend.core.variables as var
 
 
 from backend.vision import get_square_size_per
+from backend.file_managment import get_file_path
 
-def SaveSettings(file_management):
+def SaveSettings():
     setting_file = [0] * 11
 
     # 0: get robot port -> not used any more
@@ -38,7 +39,7 @@ def SaveSettings(file_management):
 
 
     try:
-        file_path = file_management.GetFilePath("/settings/settings.json")  
+        file_path = get_file_path("/settings/settings.json")  
         with open(file_path, 'w') as file:
             json.dump(setting_file, file, indent=4)
     except:

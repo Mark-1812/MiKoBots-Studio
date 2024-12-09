@@ -5,9 +5,8 @@ from backend.core.event_manager import event_manager
 import os
 
 from gui.style import *
-from backend.file_managment.file_management import FileManagement
+from backend.file_managment import get_image_path
 
-from backend.file_managment.file_management import FileManagement
 
 class UpdateChecker(QDialog):
     def __init__(self, update_des, update_version, cur_version, parent = None):
@@ -16,9 +15,8 @@ class UpdateChecker(QDialog):
         self.setLayout(layout)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         self.setStyleSheet("background-color: lightgray;")
-        
-        file_management = FileManagement()
-        image_path = file_management.resource_path('mikobot.ico')
+
+        image_path = get_image_path('mikobot.ico')
         self.setWindowIcon(QIcon(image_path))
         
         self.setWindowTitle("Update Checker")
@@ -60,8 +58,7 @@ class UpdateChecker(QDialog):
         layout.addWidget(SpaceWidget, 0, 1, layout.columnCount() - 1, 1)
         
         
-        file_management = FileManagement()
-        image_path = file_management.resource_path('studio.png')
+        image_path = get_image_path('studio.png')
         
         pixmap = QPixmap(image_path)
         

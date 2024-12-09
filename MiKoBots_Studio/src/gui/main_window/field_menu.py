@@ -36,6 +36,7 @@ from backend.run_program import run_single_line
 
 from backend.vision import connect_cam, cam_connected
 
+from backend.file_managment import get_image_path
 
 
 class MenuField(QFrame):
@@ -53,7 +54,6 @@ class MenuField(QFrame):
         self.connect_io_window = ConnectDevice("IO")
         self.connect_cam_window = ConnectDevice("CAMERA")
         self.vision_window = VisionWindow()
-        self.file_management = FileManagement()
 
         frame = QFrame()
         layout = QVBoxLayout()
@@ -100,7 +100,7 @@ class MenuField(QFrame):
         event_manager.subscribe("request_disable_cam_button", self.ButtonConnectCamDisable)
         
     def FrameButtons(self, layout):
-        image_path = self.file_management.resource_path('studio.png')
+        image_path = get_image_path('studio.png')
         
         button = QPushButton()
         button.setFixedSize(130,130)
@@ -222,7 +222,7 @@ class MenuField(QFrame):
         self.button_home_robot.pressed.connect(lambda: run_single_line("robot.Home()"))
         layout.addWidget(self.button_home_robot, 5, 0, 1, 2)
 
-        image_path = self.file_management.resource_path('pauze.png')
+        image_path = get_image_path('pauze.png')
         button_pauze = QPushButton()
         button_pauze.setFixedSize(62, 25)
         button_pauze.setIcon(QIcon(image_path))
@@ -230,7 +230,7 @@ class MenuField(QFrame):
         button_pauze.pressed.connect(lambda: self.pauze_robot())
         layout.addWidget(button_pauze, 6, 0, 1, 1)
 
-        image_path = self.file_management.resource_path('play.png')
+        image_path = get_image_path('play.png')
         button_play = QPushButton()
         button_play.setFixedSize(62, 25)
         button_play.setIcon(QIcon(image_path))
@@ -238,7 +238,7 @@ class MenuField(QFrame):
         button_play.pressed.connect(lambda: self.play_robot())
         layout.addWidget(button_play, 6, 1, 1, 1)
         
-        image_path = self.file_management.resource_path('stop.png')
+        image_path = get_image_path('stop.png')
         button_stop = QPushButton()
         button_stop.setFixedSize(130, 40)
         button_stop.setIcon(QIcon(image_path))
@@ -273,8 +273,8 @@ class MenuField(QFrame):
             self.connect_robot_window.raise_()
 
     def connect_io(self):
-        if connect_robot_check():
-            connect_robot()
+        if connect_io_check():
+            connect_io()
         else:
             self.connect_io_window.empty_list()
             self.connect_io_window.show()

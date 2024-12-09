@@ -1,6 +1,6 @@
-from PyQt5.QtGui import QCursor, QPixmap, QIcon, QDoubleValidator, QSyntaxHighlighter, QTextCharFormat, QColor, QTextCursor, QFont
-from PyQt5.QtCore import Qt, QRegularExpression, QUrl, pyqtSignal
-from PyQt5.QtWidgets import QPushButton, QSplitter, QHBoxLayout, QMainWindow, QLabel, QCheckBox, QComboBox, QSizePolicy, QScrollArea, QApplication, QFileDialog, QFrame, QGridLayout, QTextEdit, QScrollBar, QLineEdit, QWidget
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QPushButton, QSplitter, QHBoxLayout, QMainWindow, QLabel, QFrame, QGridLayout, QWidget
 
 from gui.style import *
 import webbrowser
@@ -12,10 +12,10 @@ from gui.main_window.field_program import ProgramField
 from gui.main_window.field_log import LogField
 from gui.main_window.field_menu import MenuField
 from gui.main_window.simulation_frame import SimulationGUI
-from backend.file_managment.file_management import FileManagement
-from backend.core.event_manager import event_manager
 
-from  backend.open_program import open_setting
+from gui.windows.message_boxes import CloseProgramMessage
+
+from backend.open_program import open_setting
 from backend.robot_management.communication import close_robot, close_io
 
 from backend.vision import close_cam
@@ -23,29 +23,24 @@ from backend.xbox import close_xbox
 
 from backend.run_program import stop_script
 
-from backend.file_manager import open_file_from_path
-
 import backend.core.variables as var
-from gui.windows.update_window import UpdateChecker
-from gui.windows.message_boxes import CloseProgramMessage
 
-from  backend import close_program
-
-from backend.file_manager import save_file
+from backend import close_program
+from backend.file_manager import save_file, open_file_from_path
+from backend.file_managment import get_image_path
 
 class MainWindow(QMainWindow):   
-    def __init__(self,  screen_geometry):  
+    def __init__(self,  screen_geometry, current_version):  
         super().__init__()
         
-        file_management = FileManagement()
-        image_path = file_management.resource_path('mikobot.ico')
+        image_path = get_image_path('mikobot.ico')
         
         width_window = 1200 
         height_window = 855
         
         self.screen_geometry = screen_geometry
            
-        self.setWindowTitle("MiKoBots Studio")
+        self.setWindowTitle(f"MiKoBots Studio V{current_version}")
         self.setWindowIcon(QIcon(image_path))
         self.setGeometry(100, 100, width_window, height_window)
         self.move_to_center(screen_geometry)
