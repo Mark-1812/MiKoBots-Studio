@@ -18,9 +18,21 @@ At the moment the following requirements are in place if you want to control you
 * Microcontroller: ESP32
 
 **Version:**
-The current released version and which can be donwloaded on https://mikobots.com/ is: V1.1
+The current released version and which can be donwloaded on https://mikobots.com/ is: V1.13
+
+
+Currently working on an update that allows the software and firmware to control servo motors, and adding a new type of robot 5 axis. This update should allow to connect robots like the Arduino Braccio to the software.
+
 
 **History:**<br>
+Version: 1.13<br>
+Date: 7-12-2024<br>
+* Fixed a bug, related to connecting the robot to the software
+
+Version: 1.12<br>
+Date: 6-12-2024<br>
+* Fixed a bug, not able to import new robot
+
 Version: 1.11<br>
 Date: 5-12-2024<br>
 * More vision function
