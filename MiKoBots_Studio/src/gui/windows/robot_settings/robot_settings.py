@@ -21,8 +21,8 @@ class RobotSettings(QFrame):
         self.layout = QGridLayout(self) 
         
         self.settings_name = [
-            'Set_robot_name','Set_number_of_joints','Set_extra_joint','Set_motor_pin', 'Set_switch_pin', 'Set_tools', 
-            'Set_io_pin','Set_max_pos', 'Set_lim_pos', 'Set_step_deg', 
+            'Set_robot_name', 'Set_number_of_joints','Set_extra_joint','Set_motor_type','Set_motor_pin', 'Set_switch_pin', 'Set_tools', 
+            'Set_io_pin','Set_servo_settings', 'Set_max_pos', 'Set_lim_pos', 'Set_step_deg',
             'Set_dir_joints', 'Set_speed', 'Set_home_settings', 'Set_dh_par'               
             ] 
         self.settings = [] 
@@ -44,6 +44,7 @@ class RobotSettings(QFrame):
             self.Extra_Linkage = 1
 
         self.CreateSettingsFields(rows)
+        
  
         for i, setting in enumerate(self.settings):
             settings = settings_file[self.settings_name[i+3]]
@@ -57,11 +58,6 @@ class RobotSettings(QFrame):
 
         if settings_file[self.settings_name[2]][0] == 1:
             self.checkbox.setChecked(True)
-            
-            #self.settings[10].DeleteFields()
-            #self.settings[10].CreateFieldsSettings(int(settings_file[self.settings_name[1]][0]) + self.Extra_Linkage)
-            # settings = settings_file[self.settings_name[i+3]]
-            # setting.set_values(settings[0])
             
         else:
             self.checkbox.setChecked(False)
@@ -86,6 +82,7 @@ class RobotSettings(QFrame):
      
     def CreateSettingsFields(self, rows):
         for i in range(len(self.settings)):
+            print(self.settings[i].title)
             if self.settings[i].times_nr_joints == 1:
                 if self.settings[i].title == "DH - parameters":
                     self.settings[i].CreateFieldsSettings(rows + self.Extra_Linkage)
@@ -161,6 +158,8 @@ class RobotSettings(QFrame):
         
         
         ### settings
+        setting_names = ["J1 type: ","J2 type: ","J3 type: ","J4 type: ","J5 type: ","J6 type: "]
+        self.settings.append(CreateFields(rows=6, columns=1, row_names=setting_names, title="Motor type", url = URL_HELP_PINS,  times_nr_joints=1))
         
         setting_names = ["PUL pin J1: ","DIR pin J1: ","PUL pin J2: ","DIR pin J2: ", "PUL pin J3: ","DIR pin J3: ",
                     "PUL pin J4: ","DIR pin J4: ", "PUL pin J5: ","DIR pin J5: ", "PUL pin J6: ","DIR pin J6: "]
@@ -179,9 +178,19 @@ class RobotSettings(QFrame):
         self.settings.append(CreateFields(rows=10, columns=1, row_names=setting_names, title="IO pin", url = URL_HELP_PINS, CheckBoxPin=True))
 
            
+        setting_names = ["J1 Servo pin: ", "J1 Servo max: ", "J1 Servo min: ", "J1 Servo movement: ", 
+                         "J2 Servo pin: ", "J2 Servo max: ", "J2 Servo min: ", "J2 Servo movement: ", 
+                         "J3 Servo pin: ", "J3 Servo max: ", "J3 Servo min: ", "J3 Servo movement: ", 
+                         "J4 Servo pin: ", "J4 Servo max: ", "J4 Servo min: ", "J4 Servo movement: ", 
+                         "J5 Servo pin: ", "J5 Servo max: ", "J5 Servo min: ", "J5 Servo movement: ", 
+                         "J6 Servo pin: ", "J6 Servo max: ", "J6 Servo min: ", "J6 Servo movement: "]
+        self.settings.append(CreateFields(rows=24, columns=1, row_names=setting_names, title="Servo settings", url = URL_HELP_MAX_MOVE, times_nr_joints=4))
+        
         setting_names = ["J1 min: ", "J1 max: ", "J2 min: ", "J2 max: ", "J3 min: ", "J3 max: ", 
                             "J4 min: ", "J4 max: ", "J5 min: ", "J5 max: ", "J6 min: ", "J6 max: ",]
         self.settings.append(CreateFields(rows=12, columns=1, row_names=setting_names, title="Max movement joints", url = URL_HELP_MAX_MOVE, times_nr_joints=2))
+        
+        
         
         setting_names = ["Pos S1: ", "Pos S2: ", "Pos S3: ", "Pos S4: ", "Pos S5: ", "Pos S6: "]
         self.settings.append(CreateFields(rows=6, columns=1, row_names=setting_names, title="Posistion switch", url = URL_HELP_LIM_POS, times_nr_joints=1))

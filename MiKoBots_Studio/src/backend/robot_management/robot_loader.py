@@ -10,9 +10,7 @@ import shutil
 import zipfile
 from pathlib import Path
 
-from backend.calculations.kinematics_6_axis import ForwardKinematics_6, InverseKinmatics_6
-from backend.calculations.kinematics_3_axis import ForwardKinematics_3, InverseKinematics_3
-from backend.calculations.convert_matrix import MatrixToXYZ
+from backend.calculations import forwardKinematics, inverseKinematics, matrix_to_xyz
 
 from backend.file_managment import get_file_path
 
@@ -28,11 +26,6 @@ class RobotLoader(QObject):
 
     def __init__(self):
         super().__init__()
-        
-        self.ForwardKinematics_6 = ForwardKinematics_6()
-        self.ForwardKinematics_3 = ForwardKinematics_3()
-        self.InverseKinematics_6 = InverseKinmatics_6()
-        self.InverseKinematics_3 = InverseKinematics_3()
         
         #a list with all the robots that exsist
         self.robotFile = []    
@@ -108,17 +101,9 @@ class RobotLoader(QObject):
             var.EXTRA_JOINT = 0
 
 
-        if var.NUMBER_OF_JOINTS == 3 and var.EXTRA_JOINT:
-            try:
-                matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0], var.DH_PARAM)
-                XYZ = MatrixToXYZ(matrix["TOOL"])
-                var.POS_AXIS_SIM = XYZ
-            except:
-                print("Error")
-        elif var.NUMBER_OF_JOINTS == 6:
-            matrix = self.ForwardKinematics_6.ForwardKinematics([0,0,0,0,0,0], var.DH_PARAM)
-            XYZ = MatrixToXYZ(matrix["TOOL"])
-            var.POS_AXIS_SIM = XYZ
+        matrix = forwardKinematics(var.NUMBER_OF_JOINTS, [0]*var.NUMBER_OF_JOINTS, var.DH_PARAM)
+        var.POS_AXIS_SIM = matrix_to_xyz(var.NUMBER_OF_JOINTS, matrix["TOOL"])   
+
 
 
     def ShowPosRobot(self):
@@ -137,16 +122,10 @@ class RobotLoader(QObject):
             data = [file_path, settings_3d_model[i][3], np.eye(4), np.eye(4), settings_3d_model[i][5]]
             add_robot_sim(data)
             
-        if var.NUMBER_OF_JOINTS == 6:
-            matrix = self.ForwardKinematics_6.ForwardKinematics([0,0,0,0,0,0], var.DH_PARAM)
-            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
-        elif var.NUMBER_OF_JOINTS == 3:
-            matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0], var.DH_PARAM)
-            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
-        else:
-            print(var.LANGUAGE_DATA.get("message_no_kinematics"))
-        
-                        
+        matrix = forwardKinematics(var.NUMBER_OF_JOINTS, [0]*var.NUMBER_OF_JOINTS, var.DH_PARAM)
+        change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+        var.POS_AXIS_SIM = matrix_to_xyz(var.NUMBER_OF_JOINTS, matrix["TOOL"])  
+
         event_manager.publish("set_camera_pos_plotter", 3)         
     
   
@@ -164,18 +143,10 @@ class RobotLoader(QObject):
             var.TOOL_TYPE = "None"
             var.TOOL_POS = 0
             
-            if var.NUMBER_OF_JOINTS == 6:
-                joint_pos = self.InverseKinematics_6.InverseKinematics(var.POS_AXIS_SIM, var.POS_JOINT_SIM)
-                matrix = self.ForwardKinematics_6.ForwardKinematics(joint_pos, var.DH_PARAM)
-                change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
-            elif var.NUMBER_OF_JOINTS == 3 and var.EXTRA_JOINT:
-                try:
-                    joint_pos = self.InverseKinematics_3.inverseKinematics(var.POS_AXIS_SIM)
-                    matrix = self.ForwardKinematics_3.ForwardKinematics(joint_pos, var.DH_PARAM)
-                    change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT) 
-                except:
-                    print(" Error")     
-            return
+            joint_angles_end = inverseKinematics(var.NUMBER_OF_JOINTS,var.POS_AXIS_SIM, var.POS_JOINT_SIM)
+            matrix = forwardKinematics(var.NUMBER_OF_JOINTS, joint_angles_end, var.DH_PARAM)
+            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+            
     
     
         if len(var.TOOL_SETTINGS) > 0:
@@ -200,14 +171,10 @@ class RobotLoader(QObject):
                     
         var.TOOL = tool
         
-        if var.NUMBER_OF_JOINTS == 6:
-            joint_pos = self.InverseKinematics_6.InverseKinematics(var.POS_AXIS_SIM, var.POS_JOINT_SIM)
-            matrix = self.ForwardKinematics_6.ForwardKinematics(joint_pos, var.DH_PARAM)
-            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
-
-        elif var.NUMBER_OF_JOINTS == 3:
-            matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0], var.DH_PARAM)
-            change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+        joint_angles_end = inverseKinematics(var.NUMBER_OF_JOINTS,var.POS_AXIS_SIM, var.POS_JOINT_SIM)
+        matrix = forwardKinematics(var.NUMBER_OF_JOINTS, joint_angles_end, var.DH_PARAM)
+        change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
+        
             
         # send settings to the robot       
             

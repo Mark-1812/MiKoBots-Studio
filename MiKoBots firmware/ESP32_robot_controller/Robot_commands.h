@@ -63,16 +63,96 @@ void set_motor_pin(String command){
 
   for(int i=0; i < NUMBER_OF_JOINTS; i++) {  
     // set the motor pin & scale
-    pinMode(motors[i].step_pin,OUTPUT);
-    pinMode(motors[i].dir_pin,OUTPUT);
+    if (!motors[i].motor_type){
+      pinMode(motors[i].step_pin, OUTPUT);
+      pinMode(motors[i].dir_pin, OUTPUT);
+    }
+    else{
+      Serial.print("Joint is servo: ");
+      Serial.println(i);
+    }
   }
 
   sent_message("Motor pins settings are updated");
   sent_message("END");
 }
 
-void set_switch_pin(String command){
+void set_motor_type(String command){
   int pos_setting[12];
+
+  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+    pos_setting[i] = command.indexOf(alphabet[i]);
+  }
+
+  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+    if (i < NUMBER_OF_JOINTS - 1){
+      motors[i].motor_type = (command.substring(pos_setting[i] + 1, pos_setting[i + 1]).toInt() != 0); // convert it toa true (1) or false (0)
+    } else{
+      motors[i].motor_type = (command.substring(pos_setting[i] + 1).toInt() != 0); // convert it toa true (1) or false (0)
+    }
+  }
+
+  sent_message("Motor types are set");
+  sent_message("END");
+}
+
+void set_servo_pin(String command1){
+  // the setting for servo is build like this
+  // A servo_pin(1) B servo_max(1) C servo_min(1) D servo_degree(1) E servo_pin(2) F servo_max(2).............
+
+
+  int pos_setting[24];
+
+  for(int i = 0; i < NUMBER_OF_JOINTS * 4; i++){
+    pos_setting[i] = command1.indexOf(alphabet[i]);
+    Serial.println(pos_setting[i]);
+  }
+
+  Serial.println(command1);
+
+  int j = 0;
+  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+    motors[i].servo_pin = command1.substring(pos_setting[j] + 1, pos_setting[j + 1]).toInt();
+    motors[i].servo_max = command1.substring(pos_setting[j + 1] + 1, pos_setting[j + 2]).toFloat();
+    motors[i].servo_min = command1.substring(pos_setting[j + 2] + 1, pos_setting[j + 3]).toFloat();
+    if (i < NUMBER_OF_JOINTS - 1){
+      motors[i].servo_degree = command1.substring(pos_setting[j + 3] + 1, pos_setting[j + 4]).toInt();
+    } else{
+      motors[i].servo_degree = command1.substring(pos_setting[j + 3] + 1).toInt();
+    }
+
+    // Serial.println(motors[i].servo_pin);
+    // Serial.println(motors[i].servo_max);
+    // Serial.println(motors[i].servo_min);
+    // Serial.println(motors[i].servo_degree);
+    
+    j = j + 4;
+  }
+
+  for(int i=0; i < NUMBER_OF_JOINTS; i++) {  
+    if (motors[i].motor_type){
+      Serial.print("Joint is servo: ");
+      Serial.println(i);
+
+      // initialize the servo
+
+      motors[i].servo = &servoInstances[i];
+      motors[i].servo->attach(motors[i].servo_pin);
+
+      // set the step per deg
+      JointsInfo[i].StepPerDeg = (motors[i].servo_max - motors[i].servo_min) / float(motors[i].servo_degree);
+
+      Serial.print("Steps per deg servo: ");
+      Serial.println(JointsInfo[i].StepPerDeg);
+    }
+  }
+
+  sent_message("Servo pins settings are updated");
+  sent_message("END");
+}
+
+void set_switch_pin(String command){
+  int pos_setting[24];
 
   for(int i = 0; i < NUMBER_OF_JOINTS; i++){
     pos_setting[i] = command.indexOf(alphabet[i]);
@@ -143,10 +223,11 @@ void set_step_deg(String command){
     pos_setting[i] = command.indexOf(alphabet[i]);
   }
 
+  
   for(int i = 0; i < NUMBER_OF_JOINTS; i++){
-    if (i < NUMBER_OF_JOINTS - 1){
+    if (i < NUMBER_OF_JOINTS - 1 & !motors[i].motor_type){
       JointsInfo[i].StepPerDeg = command.substring(pos_setting[i] + 1, pos_setting[i + 1]).toInt();
-    } else{
+    } else if(!motors[i].motor_type){
       JointsInfo[i].StepPerDeg = command.substring(pos_setting[i] + 1).toInt();
     }
   }
@@ -226,6 +307,10 @@ void set_dh_par(String command){
 
   if (NUMBER_OF_JOINTS == 3){
     ForwardKinematic_3_PosStart();
+  }
+  if(NUMBER_OF_JOINTS == 5){
+    ForwardKinematic_5_PosEnd();
+    ForwardKinematic_5_PosStart();
   }
   if (NUMBER_OF_JOINTS == 6){
     ForwardKinematic_6_PosStart();
@@ -416,11 +501,19 @@ void home_Joints(String command){
       }
 
       // See if the joint order is the same 
-      if(JointsInfo[j].HomingOrder == i + 1){
+      if(JointsInfo[j].HomingOrder == i + 1 & !motors[j].motor_type){
+        
         moveToLimit(j);
         robot[j].PosJEnd = JointsInfo[j].HomingPos;
         MotorMoveJ(50, 80, 0, 0);
+        
+      } else if(JointsInfo[j].HomingOrder == i + 1 & !motors[j].motor_type){
+        // when the motor of the joint is a servo there is no limit switch 
+        // posLimitSwitch is the position of the servo when the joint is in 0 position
+        
+        MotorMoveJ(50, 80, 0, 0);
       }
+
     }
   }
 
@@ -435,7 +528,10 @@ void home_Joints(String command){
     ForwardKinematic_6_PosEnd();
     ForwardKinematic_6_PosStart();
   }
-
+  if(NUMBER_OF_JOINTS == 5){
+      ForwardKinematic_5_PosEnd();
+      ForwardKinematic_5_PosStart();
+  }
   if(NUMBER_OF_JOINTS == 3){
     ForwardKinematic_3_PosEnd();
     ForwardKinematic_3_PosStart();
@@ -470,7 +566,10 @@ void offsetJ(String command){
   if (NUMBER_OF_JOINTS == 6){
     InverseKinematic_6();
   }
-  if (NUMBER_OF_JOINTS == 3){
+  else if (NUMBER_OF_JOINTS == 5){
+    InverseKinematic_5();
+  }
+  else if (NUMBER_OF_JOINTS == 3){
     InverseKinematic_3();
   }
 
@@ -533,7 +632,10 @@ void offsetL(String command){
       if(NUMBER_OF_JOINTS == 6){
         InverseKinematic_6();
       }
-      if(NUMBER_OF_JOINTS == 3){
+      else if(NUMBER_OF_JOINTS == 5){
+        InverseKinematic_5();
+      }
+      else if(NUMBER_OF_JOINTS == 3){
         InverseKinematic_3();
       }
 
@@ -569,6 +671,7 @@ void jogJ(String command){
 
 
 
+
   error = check_for_error();
   if (error != 1)
   {
@@ -578,7 +681,11 @@ void jogJ(String command){
       ForwardKinematic_6_PosStart();
       ForwardKinematic_6_PosEnd();
     }
-    if(NUMBER_OF_JOINTS == 3){
+    else if(NUMBER_OF_JOINTS == 5){
+      ForwardKinematic_5_PosStart();
+      ForwardKinematic_5_PosEnd();
+    }
+    else if(NUMBER_OF_JOINTS == 3){
       ForwardKinematic_3_PosStart();
       ForwardKinematic_3_PosEnd();
     }    
@@ -616,10 +723,15 @@ void MoveJoint(String command){
       ForwardKinematic_6_PosEnd();
       ForwardKinematic_6_PosStart();
     }
-    if(NUMBER_OF_JOINTS == 3){
+    else if(NUMBER_OF_JOINTS == 5){
+      ForwardKinematic_5_PosEnd();
+      ForwardKinematic_5_PosStart();
+    }
+    else if(NUMBER_OF_JOINTS == 3){
       ForwardKinematic_3_PosEnd();
       ForwardKinematic_3_PosStart();
     }    
+
 
     for(int i = 0; i < NUMBER_OF_JOINTS; i++){
       robot[i].PosJStart = robot[i].PosJEnd;
@@ -646,7 +758,10 @@ void jogL(String command){
   if(NUMBER_OF_JOINTS == 6){
     InverseKinematic_6();
   }
-  if(NUMBER_OF_JOINTS == 3){
+  else if(NUMBER_OF_JOINTS == 5){
+    InverseKinematic_5();
+  }
+  else if(NUMBER_OF_JOINTS == 3){
     InverseKinematic_3();
   }
   
@@ -683,6 +798,12 @@ void jogL(String command){
       if(NUMBER_OF_JOINTS == 6){
         InverseKinematic_6();
       }
+      else if(NUMBER_OF_JOINTS == 5){
+        InverseKinematic_5();
+      }
+      else if(NUMBER_OF_JOINTS == 3){
+        InverseKinematic_3();
+      }
 
       //error = check_for_error();
       if(error != 1){
@@ -717,7 +838,10 @@ void MoveJ(String command){
   if(NUMBER_OF_JOINTS == 6){
     InverseKinematic_6();
   }
-  if(NUMBER_OF_JOINTS == 3){
+  else if(NUMBER_OF_JOINTS == 5){
+    InverseKinematic_5();
+  }
+  else if(NUMBER_OF_JOINTS == 3){
     InverseKinematic_3();
   }
 
@@ -784,7 +908,10 @@ void MoveL(String command){
       if(NUMBER_OF_JOINTS == 6){
         InverseKinematic_6();
       }
-      if(NUMBER_OF_JOINTS == 3){
+      else if (NUMBER_OF_JOINTS == 5){
+        InverseKinematic_5();
+      }
+      else if(NUMBER_OF_JOINTS == 3){
         InverseKinematic_3();
       }
       

@@ -33,9 +33,12 @@ class IO():
             print("error do not regonize this type, only INPUT or OUTPUT")        
     
     def digitalRead(self, pin_number):
+        print(self.type)
         if self.type == "INPUT":
             
+            print(f"IO check {IO_CHECK}")
             IO_CHECK = event_manager.publish("request_check_io_state", pin_number)[0]
+            print(f"IO check {IO_CHECK}")
             
             if IO_CHECK:
                 return True

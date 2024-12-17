@@ -9,9 +9,6 @@ import shutil
 import zipfile
 from pathlib import Path
 
-from backend.calculations.kinematics_6_axis import ForwardKinematics_6, InverseKinmatics_6
-from backend.calculations.kinematics_3_axis import ForwardKinematics_3, InverseKinematics_3
-
 from backend.file_managment import get_file_path, get_platform
 from backend.core.event_manager import event_manager
 
@@ -21,11 +18,6 @@ from gui.windows.message_boxes import ErrorMessage, WarningMessageRe
 class RobotSettings:
     def __init__(self):
         super().__init__()
-        
-        self.ForwardKinematics_6 = ForwardKinematics_6()
-        self.ForwardKinematics_3 = ForwardKinematics_3()
-        self.InverseKinematics_6 = InverseKinmatics_6()
-        self.InverseKinematics_3 = InverseKinematics_3()
         
         #a list with all the robots that exsist
         self.robotFile = []    
@@ -61,6 +53,14 @@ class RobotSettings:
         if not 'Set_robot_name' in general_setting:
             self.selected_robot_name = {'Set_robot_name': [self.selected_robot_name,""]}
             general_setting = {**self.selected_robot_name, **general_setting}
+            
+        if not 'Set_motor_type' in general_setting:
+            self.selected_robot_name = {'Set_motor_type': [[""]*number_of_joints,""]}
+            general_setting = {**self.selected_robot_name, **general_setting}
+            
+        if not 'Set_servo_settings' in general_setting:
+            self.selected_robot_name = {'Set_servo_settings': [[""]*4*number_of_joints,""]}
+            general_setting = {**self.selected_robot_name, **general_setting}
 
         return [general_setting, robot_model_settings, robot_tool_settings, number_of_joints, dh_param]
                      
@@ -95,7 +95,9 @@ class RobotSettings:
             "Set_extra_joint": [0, ""],
             'Set_robot_name': [robot_name, ""],
             'Set_tools': [["0", "0", "0", "0", "0", "0"],""], 
-            'Set_io_pin': [["0", "0", "0", "0", "0", "0"],""]
+            'Set_io_pin': [["0", "0", "0", "0", "0", "0"],""],
+            'Set_motor_type': [["0", "0", "0", "0", "0", "0"],""],
+            'Set_servo_settings': [["0", "0", "0", "0", "0", "0","0", "0", "0", "0", "0", "0","0", "0", "0", "0", "0", "0","0", "0", "0", "0", "0", "0"],""]
             }     
 
         self.robots.append([robot_name, settings_robot, [], [], "IO settings"])

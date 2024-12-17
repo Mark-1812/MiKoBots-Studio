@@ -96,8 +96,10 @@ class RobotSimulation:
 
     def ChangePosRobot(self, matrix, name_joints, number_of_joints, extra_joint):
 
-        if len(self.plotter_robot) > number_of_joints - 1 + extra_joint:
+        # if len(self.plotter_robot) > number_of_joints - 1 + extra_joint:
+        try:
             for i in range(len(self.plotter_robot)):
+                print(self.plotter_robot[i][4])
                 if self.plotter_robot[i][4] == "Link 1":   
                     matrix_data = self.plotter_robot[i][2]
                     self.plotter_robot[i][2] = np.linalg.inv(matrix[name_joints[0]])
@@ -206,7 +208,7 @@ class RobotSimulation:
                     self.plotter_robot[i][0].SetUserTransform(transform)
                     self.plotter_robot[i][3] = matrix[name_joints[5]]  
                     
-                                                   
+                                                    
             if self.plotter_tool[0]:
                 matrix_data = self.plotter_tool[2]
                 self.plotter_tool[2] = np.linalg.inv(matrix[name_joints[6]])
@@ -225,6 +227,8 @@ class RobotSimulation:
                 self.plotter_tool[0].SetUserTransform(transform)
                 self.plotter_tool[3] = matrix[name_joints[6]]  
 
+        except:
+            pass
         self.rendering()
 
     def rendering(self):

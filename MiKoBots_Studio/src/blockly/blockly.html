@@ -8,6 +8,8 @@
     <script src="blockly/blocks_compressed.js"></script>
     <script src="blockly/python_compressed.js"></script>
     <script src="blockly/msg/js/en.js"></script>
+    <script src="Custom_blocks/WAIT/blocks_wait.js"></script>
+    <script src="Custom_blocks/WAIT/generators/python.js"></script>
     <script src="Custom_blocks/ROBOT_6/blocks_robot_6.js"></script>
     <script src="Custom_blocks/ROBOT_6/generators/python.js"></script>
     <script src="Custom_blocks/ROBOT_3/blocks_robot_3.js"></script>
@@ -93,6 +95,9 @@
                         <block type="logic_null"></block>
                         <block type="logic_ternary"></block>
                     </category>
+                    <category name="Wait" colour="315">
+                        <block type="wait"></block>
+                    </category>
                     <category name="Loops" colour="120">
                         <block type="controls_repeat_ext1"></block>
                         <block type="controls_whileUntil1"></block>
@@ -167,6 +172,7 @@
                     </category>
                     <category name="Vision" colour="0">  
                         <block type="vision_find_objects"></block>   
+                        <block type="vision_find_objects_area"></block>   
                         <block type="vision_move_to"></block>
                     </category>
                     <category name="Tic Tac Toe" colour="180">  

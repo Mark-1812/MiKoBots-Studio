@@ -83,7 +83,9 @@ class Vision():
                 if Xcenter > (self.height_picture / 2):    
                     Xplace_from_center = (Xcenter - (self.height_picture / 2)) * mm_per_pixel
                 else:
-                    Xplace_from_center = -((self.height_picture / 2) - Xcenter) * mm_per_pixel    
+                    Xplace_from_center = -((self.height_picture / 2) - Xcenter) * mm_per_pixel
+
+                angle = 0    
 
                 if Yplace_from_center > 0 and Xplace_from_center > 0:
                     angle_xy = math.atan(abs(Xplace_from_center) / abs(Yplace_from_center))
@@ -174,7 +176,7 @@ class Vision():
                     Xobject_place = round(pos_x  + x_offset, 1)
                 
                 
-                print(f"x {Xobject_place}, y {Yobject_place}, height {height}, width {width}")
+                
                 
                 
 
@@ -186,18 +188,24 @@ class Vision():
                     if Xobject_place > area_X and Xobject_place < (area_X + width_area) and Yobject_place > area_Y and Yobject_place < (area_Y + height_area):
                         print(f"in serach area x {Xobject_place}, y {Yobject_place}, height {height}, width {width}")
                         self.Objects.append([Xobject_place, Yobject_place, width, height, angle, color])
+                        event_manager.publish("request_set_pixmap_image", image_RGB)
                 else:
+                    print(f"x {Xobject_place}, y {Yobject_place}, height {height}, width {width}")
                     self.Objects.append([Xobject_place, Yobject_place, width, height, angle, color])
+                    event_manager.publish("request_set_pixmap_image", image_RGB)
                 
                 
         # check if there are no dounbles is the object list
-        event_manager.publish("request_set_pixmap_image", image_RGB)
+        
         
         return self.Objects
     
     def MoveToObject(self, list_objects = list, Zdistance = int, vel = 50, accel = 50, check = None):
         self.RobotCommand = Move()
         number_of_joints = var.NUMBER_OF_JOINTS
+
+        if type(list_objects[0]) == list:
+            list_objects = list_objects[0]
 
         if number_of_joints == 6:
             POSXYZ = [0]*6

@@ -5,7 +5,7 @@ import numpy as np
 from stl import mesh
 
 from backend.core.event_manager import event_manager
-from backend.calculations.convert_matrix import XYZToMatrix, MatrixToXYZ
+from backend.calculations.convert_matrix import XYZToMatrix
 from backend.file_managment import get_file_path
 
 import vtk

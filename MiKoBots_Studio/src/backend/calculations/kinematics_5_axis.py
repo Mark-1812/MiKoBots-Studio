@@ -5,7 +5,7 @@ import numpy as np
 import backend.core.variables as var
 import math
 
-class ForwardKinematics_3:
+class ForwardKinematics_5:
     def __init__(self):
         pass
     
@@ -68,29 +68,20 @@ class ForwardKinematics_3:
     
     def run(self, Joint_angle, dh_params):
         dh_params = [[float(value) for value in sublist] for sublist in dh_params]
-
-        extra_joint = 0
-        if len(dh_params) > 3:
-            extra_joint = 1
         
-        if extra_joint == 1:
-            Joints = ["J1", "J2", "J3", "J4", "TOOL"]
-        else:
-            Joints = ["J1", "J2", "J3", "TOOL"]
+        Joints = ["J1", "J2", "J3", "J4", "J5", "TOOL"]
+
             
         PositionsJoints = {}
         T =np.eye(4)
 
-        for i in range(3 + extra_joint):
+        for i in range(5):
             try:
                 dh_param = dh_params[i]
             except:
                 dh_param = [0,0,0,0]
 
-            if extra_joint == 1 and i == 3:
-                dh_param[0] = dh_param[0] - (dh_params[1][0] + dh_params[2][0])
-            else:
-                dh_param[0] = dh_param[0] + Joint_angle[i]
+            dh_param[0] = dh_param[0] + Joint_angle[i]
 
             T_i = self.dh_transform(dh_param)
             T = np.dot(T, T_i)
@@ -101,14 +92,14 @@ class ForwardKinematics_3:
         T = np.dot(T, Tool_matrix)  
 
 
-        if extra_joint == 1:
-            PositionsJoints[Joints[4]] = T
-        else:
-            PositionsJoints[Joints[3]] = T
+        PositionsJoints[Joints[5]] = T
         
         return PositionsJoints
  
-class InverseKinematics_3:
+ 
+ 
+ 
+class InverseKinematics_5:
     def __init__(self):
         pass
     
@@ -120,9 +111,11 @@ class InverseKinematics_3:
         tool_Z = tool_frame[2]
         
         
-        X = pos[0] - tool_X
-        Y = pos[1] - tool_Z
-        Z = pos[2] - tool_Y
+        X = pos[0] #- tool_X
+        Y = pos[1] #- tool_Z
+        Z = pos[2] #- tool_Y
+        pitch = pos[3]
+        roll = pos[4]
         
         #print(f"X {X} Y {Y} Z {Z}")
         dh_param = var.DH_PARAM
@@ -137,32 +130,46 @@ class InverseKinematics_3:
         J1 = math.atan(Y / X)
         J1 = math.degrees(J1) 
         
-        r = math.sqrt(X**2 + Y**2) - L4
-        #print(f"r: {r}")
         
-        D = math.sqrt((Z - L1)**2 + r**2)
-        #print(f"D: {D}")
+        #L4 becomes the lenth of the 
         
+        pitch_length = L4 * math.cos(math.radians(pitch))
+        # print(f"pitch_lenth {pitch_lenth}")
+        pitch_height = L4 * math.sin(math.radians(pitch))
+        # print(f"pitch_height {pitch_height}")
+        
+        r = math.sqrt(X**2 + Y**2) - pitch_length
+        # print(f"r: {r}")
+        
+        D = math.sqrt((Z - L1 - pitch_height)**2 + r**2)
+        # print(Z - L1 - pitch_height)
+        # print(f"D: {D}")
         
         a1 = math.acos((D**2 + L2**2 - L3**2) / (2 * D * L2))
-        #print(f"a1: {math.degrees(a1)}")
+        # print(f"a1: {math.degrees(a1)}")
         
-        a2 = math.atan((Z-L1)/r)
-        #print(f"a2: {math.degrees(a2)}")
+        a2 = math.atan((Z-L1-pitch_height)/r)
+        # print(f"a2: {math.degrees(a2)}")
 
         J2 = math.degrees(a1) + math.degrees(a2) - 90
         
-        J3 = math.acos((D**2 - L3**2 -  L2**2) / (2 * L3 * L2))
-        J3 = 90 - math.degrees(J3)
+        # print(D**2 - L3**2 -  L2**2)
+        
+        J3 = (math.degrees(math.acos((D**2 - L3**2 -  L2**2) / (2 * L3 * L2)))-90) * -1
 
-        J4 = -(J2+J3)
+        J4 = pitch - J2 - J3
+        
+        J5 = roll
 
         # print(f"J1: {J1}")
         # print(f"J2: {J2}")
         # print(f"J3: {J3}")
         # print(f"J4: {J4}")
         
-        POSJ123 = [J1,J2,J3,J4]
+        POSJ123 = [J1,J2,J3,J4,J5]
         
         return POSJ123
     
+
+
+

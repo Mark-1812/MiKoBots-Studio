@@ -21,6 +21,7 @@ class TalkThroughCOM():
 
         self.stop = False
         self.pauze = False
+        self.busy = False
 
         self.pause_event.clear()
 
@@ -31,7 +32,7 @@ class TalkThroughCOM():
         try:        
             print(com_port)
             self.com_port = com_port
-            self.com_ser = serial.Serial(self.com_port, baudrate=115200)#, timeout=1)
+            self.com_ser = serial.Serial(self.com_port, baudrate=57600)#, timeout=1)
             self.com_ser .dtr = False   # Ensure DTR is inactive
             self.com_ser .setRTS(False) # Deactivate RTS first
             time.sleep(0.1)
@@ -163,8 +164,8 @@ class TalkThroughCOM():
 
                 else:
                     pass
-                    data_text = "ROBOT: " + data
-                    print(data_text) 
+                data_text = "ROBOT: " + data
+                print(data_text) 
                         
                 data = None
 
@@ -180,6 +181,7 @@ class TalkThroughCOM():
         
         self.busy = 1   
         try:
+            print(command)
             self.com_ser.write(command.encode())
         except:
             self.DisConnect()
@@ -222,20 +224,26 @@ class TalkThroughCOM():
                 # send all the settings to the robot except for the settings where the IO_box is checked
                 robot_settings = var.ROBOT_SETTINGS
 
-                for category in robot_settings:
-                    category_names.append(category)
-                           
                 # sent first the number of joints
                 command = f'Set_number_of_joints A{var.NUMBER_OF_JOINTS}\n'
+                self.SendLineCommand(command)
+                
+                settings = robot_settings['Set_motor_type']
+                command = make_line_ABC(settings[0], 'Set_motor_type')
+                self.SendLineCommand(command)
+                
+                settings = robot_settings['Set_servo_settings']
+                command = make_line_ABC(settings[0], 'Set_servo_settings')
                 self.SendLineCommand(command)
                 
                 if var.EXTRA_JOINT:
                     command = f'Set_extra_joint A1\n'
                     self.SendLineCommand(command) 
+                    
                            
                 for category in robot_settings:
                     settings = robot_settings[category]
-                    if settings[1] == "" and  category != 'Set_extra_joint' and  category != 'Set_io_pin'and  category != 'Set_robot_name' and  category != "Set_tools":
+                    if settings[1] == "" and  category != 'Set_extra_joint' and category != 'Set_motor_type' and category != 'Set_servo_settings' and  category != 'Set_io_pin'and  category != 'Set_robot_name' and  category != "Set_tools":
                         
                         command = make_line_ABC(settings[0], category)
                         self.SendLineCommand(command)

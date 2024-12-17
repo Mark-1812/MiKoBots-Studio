@@ -8,6 +8,23 @@ extern float toolFrameRev[4][4];
 
 extern float R06_neg_matrix[4][4];
 
+// extern float T_i[4][4] = {
+//   {1, 0, 0, 1},
+//   {0, 1, 0, 2},
+//   {0, 0, 1, 3},
+//   {0, 0, 0, 1}
+// };
+
+// extern float T[4][4] = {
+//   {1, 0, 0, 0},
+//   {0, 1, 0, 0},
+//   {0, 0, 1, 0},
+//   {0, 0, 0, 1}
+//   };
+
+// extern float result[4][4];
+
+
 
 //DECLARE JOINT MATRICES
 extern double JointMatrix[6][4][4];

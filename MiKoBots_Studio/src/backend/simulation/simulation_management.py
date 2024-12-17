@@ -1,7 +1,6 @@
 import backend.core.variables as var
-from backend.calculations.kinematics_6_axis import ForwardKinematics_6, InverseKinmatics_6
-from backend.calculations.kinematics_3_axis import ForwardKinematics_3, InverseKinematics_3
-from backend.calculations.convert_matrix import MatrixToXYZ
+from backend.calculations import forwardKinematics, inverseKinematics, matrix_to_xyz
+
 
 from PyQt5.QtCore import QObject
 
@@ -18,12 +17,6 @@ from .robot import change_pos_robot
 
 class SimulationManagement(QObject):
     def __init__(self):
-        self.forward_kinematics_6 = ForwardKinematics_6()
-        self.inverse_kinematics_6 = InverseKinmatics_6()
-        
-        self.inverse_kinematics_3 = InverseKinematics_3()
-        self.forward_kinematics_3 = ForwardKinematics_3()
-        
         self.Motion_ok = True
         self.simulation_on = False
         self.simulation_busy = False
@@ -67,10 +60,10 @@ class SimulationManagement(QObject):
     # Movements action robot
     
     def jogJ(self, line):     
-        
-
         if self.number_of_joints == 3:
             pattern = r'J1(-?\d+).*J2(-?\d+).*J3(-?\d+)'
+        elif self.number_of_joints == 5:
+            pattern = r'J1(-?\d+).*J2(-?\d+).*J3(-?\d+).*J4(-?\d+).*J5(-?\d+)'
         elif self.number_of_joints == 6:
             pattern = r'J1(-?\d+).*J2(-?\d+).*J3(-?\d+).*J4(-?\d+).*J5(-?\d+).*J6(-?\d+)'
         else:
@@ -90,21 +83,15 @@ class SimulationManagement(QObject):
                 max_angle = abs(Joint_angles_delta[i])
             Joint_angles_end[i] = Joint_angles_delta[i] + var.POS_JOINT_SIM[i]
             
-            
- 
         # check if the robot can reach the position
         self.Motion_ok = self.checkJointPos(Joint_angles_end, True)
         
         # move the robot
         if self.Motion_ok:
             self.JTypeMovement(Joint_angles_start, Joint_angles_end)
-
-            if self.number_of_joints == 3:
-                matrix = self.forward_kinematics_3.ForwardKinematics(var.POS_JOINT_SIM, var.DH_PARAM)
-                var.POS_AXIS_SIM = MatrixToXYZ(matrix["TOOL"])
-            elif self.number_of_joints == 6:
-                matrix = self.forward_kinematics_6.ForwardKinematics(var.POS_JOINT_SIM, var.DH_PARAM)
-                var.POS_AXIS_SIM = MatrixToXYZ(matrix["TOOL"])      
+            
+            matrix = forwardKinematics(self.number_of_joints, var.POS_JOINT_SIM, var.DH_PARAM)
+            var.POS_AXIS_SIM = matrix_to_xyz(self.number_of_joints, matrix["TOOL"])   
 
             
             self.updateLabels()
@@ -112,6 +99,8 @@ class SimulationManagement(QObject):
     def MoveJoint(self, line):
         if self.number_of_joints == 3:
             pattern = r'J1(-?\d+).*J2(-?\d+).*J3(-?\d+)'
+        elif self.number_of_joints == 5:
+            pattern = r'J1(-?\d+).*J2(-?\d+).*J3(-?\d+).*J4(-?\d+).*J5(-?\d+)'
         elif self.number_of_joints == 6:
             pattern = r'J1(-?\d+).*J2(-?\d+).*J3(-?\d+).*J4(-?\d+).*J5(-?\d+).*J6(-?\d+)'
         else:
@@ -133,12 +122,9 @@ class SimulationManagement(QObject):
             self.JTypeMovement(Joint_angles_start, Joint_angles_end)
             
             # Calculate the XYZ position of the robot
-            if self.number_of_joints == 3:
-                matrix = self.forward_kinematics_3.ForwardKinematics(var.POS_JOINT_SIM, var.DH_PARAM)
-                var.POS_AXIS_SIM = MatrixToXYZ(matrix["TOOL"])
-            elif self.number_of_joints == 6:
-                matrix = self.forward_kinematics_6.ForwardKinematics(var.POS_JOINT_SIM, var.DH_PARAM)
-                var.POS_AXIS_SIM = MatrixToXYZ(matrix["TOOL"])       
+            matrix = forwardKinematics(self.number_of_joints, var.POS_JOINT_SIM, var.DH_PARAM)
+            var.POS_AXIS_SIM = matrix_to_xyz(self.number_of_joints, matrix["TOOL"])   
+                
             
             # update the position in the labels
             self.updateLabels()
@@ -146,6 +132,8 @@ class SimulationManagement(QObject):
     def MoveJ(self, line): 
         if self.number_of_joints == 3:
             pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+)'
+        elif self.number_of_joints == 5:
+            pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+).*y(-?\d+).*p(-?\d+)'
         elif self.number_of_joints == 6:
             pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+).*y(-?\d+).*p(-?\d+).*r(-?\d+)'
         else:
@@ -161,10 +149,8 @@ class SimulationManagement(QObject):
                       
         if self.Motion_ok:
             # calculate the end position of the joins
-            if self.number_of_joints == 6:
-                Joint_angles_end = self.inverse_kinematics_6.InverseKinematics(axis_pos_end, var.POS_JOINT_SIM)
-            elif self.number_of_joints == 3:
-                Joint_angles_end = self.inverse_kinematics_3.inverseKinematics(axis_pos_end)
+            Joint_angles_end = inverseKinematics(self.number_of_joints, axis_pos_end, var.POS_JOINT_SIM)
+
             
             self.JTypeMovement(Joint_angles_start, Joint_angles_end)
 
@@ -175,6 +161,8 @@ class SimulationManagement(QObject):
     def OffsetJ(self, line):
         if self.number_of_joints == 3:
             pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+)'
+        elif self.number_of_joints == 5:
+            pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+).*y(-?\d+).*p(-?\d+)'
         elif self.number_of_joints == 6:
             pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+).*y(-?\d+).*p(-?\d+).*r(-?\d+)'
         else:
@@ -195,10 +183,7 @@ class SimulationManagement(QObject):
 
         if self.Motion_ok:
             # calculate the end position of the joints
-            if self.number_of_joints == 6:
-                Joint_angles_end = self.inverse_kinematics_6.InverseKinematics(axis_pos_end, var.POS_JOINT_SIM)
-            elif self.number_of_joints == 3:
-                Joint_angles_end = self.inverse_kinematics_3.inverseKinematics(axis_pos_end)
+            Joint_angles_end = inverseKinematics(self.number_of_joints, axis_pos_end, var.POS_JOINT_SIM)
 
             # move the robot to the new position
             self.JTypeMovement(Joint_angles_start, Joint_angles_end)
@@ -210,6 +195,8 @@ class SimulationManagement(QObject):
     def MoveL(self, line):
         if self.number_of_joints == 3:
             pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+)'
+        elif self.number_of_joints == 5:
+            pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+).*y(-?\d+).*p(-?\d+)'
         elif self.number_of_joints == 6:
             pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+).*y(-?\d+).*p(-?\d+).*r(-?\d+)'
         else:
@@ -234,6 +221,8 @@ class SimulationManagement(QObject):
         # read the line
         if self.number_of_joints == 3:
             pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+)'
+        elif self.number_of_joints == 5:
+            pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+).*y(-?\d+).*p(-?\d+)'
         elif self.number_of_joints == 6:
             pattern = r'X(-?\d+).*Y(-?\d+).*Z(-?\d+).*y(-?\d+).*p(-?\d+).*r(-?\d+)'
         else:
@@ -312,26 +301,20 @@ class SimulationManagement(QObject):
 
             # calculate the end position of this step
             axis_pos_start = [a + b for a, b in zip(axis_pos_start, axis_increments)]
-
-            if self.number_of_joints == 6:
-                Joint_angles = self.inverse_kinematics_6.InverseKinematics(axis_pos_start, var.POS_JOINT_SIM)
-            elif self.number_of_joints == 3:
-                Joint_angles = self.inverse_kinematics_3.inverseKinematics(axis_pos_start)
+            
+            Joint_angles_end = inverseKinematics(self.number_of_joints, axis_pos_start, var.POS_JOINT_SIM)
 
             # check if it can reach the position
-            self.Motion_ok = self.checkJointPos(Joint_angles, True)
+            self.Motion_ok = self.checkJointPos(Joint_angles_end, True)
 
             # calculate the matrix for the position of the sim models
-            if self.number_of_joints == 6:
-                matrix = self.forward_kinematics_6.ForwardKinematics(Joint_angles,var.DH_PARAM)
-            elif self.number_of_joints == 3: 
-                matrix = self.forward_kinematics_3.ForwardKinematics(Joint_angles, var.DH_PARAM)
+            matrix = forwardKinematics(self.number_of_joints, Joint_angles_end, var.DH_PARAM)
             
             # move the robot in the simulation
             change_pos_robot(matrix, var.NAME_JOINTS, self.number_of_joints, self.extra_joint)
 
             # calculate the joint increments and calculate the delay between each step
-            joint_increments = [a - b for a, b in zip(Joint_angles, var.POS_JOINT_SIM)]
+            joint_increments = [a - b for a, b in zip(Joint_angles_end, var.POS_JOINT_SIM)]
             delay = self.CalculateSpeed(joint_increments)
 
             end_time = time.time()
@@ -339,7 +322,7 @@ class SimulationManagement(QObject):
 
             time.sleep(delay - delay_calculations)
 
-            var.POS_JOINT_SIM = Joint_angles
+            var.POS_JOINT_SIM = Joint_angles_end
 
 
         var.POS_AXIS_SIM = axis_pos_start
@@ -404,11 +387,7 @@ class SimulationManagement(QObject):
 
             # print(f"Joint start: {Joint_angles_start}")
             # print(f"Joint end: {Joint_angles_end}")
-
-            if self.number_of_joints == 6:
-                matrix = self.forward_kinematics_6.ForwardKinematics(Joint_angles_start, var.DH_PARAM)
-            elif self.number_of_joints == 3: 
-                matrix = self.forward_kinematics_3.ForwardKinematics(Joint_angles_start, var.DH_PARAM)
+            matrix = forwardKinematics(self.number_of_joints, Joint_angles_start, var.DH_PARAM)
 
             change_pos_robot(matrix, var.NAME_JOINTS, self.number_of_joints, self.extra_joint)
             delay_time = self.CalculateSpeed(Joints_increments)
@@ -468,24 +447,30 @@ class SimulationManagement(QObject):
         return delay
        
     # check if the robot can reach the position       
-    def checkJointPos(self, end_pos, joint):
+    def checkJointPos(self, joint_angles_end, joint):
+        print("checkJointPos")
         pos = True
         try:
+            print(joint)
             if not joint:
-                if self.number_of_joints == 6:
-                    end_pos = self.inverse_kinematics_6.InverseKinematics(end_pos, var.POS_JOINT_SIM)
-                elif self.number_of_joints == 3:
-                    end_pos = self.inverse_kinematics_3.inverseKinematics(end_pos)
+                print("try")
+                joint_angles_end = inverseKinematics(self.number_of_joints, joint_angles_end, var.POS_JOINT_SIM)
+                print(f"joint_angles_end {joint_angles_end}")
+                
+            print(f"joint_angles_end")
             for i in range(self.number_of_joints):
-                if end_pos[i] < float(var.MAX_JOINT_MOVE[i * 2]):
+                print(f"joint_angles_end {joint_angles_end}")
+                if joint_angles_end[i] < float(var.MAX_JOINT_MOVE[i * 2]):
                     pos = False
-                if end_pos[i] > float(var.MAX_JOINT_MOVE[i * 2 + 1]):
+                if joint_angles_end[i] > float(var.MAX_JOINT_MOVE[i * 2 + 1]):
                     pos = False
                 for i in range(self.number_of_joints):
-                    if np.isnan(end_pos[i]):
+                    if np.isnan(joint_angles_end[i]):
                         pos = False
         except:
             pos = False
+                       
+                       
                        
         if pos == False:
             print(var.LANGUAGE_DATA.get("message_cannot_reach_pos")) 

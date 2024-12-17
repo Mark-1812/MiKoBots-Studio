@@ -79,6 +79,13 @@ def close_robot():
 def scan_for_robots():
     talk_with_robot_bt.ScanForDevice()
 
+def check_robot_busy(): 
+    if talk_with_robot_bt.busy:
+        return True
+    if talk_with_robot_com.busy:
+        return True
+    
+    return False
 
 def send_tool_frame():
     if talk_with_robot_bt.connect:

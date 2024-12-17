@@ -58,6 +58,91 @@ Blockly.defineBlocksWithJsonArray([
     "inputsInline": true
   },
 
+  // block vision find objects in search area
+  {
+    "type": "vision_find_objects_area",
+    "tooltip": "",
+    "helpUrl": "",
+    "message0": "Find objects %1 color %2 %3 Area X %4 Y %5 w %6 h %7 %8",
+    "args0": [
+      {
+        "type": "input_dummy",
+        "name": "NAME"
+      },
+      {
+        "type": "field_dropdown",
+        "name": "NAME",
+        "options": [
+          [
+            "Red",
+            "RED"
+          ],
+          [
+            "Green",
+            "GREEN"
+          ],
+          [
+            "Blue",
+            "BLUE"
+          ],
+          [
+            "Yellow",
+            "YELLOW"
+          ],
+          [
+            "Orange",
+            "ORANGE"
+          ],
+          [
+            "Purple",
+            "PURPLE"
+          ],
+          [
+            "White",
+            "WHITE"
+          ],
+          [
+            "Black",
+            "BLACK"
+          ]
+        ]
+      },
+      {
+        "type": "input_dummy",
+        "name": "color"
+      },
+      {
+        "type": "field_number",
+        "name": "area_x",
+        "value": 0
+      },
+      {
+        "type": "field_number",
+        "name": "area_y",
+        "value": 0
+      },
+      {
+        "type": "field_number",
+        "name": "area_w",
+        "value": 100,
+        "min": 0
+      },
+      {
+        "type": "field_number",
+        "name": "area_h",
+        "value": 100,
+        "min": 0
+      },
+      {
+        "type": "input_dummy",
+        "name": "area"
+      }
+    ],
+    "output": null,
+    "colour": 0,
+    "inputsInline": true
+  },
+                      
   // block vision move to 
   {
     "type": "vision_move_to",

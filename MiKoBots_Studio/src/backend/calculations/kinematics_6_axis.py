@@ -66,7 +66,7 @@ class ForwardKinematics_6:
         ])
         return transformation_matrix
     
-    def ForwardKinematics(self, Joint_angle, dh_params):
+    def run(self, Joint_angle, dh_params):
         dh_params = [[float(value) for value in sublist] for sublist in dh_params]
 
         Joints = ["J1", "J2", "J3", "J4", "J5", "J6", "TOOL"]
@@ -93,7 +93,7 @@ class ForwardKinematics_6:
         
         return PositionsJoints
     
-class InverseKinmatics_6:
+class InverseKinematics_6:
     def __init__(self):
         pass
 
@@ -279,7 +279,7 @@ class InverseKinmatics_6:
         ])
         return R06_neg_matrix 
 
-    def InverseKinematics(self, POS_XYZ, POS_J123):     
+    def run(self, POS_XYZ, POS_J123):     
         DHparams = v.DH_PARAM
 
         X = POS_XYZ[0]

@@ -5,8 +5,7 @@ from backend.core.event_manager import event_manager
 import backend.core.variables as var
 
 from backend.file_managment import get_file_path
-from backend.calculations.kinematics_6_axis import ForwardKinematics_6, InverseKinmatics_6
-from backend.calculations.kinematics_3_axis import ForwardKinematics_3, InverseKinematics_3
+from backend.calculations import inverseKinematics, forwardKinematics
 
 from gui.windows.message_boxes import WarningMessageRe
 
@@ -23,11 +22,6 @@ from backend.simulation.robot import add_robot_preview, change_pos_preview, dele
 class Robot3dModel:
     def __init__(self):
         super().__init__()
-
-        self.ForwardKinematics_6 = ForwardKinematics_6()
-        self.ForwardKinematics_3 = ForwardKinematics_3()
-        self.InverseKinematics_6 = InverseKinmatics_6()
-        self.InverseKinematics_3 = InverseKinematics_3()
 
         self.model_3d_item = None
 
@@ -234,17 +228,9 @@ class Robot3dModel:
             data = [file_path, settings_3d_model[i][3], np.eye(4), np.eye(4), settings_3d_model[i][5]]
             add_robot_preview(data)
             
+        matrix = forwardKinematics(number_of_joint, [0]*number_of_joint, dh_param)
+        print(matrix)
+        change_pos_preview(matrix, var.NAME_JOINTS, number_of_joint, extra_joint)
         
-        if number_of_joint == 6:
-            matrix = self.ForwardKinematics_6.ForwardKinematics([0,0,0,0,0,0], dh_param)
-            change_pos_preview(matrix, var.NAME_JOINTS, number_of_joint, extra_joint)
-
-        
-        elif number_of_joint == 3:
-            matrix = self.ForwardKinematics_3.ForwardKinematics([0,0,0], dh_param)
-            change_pos_preview(matrix, var.NAME_JOINTS, number_of_joint, extra_joint)
-        
-        else:
-            print(var.LANGUAGE_DATA.get("message_no_kinematics"))       
 
         event_manager.publish("set_camera_pos_plotter_preview") 

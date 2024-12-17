@@ -166,7 +166,6 @@ class ConnectDevice(QWidget):
         if item:
             device = self.BT_device_list[position]
             if self.type == "ROBOT":
-                print("cpmmecy bt")
                 connect_robot(device, False)
             elif self.type == "IO":
                 connect_io(device, False)

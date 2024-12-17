@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import backend.core.variables as var
 
 def XYZToMatrix(XYZ_pos):
     translation_vector = [
@@ -62,5 +63,16 @@ def MatrixToXYZ(matrix):
     POSXYZ[3] = J4
     POSXYZ[4] = J5
     POSXYZ[5] = J6
+    
+    return POSXYZ
+
+def MatrixToXYZ_5(matrix):    
+    POSXYZ = [0] * 6
+    
+    POSXYZ[0] = matrix[0][3]
+    POSXYZ[1] = matrix[1][3]
+    POSXYZ[2] = matrix[2][3]
+    POSXYZ[3] = var.POS_JOINT[3] - var.POS_JOINT[2] - var.POS_JOINT[1]
+    POSXYZ[4] = var.POS_JOINT[4]
     
     return POSXYZ

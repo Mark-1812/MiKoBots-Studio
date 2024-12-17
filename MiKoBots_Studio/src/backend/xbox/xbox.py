@@ -9,6 +9,7 @@ from backend.core.event_manager import event_manager
 from gui.windows.message_boxes import ErrorMessage
 
 from backend.run_program import run_single_line
+from backend.robot_management.communication import check_robot_busy
 import pygame
 
  
@@ -32,10 +33,6 @@ class XBox:
             event_manager.publish("request_button_controller_connect", False)
             
     def threadXbox(self):
-        print("xbox 1")
-        
-        print("xbox 2")
-        
         state = 0
 
         # Find the Xbox controller
@@ -45,7 +42,6 @@ class XBox:
                 self.controller = pygame.joystick.Joystick(i)
                 self.controller.init()
                 break
-        print("xbox 3")
 
         if self.controller is None:
             pygame.quit()
@@ -390,7 +386,8 @@ class XBox:
                     posJoint = [0, 0, 0, 0, 0, -jog_distance]                
                                                
                 
-            if posXYZ != [0, 0, 0, 0, 0, 0]:
+            
+            if posXYZ != [0, 0, 0, 0, 0, 0] and not check_robot_busy():
                 posAxis = []
                 number_of_joint = var.NUMBER_OF_JOINTS
 
@@ -398,10 +395,11 @@ class XBox:
                     posAxis.append(posXYZ[i])
                     
                 if posAxis != [0]*number_of_joint:
+                    
                     run_single_line(f"robot.OffsetJ({posAxis}, {var.JOG_SPEED}, {var.JOG_ACCEL})")
                 
                 
-            elif posJoint != [0, 0, 0, 0, 0, 0]:
+            elif posJoint != [0, 0, 0, 0, 0, 0] and not check_robot_busy():
                 posAxis = []
                 number_of_joint = var.NUMBER_OF_JOINTS
 
