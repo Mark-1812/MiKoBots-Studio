@@ -248,17 +248,19 @@ class RobotSettings:
         zip_file = os.path.basename(file_path_zip)
         robot_name = os.path.splitext(zip_file)[0]
         robot_name_old = robot_name
-        duplicate = False
 
         for i in range(len(self.robots)):
             if robot_name == self.robots[i][0]:
-                duplicate = True
                 robot_name = robot_name + "_1"
                 i = 0
              
                 
         robot_folder = os.path.join(folder_robots, robot_name)
-        os.makedirs(robot_folder, exist_ok=True)
+        
+        if get_platform() == "Windows":
+            os.makedirs(robot_folder, exist_ok=True)
+        else:
+            os.makedirs(folder_robots, exist_ok=True)
 
         #Create a temporary folder to extract the original folder contents
         with zipfile.ZipFile(file_path_zip, 'r') as zip_ref:
@@ -266,15 +268,29 @@ class RobotSettings:
             os.makedirs(temp_folder, exist_ok=True)
             zip_ref.extractall(temp_folder)
 
-            for item in os.listdir(temp_folder):
-                item_path = os.path.join(temp_folder, item)
-                if os.path.isdir(item_path):
-                    shutil.move(item_path, os.path.join(robot_folder, os.path.basename(item)))
-                elif os.path.isfile(item_path):
+            if get_platform() == "Windows":
+                for item in os.listdir(temp_folder):
+                    item_path = os.path.join(temp_folder, item)
+                    if os.path.isdir(item_path):
+                        shutil.move(item_path, os.path.join(robot_folder, os.path.basename(item)))
+                    elif os.path.isfile(item_path):
+                        shutil.move(item_path, robot_folder)
+                # Remove the temporary directory
+                shutil.rmtree(temp_folder)
+            else:
+                # Move extracted contents to the new folder and rename if necessary
+                for item in os.listdir(temp_folder):
+                    item_path = os.path.join(temp_folder, item)
                     shutil.move(item_path, robot_folder)
 
-            # Remove the temporary directory
-            shutil.rmtree(temp_folder)
+                # Remove the temporary directory
+                shutil.rmtree(temp_folder)
+
+                macosx_folder = os.path.join(robot_folder, "__MACOSX")
+                if os.path.exists(macosx_folder):
+                    shutil.rmtree(macosx_folder)  
+
+            
 
 
         # if there is a duplicate also change the name in the settings

@@ -448,18 +448,12 @@ class SimulationManagement(QObject):
        
     # check if the robot can reach the position       
     def checkJointPos(self, joint_angles_end, joint):
-        print("checkJointPos")
         pos = True
         try:
-            print(joint)
             if not joint:
-                print("try")
                 joint_angles_end = inverseKinematics(self.number_of_joints, joint_angles_end, var.POS_JOINT_SIM)
-                print(f"joint_angles_end {joint_angles_end}")
                 
-            print(f"joint_angles_end")
             for i in range(self.number_of_joints):
-                print(f"joint_angles_end {joint_angles_end}")
                 if joint_angles_end[i] < float(var.MAX_JOINT_MOVE[i * 2]):
                     pos = False
                 if joint_angles_end[i] > float(var.MAX_JOINT_MOVE[i * 2 + 1]):

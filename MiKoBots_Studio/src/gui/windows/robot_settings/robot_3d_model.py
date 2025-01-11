@@ -246,8 +246,7 @@ class Robot3DModel(QFrame):
     def ClearSettings(self):
         for i in range(6):
             self.origin_pos[i].setText("0.0")
-
-            
+          
     def GetOriginData(self, data):
         for i in range(6):
             try:

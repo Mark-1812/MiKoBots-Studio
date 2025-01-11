@@ -12,19 +12,23 @@ MiKoBots Studio is an opensource project, designed to control diy robot arms. So
 At the moment the following requirements are in place if you want to control your own robot arm.
 
 **Requirements:**
-* 6 axis or 3 axis robot arm 
-* Type of motor: Stepper motors
-* Limit swithes: each joint should have a limit switch to set the home position
-* Microcontroller: ESP32
+* 6(RRRRRR), 5(RRRRR) or 3(RRR) axis robot arm 
+* Type of motor: Stepper motors or servo
+* Limit swithes: each joint should have a limit switch to set the home position, except the joints with servo's
+* Microcontroller: ESP32, Arduino mega
 
 **Version:**
-The current released version and which can be donwloaded on https://mikobots.com/ is: V1.13
+The current released version and which can be donwloaded on https://mikobots.com/ is: V1.14
 
-
-Currently working on an update that allows the software and firmware to control servo motors, and adding a new type of robot 5 axis. This update should allow to connect robots like the Arduino Braccio to the software.
 
 
 **History:**<br>
+Version: 1.14<br>
+Date: 11-1-2025<br>
+* added support for arduino mega boards
+* besides stepper motor you can also choice out of a servo
+
+
 Version: 1.13<br>
 Date: 7-12-2024<br>
 * Fixed a bug, related to connecting the robot to the software

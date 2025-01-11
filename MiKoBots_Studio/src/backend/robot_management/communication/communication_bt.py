@@ -246,12 +246,9 @@ class TalkThroughBT(QThread):
     def SendSettingsRobot(self):
         if not self.busy and self.connect:
             self.SendToolFrame()
-            
-            
-            category_names = []
 
             def make_line_ABC(settings_values, command_name):
-                letters = [chr(i) for i in range(65, 91)]  # A-Z letters
+                letters = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)]
 
                 if isinstance(settings_values[0], list):
                     column = len(settings_values)

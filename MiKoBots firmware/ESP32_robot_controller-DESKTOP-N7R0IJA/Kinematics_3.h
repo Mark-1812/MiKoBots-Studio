@@ -1,3 +1,4 @@
+#include "Variables.h"
 extern int check_for_error();
 
 
@@ -119,9 +120,14 @@ void InverseKinematic_3() {
 
 */
 
-  float X = robot[0].PosEnd - TOOL_FRAME[0];
-  float Y = robot[1].PosEnd - TOOL_FRAME[2];
-  float Z = robot[2].PosEnd - TOOL_FRAME[1];
+  float tool_X = TOOL_FRAME[0];
+  float tool_Y = TOOL_FRAME[1];
+  float tool_Z = TOOL_FRAME[2];
+
+
+  float X = robot[0].PosEnd - tool_X;
+  float Y = robot[1].PosEnd - tool_Z;
+  float Z = robot[2].PosEnd - tool_Y;
 
   float L1 = DHparams[0][2];
   float L2 = DHparams[1][3];
@@ -129,8 +135,8 @@ void InverseKinematic_3() {
   float L4 = DHparams[3][3];
 
 
-  // J1 
-  robot[0].PosJEnd = degrees(atan(Y / X));
+
+  float J1 = degrees(atan(Y / X));
 
   float r = sqrt(pow(X, 2) + pow(Y, 2)) - L4;
   float D = sqrt(pow((Z - L1), 2) + pow(r, 2));
@@ -138,17 +144,21 @@ void InverseKinematic_3() {
   float a1 = acos((pow(D, 2) + pow(L2, 2) - pow(L3, 2)) / (2 * D * L2));
   float a2 = atan((Z - L1) / r);
 
-  // J2
-  robot[1].PosJEnd = degrees(a1) + degrees(a2) - 90;
+  float J2 = degrees(a1) + degrees(a2) - 90;
 
-  // J3
-  robot[2].PosJEnd = 90 - degrees(acos((pow(D, 2) - pow(L3, 2) - pow(L2, 2)) / (2 * L3 * L2))) + robot[1].PosJEnd;
+  float J3 = acos((pow(D, 2) - pow(L3, 2) - pow(L2, 2)) / (2 * L3 * L2));
+  J3 = 90 - degrees(J3) + J2;
 
-
-
-  // check if the robot can reach the position
-  // error = check_for_error();
-
+  robot[0].PosJEnd = J1;
+  robot[1].PosJEnd = J2;
+  robot[2].PosJEnd = J3;
+/*
+  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+    Serial.print(robot[i].PosJEnd);
+    Serial.print(", ");
+  }
+  Serial.println("");
+*/
   if (error){
     for(int i = 0; i < NUMBER_OF_JOINTS; i++){
       robot[i].PosJEnd = robot[i].PosJStart;

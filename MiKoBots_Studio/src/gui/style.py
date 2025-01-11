@@ -616,3 +616,27 @@ style_listwidget = ("""
 
 
 
+style_table = ("""
+    QTableWidget {
+        background-color: white; /* Light gray background */
+        alternate-background-color: lightgray; /* Slightly darker gray for alternate rows */
+        gridline-color: #a9a9a9; /* Gridline color */
+    }
+    QTableWidget::item {
+        border: 1px solid #a9a9a9; /* Cell border color */
+        padding: 5px;
+        color: black; /* Set text color to black */
+    }
+               
+    QHeaderView::section {
+        background-color: #d9d9d9; /* Green header background */
+        color: black; /* Header text color */
+        font-weight: bold; /* Bold header text */
+        border: 1px solid #a9a9a9;
+        padding: 5px;
+    }
+    QTableCornerButton::section {
+        background-color: lightgray; /* Match header background */
+        border: 1px solid #a9a9a9;
+    }
+""")

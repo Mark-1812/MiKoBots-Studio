@@ -144,6 +144,7 @@ class TalkThroughCOM():
                         event_manager.publish("request_set_io_state_input", io_number, False)    
                 elif data.startswith("POS:"):
                     words = data.split()
+                    print("ROBOT: " + data)
 
                     for i in range(len(words)):
                         if words[i] == 'G':
@@ -199,7 +200,7 @@ class TalkThroughCOM():
             category_names = []
 
             def make_line_ABC(settings_values, command_name):
-                letters = [chr(i) for i in range(65, 91)]  # A-Z letters
+                letters = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)]
 
                 if isinstance(settings_values[0], list):
                     column = len(settings_values)
@@ -223,6 +224,8 @@ class TalkThroughCOM():
             def threadSettings():
                 # send all the settings to the robot except for the settings where the IO_box is checked
                 robot_settings = var.ROBOT_SETTINGS
+                
+                print(robot_settings)
 
                 # sent first the number of joints
                 command = f'Set_number_of_joints A{var.NUMBER_OF_JOINTS}\n'
@@ -232,10 +235,6 @@ class TalkThroughCOM():
                 command = make_line_ABC(settings[0], 'Set_motor_type')
                 self.SendLineCommand(command)
                 
-                settings = robot_settings['Set_servo_settings']
-                command = make_line_ABC(settings[0], 'Set_servo_settings')
-                self.SendLineCommand(command)
-                
                 if var.EXTRA_JOINT:
                     command = f'Set_extra_joint A1\n'
                     self.SendLineCommand(command) 
@@ -243,7 +242,7 @@ class TalkThroughCOM():
                            
                 for category in robot_settings:
                     settings = robot_settings[category]
-                    if settings[1] == "" and  category != 'Set_extra_joint' and category != 'Set_motor_type' and category != 'Set_servo_settings' and  category != 'Set_io_pin'and  category != 'Set_robot_name' and  category != "Set_tools":
+                    if settings[1] == "" and  category != 'Set_extra_joint' and category != 'Set_motor_type'  and  category != 'Set_io_pin'and  category != 'Set_robot_name' and  category != "Set_tools":
                         
                         command = make_line_ABC(settings[0], category)
                         self.SendLineCommand(command)

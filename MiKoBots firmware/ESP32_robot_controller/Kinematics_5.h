@@ -99,10 +99,17 @@ void InverseKinematic_5() {
   float tool_Y = TOOL_FRAME[1];
   float tool_Z = TOOL_FRAME[2];
 
+  Serial.print("Tool frame: ");
+  for(int i = 0; i < 6; i++){
+    Serial.print(TOOL_FRAME[i]);
+    Serial.print(", ");
+  }
+  Serial.println(" ");
+
 
   float X = robot[0].PosEnd;// - tool_X;
-  float Y = robot[1].PosEnd;// - tool_Z;
-  float Z = robot[2].PosEnd;// - tool_Y;
+  float Y = robot[1].PosEnd;//- tool_Y;
+  float Z = robot[2].PosEnd;// - tool_Z;
   float pitch = robot[3].PosEnd;
   float roll = robot[4].PosEnd;
 
@@ -110,14 +117,21 @@ void InverseKinematic_5() {
   float L1 = DHparams[0][2];
   float L2 = DHparams[1][3];
   float L3 = DHparams[2][3];
-  float L4 = DHparams[3][3];
+  float L4 = DHparams[4][2] + TOOL_FRAME[2];
 
+  Serial.print("L4: ");
+  Serial.println(L4);
 
 
   float J1 = degrees(atan(Y / X));
 
   float pitch_length = L4 * cos(radians(pitch));
   float pitch_height = L4 * sin(radians(pitch));
+
+  Serial.print("pitch_length: ");
+  Serial.println(pitch_length);
+  Serial.print("pitch_height: ");
+  Serial.println(pitch_height);
 
   float r = sqrt(pow(X, 2) + pow(Y, 2)) - pitch_length;
   float D = sqrt(pow((Z - L1 - pitch_height), 2) + pow(r, 2));

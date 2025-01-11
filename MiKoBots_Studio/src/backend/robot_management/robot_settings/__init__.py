@@ -19,10 +19,9 @@ def change_robot_settings(robot):
 
     # delete the current settings
     delete_robot_preview()
-    event_manager.publish("request_delete_settings_fields") 
 
     # set the new settings
-    event_manager.publish("request_set_robot_settings", settings_file[3], settings_file[0])
+    event_manager.publish("request_set_robot_settings", settings_file[0])
     tool_management.SetSettings(settings_file[2])
     robot_3d_model.SetSettings(settings_file[1])
     robot_3d_model.ShowRobotPreview(settings_file[3], settings_file[4])

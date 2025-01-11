@@ -99,7 +99,6 @@ class RobotSimulation:
         # if len(self.plotter_robot) > number_of_joints - 1 + extra_joint:
         try:
             for i in range(len(self.plotter_robot)):
-                print(self.plotter_robot[i][4])
                 if self.plotter_robot[i][4] == "Link 1":   
                     matrix_data = self.plotter_robot[i][2]
                     self.plotter_robot[i][2] = np.linalg.inv(matrix[name_joints[0]])

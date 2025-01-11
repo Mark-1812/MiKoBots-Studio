@@ -58,6 +58,14 @@ void set_tool_frame(String command){
     }
   }
 
+  String message = "";
+  for(int i = 0; i < 6; i++){
+    message += TOOL_FRAME[i];
+    message += ", ";
+  }
+
+  sent_message(message);
+
   sent_message("Tool frame is updated");
   sent_message("END");
 }
@@ -88,30 +96,22 @@ void tool_move_to(String command){
 
   float togo_pos = New_pos * ((servo_max - servo_min) / 100.0);
 
-  Serial.print("togo_pos: ");
-  Serial.println(togo_pos);
-
-  Serial.print("tool_pos: ");
-  Serial.println(tool_pos);
-
-  int tool_pos_start = tool_pos;
-
   if ((togo_pos - tool_pos) > 0){
-    for (tool_pos = tool_pos_start; tool_pos <= togo_pos; tool_pos += 1){
+    for (int pos = tool_pos; pos <= New_pos; pos += 1){
       delay(20);
-      servoTool.write(tool_pos);
+      servoTool.write(pos);
     }
   }
   else{
-    for (tool_pos = tool_pos_start; tool_pos > togo_pos; tool_pos -= 1){
+    for (int pos = tool_pos; pos > New_pos; pos -= 1){
       delay(20);
-      servoTool.write(tool_pos);
+      servoTool.write(pos);
     }
   }
 
   tool_pos = togo_pos;
 
-  String message = "POS: G " + String(New_pos);
+  String message = "POS: G " + tool_pos;
   sent_message(message);
   sent_message("END");
 }

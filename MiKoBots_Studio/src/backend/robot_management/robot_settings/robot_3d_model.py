@@ -229,7 +229,6 @@ class Robot3dModel:
             add_robot_preview(data)
             
         matrix = forwardKinematics(number_of_joint, [0]*number_of_joint, dh_param)
-        print(matrix)
         change_pos_preview(matrix, var.NAME_JOINTS, number_of_joint, extra_joint)
         
 

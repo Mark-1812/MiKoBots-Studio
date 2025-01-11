@@ -112,8 +112,8 @@ class InverseKinematics_5:
         
         
         X = pos[0] #- tool_X
-        Y = pos[1] #- tool_Z
-        Z = pos[2] #- tool_Y
+        Y = pos[1] #- tool_Y
+        Z = pos[2] #- tool_Z
         pitch = pos[3]
         roll = pos[4]
         
@@ -123,7 +123,7 @@ class InverseKinematics_5:
         L1 = float(dh_param[0][2])
         L2 = float(dh_param[1][3])
         L3 = float(dh_param[2][3])
-        L4 = float(dh_param[3][3])
+        L4 = float(dh_param[4][2]) + tool_Z
         
         #print(f"L1 {L1} L2 {L2} L3 {L3}")
         

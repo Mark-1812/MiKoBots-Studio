@@ -1,26 +1,37 @@
 // FIRMWARE for the robot
-// Version 0.1  
+// Version 1.2
+// date 11-1-2025
+
+/*
+The current version of the firmware allows you to use also arduino mega boards and
+use servo for the joints besides stepper motors. 
+
+The firmware is still in development if you have issues please contact info@mikobots.com
+
+ps. diclaimer I'm not an software engineer, if you have any tips please share
+*/
 
 
-#define MAX_NUMBER_OF_JOINTS 6
+#define type_device "ROBOT"       /// change to IO if you installing the IO box
+#define board_expansion "None" // Needed for Braccio robot arm can be set to "None" if not use, else set to "Braccio"
+
+
 #include <math.h>
-
-#define type_device "ROBOT"
-
+#define MAX_NUMBER_OF_JOINTS 6
 int NUMBER_OF_JOINTS = 6;
 int EXTRA_JOINT = 0;
 
-float DHparams[6][4];
-float TOOL_FRAME[6];
+
 int KinematicError = 0;
 int error = 0;
 
 char alphabet[] = {
   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
-  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 
+  'a', 'b', 'c', 'd', 'e', 'f', 'g'
 };
 
-const char* Axis_name[] = {"X", "Y", "Z", "y", "p", "r"};
+char Axis_name[] = {'X', 'Y', 'Z', 'y', 'p', 'r'};
 const char* Joint_name[] = {"J1", "J2", "J3", "J4", "J5","J6"};
 
 // structure of the Joint information
@@ -36,8 +47,6 @@ typedef struct{
   int MaxAccel;
 } jointInfo;
 jointInfo JointsInfo[MAX_NUMBER_OF_JOINTS];
-
-
 
 // structure positions
 typedef struct{
@@ -95,6 +104,7 @@ typedef struct {
   int servo_max;
   int servo_min;
   int servo_degree;
+  int PosZeroServo;
   Servo* servo;
 } Motor;
 Motor motors[MAX_NUMBER_OF_JOINTS];
@@ -108,10 +118,11 @@ TaskHandle_t Task2;
 SemaphoreHandle_t mutex;
 SemaphoreHandle_t stopSemaphore;
 
-#include "Variables.h"
+
 #include "Motor_move.h"
 #include "Kinematic_functions.h"
 #include "Kinematics_6.h"
+#include "Kinematics_5.h"
 #include "Kinematics_3.h"
 #include "Robot_commands.h"
 #include "Tool_commands.h"
@@ -126,7 +137,7 @@ SemaphoreHandle_t stopSemaphore;
 #define CHARACTERISTIC_UUID_IO "19680482-86af-4892-ab79-962e98f41045"  // UUID for IO
 #define SERVICE_UUID_IO        "30a96603-6e34-49d8-9d64-a13f68fefab6"
 
-const int BUFFER_SIZE = 5;
+const int BUFFER_SIZE = 10;
 String lines[BUFFER_SIZE];
 volatile int lineIndex = 0;
 
@@ -197,7 +208,7 @@ class MyServerCallbacks : public BLEServerCallbacks {
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
+  Serial.begin(57600);
   
   if(platform == "ESP32"){
     initializeBLE();
@@ -370,7 +381,9 @@ void Task2code(void * pvParameters) {
       // Settings robot
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_number_of_joints")) set_number_of_joints(command);
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_motor_type")) set_motor_type(command);
-      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_settings")) set_servo_pin(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_pin")) set_servo_pin(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_pulse")) set_servo_pulse(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_position")) set_servo_pos(command);
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_motor_pin")) set_motor_pin(command);
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_switch_pin")) set_switch_pin(command);
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_max_pos")) set_max_pos(command);
@@ -499,6 +512,7 @@ typedef struct {
   int servo_pin;
   int servo_max;
   int servo_min;
+  int PosZeroServo;
   int servo_degree;
   Servo* servo;
 } Motor;
@@ -508,7 +522,6 @@ Servo servoInstances[MAX_NUMBER_OF_JOINTS];
 
 // The Servo can not directly be used in the the struct, so store pointer to servo object
 
-#include "Variables.h"
 #include "Motor_move.h"
 #include "Kinematic_functions.h"
 #include "Kinematics_6.h"
@@ -528,6 +541,11 @@ char buffer[MAX_BUFFER_SIZE]; // Character array to hold serial input
 
 void setup() {
   Serial.begin(57600);
+
+  if (board_expansion == "Braccio"){
+    pinMode(12, OUTPUT);
+    digitalWrite(12, HIGH);
+  }
 
   String Message = String(type_device) + "_CONNECTED";
   sent_message(Message);
@@ -593,7 +611,9 @@ void processCommand(const String& command) {
     // Settings robot
     else if (type_device == "ROBOT" and typeOfCommand.equals("Set_number_of_joints")) set_number_of_joints(command);
     else if (type_device == "ROBOT" and typeOfCommand.equals("Set_motor_type")) set_motor_type(command);
-    else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_settings")) set_servo_pin(command);
+    else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_pin")) set_servo_pin(command);
+    else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_pulse")) set_servo_pulse(command);
+    else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_position")) set_servo_pos(command);
     else if (type_device == "ROBOT" and typeOfCommand.equals("Set_motor_pin")) set_motor_pin(command);
     else if (type_device == "ROBOT" and typeOfCommand.equals("Set_switch_pin")) set_switch_pin(command);
     else if (type_device == "ROBOT" and typeOfCommand.equals("Set_max_pos")) set_max_pos(command);
@@ -634,6 +654,19 @@ void sendPos(){
   }
 
   sent_message(command);
+
+  String command1 = "PSJstart: ";
+
+  for(int i = 0; i< NUMBER_OF_JOINTS; i++){
+    command1 += String(Axis_name[i]) + " " + String(robot[i].PosEnd) + " ";
+  }
+
+  for(int i = 0; i< NUMBER_OF_JOINTS; i++){
+    command1 += String(Joint_name[i]) + " " + String(robot[i].PosJEnd) + " ";
+  }
+
+  sent_message(command1);
   sent_message("END");
+
 
 }

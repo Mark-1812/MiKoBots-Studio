@@ -132,7 +132,6 @@ class RobotLoader(QObject):
     def changeTool(self, tool):
         delete_tool_sim()
         var.TOOL_SETTINGS = self.robotFile['Tools']  
-        
 
         # if no tool
         if (tool + 1) > len(var.TOOL_SETTINGS):
@@ -148,13 +147,13 @@ class RobotLoader(QObject):
             change_pos_robot(matrix, var.NAME_JOINTS, var.NUMBER_OF_JOINTS, var.EXTRA_JOINT)
             
     
-    
-        if len(var.TOOL_SETTINGS) > 0:
+
+        elif len(var.TOOL_SETTINGS) > 0:
             file_path = get_file_path(var.TOOL_SETTINGS[tool][2])
             data = [file_path, var.TOOL_SETTINGS[tool][3], np.eye(4), np.eye(4)]
 
             add_tool_sim(data)
- 
+
             var.TOOL_NAME = var.TOOL_SETTINGS[tool][0]
             var.TOOL_FRAME = var.TOOL_SETTINGS[tool][5]   
             var.TOOL_CAM_OFFSET = var.TOOL_SETTINGS[tool][9]         
@@ -167,6 +166,7 @@ class RobotLoader(QObject):
             number = int(string_tool_nr.split()[-1]) - 1
 
             var.TOOL_PIN = var.ROBOT_SETTINGS["Set_tools"][0][number]
+
 
                     
         var.TOOL = tool

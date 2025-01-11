@@ -1,30 +1,4 @@
-/* 
-what if the motor is a servo insead of a stepper motor
-
-digital servo can be controlled by writeMicroseconds()
-this method is more accurate than the standard write()
-
-digitalServo.writeMicroseconds(2510);
-
-Most digital servos do have a range between 500 and 2500 for 180 degrees, but depends on the type and brand of the servo
-Settings we need to know for positioning the SERVO:
-- The servo position when the joint is at zero degrees
-- The range of the servo ~ 500 - 2500 
-- The how many degrees the servo can rotate
-- Servo pin
-
-Settings we have to calculate:
-- How many steps/deg = DEGREES_OF_MOVE / (MAX_RANGE - MIN_RANGE)
-
-
-Note:
-No need for DIR pin is a PWM signal for the position so always on a pwm pin
- 
-Make a vairable that indicates if it is a SERVO or a stepper motor
-
-*/
-
-
+void sent_message(String message);
 
 void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
   // ACC:       acceleration in     ->  (steps/seconds)2
@@ -41,7 +15,7 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
     robot[i].PosJDelta = (robot[i].PosJEnd - robot[i].PosJStart) * JointsInfo[i].StepPerDeg;
 
     // Serial.print("J");
-    // Serial.print(i+1);
+    // Serial.print(i);
 
     // Serial.print(" Pos J end ");
     // Serial.print(robot[i].PosJEnd);
@@ -58,33 +32,12 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
     // delay(50);
 
 
-    // Set the direction of the movement
-    if (robot[i].PosJDelta < 0 & !motors[i].motor_type){
+    if (robot[i].PosJDelta < 0){
       digitalWrite(motors[i].dir_pin, ((JointsInfo[i].DirJoint == 0) ? HIGH : LOW));
     }
-    else if (robot[i].PosJDelta > 0 & !motors[i].motor_type){
+    if (robot[i].PosJDelta > 0){
       digitalWrite(motors[i].dir_pin, ((JointsInfo[i].DirJoint == 1) ? HIGH : LOW));
     }
-
-    // set the direction of the servo's
-    if (robot[i].PosJDelta < 0 & motors[i].motor_type){  // delta is negative
-      if (JointsInfo[i].DirJoint == 0){ // 0 standard direction
-        motors[i].servo_dir = false;
-      }
-      else if (JointsInfo[i].DirJoint == 1){// 1 opposite direction
-        motors[i].servo_dir = true; 
-      }
-    }
-    else if (robot[i].PosJDelta > 0 & motors[i].motor_type){ // delta is positive
-      if (JointsInfo[i].DirJoint == 0){ // 0 standard direction
-        motors[i].servo_dir = true;
-      }
-      else if (JointsInfo[i].DirJoint == 1){// 1 opposite direction
-        motors[i].servo_dir = false;
-      }
-    }
-
-    // See which joint has the maximum movement
     robot[i].PosJDelta = abs(robot[i].PosJDelta);
     if (robot[i].PosJDelta/JointsInfo[i].StepPerDeg > maxDeg){
       maxDeg = robot[i].PosJDelta/JointsInfo[i].StepPerDeg;
@@ -130,16 +83,13 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
     if ((percentage[i] * VEL) > (JointsInfo[i].MaxSpeed * JointsInfo[i].StepPerDeg * (VEL1 / 100))){
       JointMaxSpeed = i;
       VEL = (VEL1/100) * (JointsInfo[JointMaxSpeed].MaxSpeed/percentage[JointMaxSpeed]) * JointsInfo[JointMaxSpeed].StepPerDeg;
-      // Serial.print("snelheid aangepast aan joint ");
       // Serial.println(VEL);
 
       // Serial.println(JointsInfo[JointMaxSpeed].MaxSpeed);
       // Serial.println(percentage[i]);
-      // Serial.print("Step per deg");
       // Serial.println(JointsInfo[JointMaxSpeed].StepPerDeg);
 
       ACC = (ACC1/100) * JointsInfo[JointMaxSpeed].MaxAccel;
-
       Max_delay = 1000000/VEL;
       // Serial.print("snelheid aangepast aan joint ");
       // Serial.print(i);
@@ -147,9 +97,6 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
       // Serial.println(VEL);
     }
   }
-
-  // Serial.print("VEL: ");
-  // Serial.println(VEL);
 
   long AB = 0;
   long CD = 0;
@@ -212,9 +159,12 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
     curDelay = 3000;
   }
 
+  // for (int k = 0; k < NUMBER_OF_JOINTS; k++){
+  //   Serial.println(motors[k].step_pin);
+  // }
 
   for (int i = 0; i < maxSteps; i++){
-    if(stop == 1 || deviceDisconnected){    // when the stop button is pressed go out of this for loop
+    if(stop == 1){    // when the stop button is pressed go out of this for loop
       break;
     }
     
@@ -224,46 +174,35 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
     }  
 
     for (int k = 0; k < NUMBER_OF_JOINTS; k++){
-      // Set al the step pin HIGH
       digitalWrite(motors[k].step_pin,HIGH);
     }
     delayMicroseconds(curDelay / 2);
-
     for (int j = 0; j < NUMBER_OF_JOINTS; j++){
       over[j] += robot[j].PosJDelta; 
       if (over[j] >= maxSteps){
         over[j] -= maxSteps;   
-        // Set only the step pin low of the motors that should move
-        // Also change the position of the servo here
-        // it should move one step but how dopes it know the direction?
-        if (motors[j].motor_type & motors[j].servo_dir){
-          robot[j].PosJCur++;
-          motors[j].servo->writeMicroseconds(robot[j].PosJCur); // the servo should move 1 but how to keep track of the current place?
-        }
-        else if(motors[j].motor_type & !motors[j].servo_dir){
-          robot[j].PosJCur--;
-          motors[j].servo->writeMicroseconds(robot[j].PosJCur); 
-        }
-        else{
-          digitalWrite(motors[j].step_pin,LOW);
-        }
+        digitalWrite(motors[j].step_pin,LOW);
       }
     }
-
-    // Change the speed of the movement
     if (i < AB){
       curDelay -= AccelIncrease;
     }
     else if (i > (maxSteps - CD)){
       curDelay += DecelDecrease;
     }
-
     delayMicroseconds(curDelay / 2);
     steps_to_do--;
+
+    if (deviceDisconnected){
+      break;
+    }
+
   }
 
   // calculate the current position when the stop button is pressed
   if(stop == 1){
+    // Serial.println("Program stopped");
+
     float pos_done;
     for (int i = 0; i < NUMBER_OF_JOINTS; i++){
       pos_done = ((float(maxSteps - steps_to_do) / maxSteps) * robot[i].PosJDelta)/JointsInfo[i].StepPerDeg;  
@@ -274,11 +213,10 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
         robot[i].PosJEnd = robot[i].PosJStart - pos_done;
       }
     }
-
     if(NUMBER_OF_JOINTS == 6){
       ForwardKinematic_6_PosEnd();
-    } 
-    else if(NUMBER_OF_JOINTS == 3){
+    }
+    if(NUMBER_OF_JOINTS == 3){
       ForwardKinematic_3_PosEnd();
     }
 
@@ -287,5 +225,6 @@ void MotorMoveJ(float ACC1, float VEL1, float VEL_0, float VEL_1){
   // position start is now position begining
   for (int i = 0; i < NUMBER_OF_JOINTS; i++){
     robot[i].PosJStart = robot[i].PosJEnd;
+
   }
 }

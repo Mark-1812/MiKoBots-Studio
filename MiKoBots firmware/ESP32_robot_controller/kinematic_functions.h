@@ -1,3 +1,27 @@
+float toolFrame[4][4];
+float InvtoolFrame[4][4];
+
+float R06_neg_matrix[4][4]{};
+
+float DHparams[6][4];
+float TOOL_FRAME[6];
+
+float T_i[4][4] = {
+  {1, 0, 0, 1},
+  {0, 1, 0, 2},
+  {0, 0, 1, 3},
+  {0, 0, 0, 1}
+};
+
+float T[4][4] = {
+  {1, 0, 0, 0},
+  {0, 1, 0, 0},
+  {0, 0, 1, 0},
+  {0, 0, 0, 1}
+  };
+
+float result[4][4];
+
 void tool_matrix() {
   toolFrame[0][0] = cos(radians(TOOL_FRAME[3])) * cos(radians(TOOL_FRAME[4]));
   toolFrame[0][1] = cos(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[4])) * sin(radians(TOOL_FRAME[5]));
@@ -17,21 +41,26 @@ void tool_matrix() {
   toolFrame[3][3] = 1;
 }
 
-float T_i[4][4] = {
-  {1, 0, 0, 1},
-  {0, 1, 0, 2},
-  {0, 0, 1, 3},
-  {0, 0, 0, 1}
-};
+void inv_tool_matrix(){
+  InvtoolFrame[0][0] = toolFrame[0][0];
+  InvtoolFrame[0][1] = toolFrame[1][0];
+  InvtoolFrame[0][2] = toolFrame[2][0];
+  InvtoolFrame[0][3] = -TOOL_FRAME[0];
+  InvtoolFrame[1][0] = toolFrame[0][1];
+  InvtoolFrame[1][1] = toolFrame[1][1];
+  InvtoolFrame[1][2] = toolFrame[2][1];
+  InvtoolFrame[1][3] = -TOOL_FRAME[1];
+  InvtoolFrame[2][0] = toolFrame[0][2];
+  InvtoolFrame[2][1] = toolFrame[1][2];
+  InvtoolFrame[2][2] = toolFrame[2][2];
+  InvtoolFrame[2][3] = -TOOL_FRAME[2];
+  InvtoolFrame[3][0] = 0;
+  InvtoolFrame[3][1] = 0;
+  InvtoolFrame[3][2] = 0;
+  InvtoolFrame[3][3] = 1; 
+}
 
-float T[4][4] = {
-  {1, 0, 0, 0},
-  {0, 1, 0, 0},
-  {0, 0, 1, 0},
-  {0, 0, 0, 1}
-  };
 
-float result[4][4];
 
 void matrixMultiply(float A[4][4], float B[4][4], float C[4][4]) {
     for (int i = 0; i < 4; i++) {

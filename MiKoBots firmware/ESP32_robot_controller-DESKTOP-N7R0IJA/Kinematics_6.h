@@ -1,3 +1,4 @@
+#include "Variables.h"
 extern int check_for_error();
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,28 +97,21 @@ void InverseKinematic_6() {
     WristCon = "N";
   }
 
-  float J1matrix_rev[4][4];
-  float J2matrix_rev[4][4];
-  float J3matrix_rev[4][4];
-
-  double R02matrix[4][4];
-  double R03matrix[4][4];
-  double R04matrix[4][4];
-  double R05matrix[4][4];
-  double R06matrix[4][4];
-  double R0Tmatrix[4][4];
-
-  float R02matrix_rev[4][4];
-  float R03matrix_rev[4][4];
-
-  float R0T_rev_matrix[4][4];
-  float InvtoolFrame[4][4];
-  float R06_rev_matrix[4][4];
-  float R05_rev_matrix[4][4];
-  float InvR03matrix_rev[4][4];
-  float R03_6matrix[4][4];
-
-  
+  float pX;
+  float pY;
+  float pX_a1_fwd;
+  float pX_a1_mid;
+  float pa2H_fwd;
+  float pa2H_mid;
+  float pa3H;
+  float thetaA_fwd;
+  float thetaA_mid;
+  float thetaB_fwd;
+  float thetaB_mid;
+  float thetaC_fwd;
+  float thetaC_mid;
+  float thetaD;
+  float thetaE;
 
   float XatJ1zero;
   float YatJ1zero;
@@ -125,6 +119,7 @@ void InverseKinematic_6() {
   float Length_2;
   float Length_3;
   float Length_4;
+  float Theta_A;
   float Theta_B;
   float Theta_C;
   float Theta_D;
@@ -155,9 +150,39 @@ void InverseKinematic_6() {
 
   
 
-  tool_matrix();
+  toolFrame[0][0] = cos(radians(TOOL_FRAME[3])) * cos(radians(TOOL_FRAME[4]));
+  toolFrame[0][1] = cos(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[4])) * sin(radians(TOOL_FRAME[5]));
+  toolFrame[0][2] = cos(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[4])) * cos(radians(TOOL_FRAME[5])) + sin(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[5]));
+  toolFrame[0][3] = TOOL_FRAME[0];
+  toolFrame[1][0] = sin(radians(TOOL_FRAME[3])) * cos(radians(TOOL_FRAME[4]));
+  toolFrame[1][1] = sin(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[4])) * sin(radians(TOOL_FRAME[5])) + cos(radians(TOOL_FRAME[3])) * cos(radians(TOOL_FRAME[5]));
+  toolFrame[1][2] = cos(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[4])) * cos(radians(TOOL_FRAME[5])) - cos(radians(TOOL_FRAME[3])) * sin(radians(TOOL_FRAME[5]));
+  toolFrame[1][3] = TOOL_FRAME[1];
+  toolFrame[2][0] = -sin(radians(TOOL_FRAME[4]));
+  toolFrame[2][1] = cos(radians(TOOL_FRAME[4])) * sin(radians(TOOL_FRAME[5]));
+  toolFrame[2][2] = cos(radians(TOOL_FRAME[4])) * cos(radians(TOOL_FRAME[5]));
+  toolFrame[2][3] = TOOL_FRAME[2];
+  toolFrame[3][0] = 0;
+  toolFrame[3][1] = 0;
+  toolFrame[3][2] = 0;
+  toolFrame[3][3] = 1;
 
-  inv_tool_matrix();
+  InvtoolFrame[0][0] = toolFrame[0][0];
+  InvtoolFrame[0][1] = toolFrame[1][0];
+  InvtoolFrame[0][2] = toolFrame[2][0];
+  InvtoolFrame[0][3] = -TOOL_FRAME[0];
+  InvtoolFrame[1][0] = toolFrame[0][1];
+  InvtoolFrame[1][1] = toolFrame[1][1];
+  InvtoolFrame[1][2] = toolFrame[2][1];
+  InvtoolFrame[1][3] = -TOOL_FRAME[1];
+  InvtoolFrame[2][0] = toolFrame[0][2];
+  InvtoolFrame[2][1] = toolFrame[1][2];
+  InvtoolFrame[2][2] = toolFrame[2][2];
+  InvtoolFrame[2][3] = -TOOL_FRAME[2];
+  InvtoolFrame[3][0] = 0;
+  InvtoolFrame[3][1] = 0;
+  InvtoolFrame[3][2] = 0;
+  InvtoolFrame[3][3] = 1; 
 
   for (int j = 0; j < 4; j++) {
     for (int i = 0; i < 4; i++) {
@@ -429,8 +454,8 @@ void InverseKinematic_6() {
 
 
 
-  // check if the robot can reach the position
-  // error = check_for_error();
+
+  //error = check_for_error();
 
   if (error){
     for(int i = 0; i < NUMBER_OF_JOINTS; i++){
