@@ -62,6 +62,7 @@ def change_robot(robot = None):
 def change_tool(tool):
     robot_loader.changeTool(tool)
     send_tool_frame()
+    
 
 ### robot 
 def get_pos_robot(SIM):

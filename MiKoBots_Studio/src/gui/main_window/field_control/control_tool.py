@@ -122,9 +122,9 @@ class ControlTool(QFrame):
         self.TOOL_COMBO.blockSignals(False)
 
     def SetToolCombo(self, tool):
-        self.TOOL_COMBO.blockSignals(True)
+        # self.TOOL_COMBO.blockSignals(True)
         self.TOOL_COMBO.setCurrentIndex(tool)
-        self.TOOL_COMBO.blockSignals(False)
+        # self.TOOL_COMBO.blockSignals(False)
         
     def EnableToolCombo(self, enable):
         if enable:

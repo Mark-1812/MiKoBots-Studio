@@ -17,12 +17,14 @@ At the moment the following requirements are in place if you want to control you
 * Limit swithes: each joint should have a limit switch to set the home position, except the joints with servo's
 * Microcontroller: ESP32, Arduino mega
 
-**Version:**
-The current released version and which can be donwloaded on https://mikobots.com/ is: V1.14
+**Version MiKoBots Studio:**
+The current released version and which can be donwloaded on https://mikobots.com/ is: V1.15
 
+**History MiKoBots Studio:**<br>
+Version: 1.15<br>
+Date: 18-2-2025<br>
+* fixed some bugs regarding saving settings, connecting IO
 
-
-**History:**<br>
 Version: 1.14<br>
 Date: 11-1-2025<br>
 * added support for arduino mega boards
@@ -55,3 +57,7 @@ A lot of new updates since version 1.0, the mostimportant updates are:
 Version: 1.0<br>
 Date: 1-10-2024<br>
 First official release of MiKoBots studio.
+
+
+**Version MiKoBots firmware:**
+The current released version and which can be donwloaded on https://mikobots.com/ is: V1.22

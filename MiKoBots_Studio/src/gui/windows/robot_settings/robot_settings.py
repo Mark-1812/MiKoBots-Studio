@@ -479,6 +479,14 @@ class RobotSettings(QFrame):
         label.setStyleSheet(style_label)
         layout.addRow(label, dir_pin_input)
         
+        ena_pin_input = QLineEdit()
+        ena_pin_input.setMaximumWidth(width_line)
+        ena_pin_input.setStyleSheet(style_entry)
+        label = QLabel("ENA pin:")
+        label.setFixedWidth(width_text)
+        label.setStyleSheet(style_label)
+        layout.addRow(label, ena_pin_input)
+        
         switch_pin_input = QLineEdit()
         switch_pin_input.setMaximumWidth(width_line)
         switch_pin_input.setStyleSheet(style_entry)
@@ -508,6 +516,8 @@ class RobotSettings(QFrame):
             pul_pin_input.setText(pul_pin)
             dir_pin = json_data.get("Set_motor_pin", [[""] * 6] * len(self.joint_frames))[0][index*2 +1]
             dir_pin_input.setText(dir_pin)
+            ena_pin = json_data.get("Set_ena_pin", [[""] * 6] * len(self.joint_frames))[0][index]
+            ena_pin_input.setText(ena_pin)
             switch_pin = json_data.get("Set_switch_pin", [[""] * 6] * len(self.joint_frames))[0][index]
             switch_pin_input.setText(switch_pin)
             switch_position = json_data.get("Set_lim_pos", [[""] * 6] * len(self.joint_frames))[0][index]
@@ -590,6 +600,7 @@ class RobotSettings(QFrame):
             
             ## stepper motor settings
             "Set_motor_pin":  [[0]*self.nr_of_joints*2,""],
+            "Set_ena_pin": [[0]*self.nr_of_joints,""],
             "Set_switch_pin": [[0]*self.nr_of_joints,""],
             "Set_lim_pos": [[0]*self.nr_of_joints,""],
             "Set_step_deg": [[0]*self.nr_of_joints,""],
@@ -643,14 +654,17 @@ class RobotSettings(QFrame):
                 data["Set_motor_pin"][0][joint_nr * 2] = type_specific_layout.itemAt(1).widget().text()
                 data["Set_motor_pin"][0][joint_nr * 2 + 1] = type_specific_layout.itemAt(3).widget().text()
                 
+                ## set ena pin
+                data["Set_ena_pin"][0][joint_nr] = type_specific_layout.itemAt(5).widget().text()
+                
                 ## set switch pin
-                data["Set_switch_pin"][0][joint_nr] = type_specific_layout.itemAt(5).widget().text()
+                data["Set_switch_pin"][0][joint_nr] = type_specific_layout.itemAt(7).widget().text()
 
                 ## set switch pin
-                data["Set_lim_pos"][0][joint_nr] = type_specific_layout.itemAt(7).widget().text()
+                data["Set_lim_pos"][0][joint_nr] = type_specific_layout.itemAt(9).widget().text()
                 
                 # set step per degree
-                data["Set_step_deg"][0][joint_nr] = type_specific_layout.itemAt(9).widget().text()
+                data["Set_step_deg"][0][joint_nr] = type_specific_layout.itemAt(11).widget().text()
                 
                 
             elif frame.combo_box.currentText() == "Servo":
@@ -693,9 +707,9 @@ class RobotSettings(QFrame):
         # extract the tool pins
         
         tool_pins = []
-        for line_edit in self.io_fields:
+        for line_edit in self.tool_fields:
             tool_pins.append(line_edit.text())
-        data["Set_tools"][0] = io_pins
+        data["Set_tools"][0] = tool_pins
         
         if self.checkbox_enable_tool.isChecked():
             data["Set_tools"][1] = "IO"

@@ -1,10 +1,6 @@
-import sys
-import asyncio
-from PyQt5.QtCore import pyqtSignal, QThread
-from bleak import BleakScanner, BleakClient
 from PyQt5.QtWidgets import QLabel, QApplication, QPushButton, QListWidget, QMainWindow, QComboBox, QVBoxLayout, QWidget, QLineEdit
 from serial.tools import list_ports
-
+from PyQt5.QtGui import  QDesktopServices, QPixmap, QIcon
 from backend.core.event_manager import event_manager
 
 
@@ -15,6 +11,7 @@ from backend.robot_management.communication import scan_for_robots
 from backend.robot_management.communication import connect_robot
 
 from backend.vision import connect_cam
+from backend.file_managment import get_image_path
 
 from gui.style import *
 
@@ -22,6 +19,9 @@ class ConnectDevice(QWidget):
     def __init__(self, type):
         super().__init__()
         self.type = type
+        
+        image_path = get_image_path('mikobot.ico')
+        self.setWindowIcon(QIcon(image_path))
 
         self.setWindowTitle("Connect " + type)
         self.setGeometry(100, 100, 400, 300)

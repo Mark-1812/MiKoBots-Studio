@@ -55,12 +55,13 @@ class RobotSettings:
             general_setting = {**self.selected_robot_name, **general_setting}
             
         if not 'Set_motor_type' in general_setting:
-            self.selected_robot_name = {'Set_motor_type': [[""]*number_of_joints,""]}
-            general_setting = {**self.selected_robot_name, **general_setting}
+            motor_type = {'Set_motor_type': [[""]*number_of_joints,""]}
+            general_setting = {**motor_type, **general_setting}
             
-        if not 'Set_servo_settings' in general_setting:
-            self.selected_robot_name = {'Set_servo_settings': [[""]*4*number_of_joints,""]}
-            general_setting = {**self.selected_robot_name, **general_setting}
+        if not 'Set_ena_pin' in general_setting:
+            enable_pin = {'Set_ena_pin': [[""]*number_of_joints,""]}
+            general_setting = {**enable_pin, **general_setting}
+            
 
         return [general_setting, robot_model_settings, robot_tool_settings, number_of_joints, dh_param]
                      

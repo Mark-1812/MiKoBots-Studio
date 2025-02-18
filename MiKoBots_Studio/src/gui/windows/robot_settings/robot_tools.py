@@ -598,7 +598,6 @@ class RobotTools(QFrame):
         
         # get the pin number
         data_tool[6] = self.combobox_tool_pin.currentText() 
-           
         
         # get the type of tool
         if self.radio_button_relay.isChecked():

@@ -4,10 +4,12 @@ from backend.core.event_manager import event_manager
 
 import os
 
+from backend.robot_management import change_tool
 from backend.robot_management.communication  import send_line_to_io, connect_io_check
 from backend.robot_management.communication  import send_line_to_robot, connect_robot_check, send_tool_frame
 from backend.simulation import check_simulation_on
 
+import time
 
 
 class Tool():
@@ -28,6 +30,11 @@ class Tool():
 
                 # if the tool is different than shown in the simulation change tool
                 event_manager.publish("request_set_tool_combo", self.tool_number)
+                # change_tool(self.tool_number)
+                
+                
+                time.sleep(0.05)
+                
                 
                 self.type_of_tool = var.TOOL_TYPE
                 self.servo_values = var.TOOL_SERVO_SETTINGS # even if the tool has no servo type

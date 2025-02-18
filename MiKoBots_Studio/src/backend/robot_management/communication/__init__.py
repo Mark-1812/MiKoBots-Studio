@@ -126,7 +126,7 @@ def stop_robot():
 def send_line_to_io(command):
     if talk_with_io_bt.connect:
         talk_with_io_bt.SendLineCommand(command)
-    elif talk_with_robot_com.connect:
+    elif talk_with_io_com.connect:
         talk_with_io_com.SendLineCommand(command)
     else:
         print("Error io is not connected")
@@ -149,6 +149,8 @@ def scan_for_io():
     talk_with_io_bt.ScanForDevice()
 
 def connect_io_check():
+    print("check io test")
+    
     if talk_with_io_bt.connect:
         return True
     if talk_with_io_com.connect:

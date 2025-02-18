@@ -77,6 +77,38 @@ void set_motor_pin(String command){
   sent_message("END");
 }
 
+void set_enable_pin(String command){
+  int pos_setting[6];
+
+  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+    pos_setting[i] = command.indexOf(alphabet[i]);
+  }
+
+  for(int i = 0; i < NUMBER_OF_JOINTS; i++){
+    if (i < NUMBER_OF_JOINTS - 1){
+      motors[i].ena_pin = command.substring(pos_setting[i] + 1, pos_setting[i + 1]).toInt();
+    } else{
+      motors[i].ena_pin = command.substring(pos_setting[i] + 1).toInt();
+    }
+  }
+
+
+  for(int i=0; i < NUMBER_OF_JOINTS; i++) {  
+    // set the motor pin & scale
+    if (!motors[i].motor_type){
+      pinMode(motors[i].ena_pin, OUTPUT);
+      digitalWrite(motors[i].ena_pin, LOW);
+    }
+    else{
+      Serial.print("Joint is servo: ");
+      Serial.println(i);
+    }
+  }
+
+  sent_message("Enable pins settings are updated");
+  sent_message("END");
+}
+
 void set_motor_type(String command){
   int pos_setting[12];
 

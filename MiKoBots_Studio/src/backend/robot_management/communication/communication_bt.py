@@ -211,9 +211,8 @@ class TalkThroughBT(QThread):
                 event_manager.publish("request_label_pos_axis", var.POS_AXIS, var.NAME_AXIS, var.UNIT_AXIS)
 
         else:
-            pass
-        data_text = "ROBOT: " + data_text
-        print(data_text) 
+            data_text = "ROBOT: " + data_text
+            print(data_text) 
         
         data_text = None
 
@@ -233,7 +232,7 @@ class TalkThroughBT(QThread):
 
     async def _SendLineCommand(self, message):
         if self.ROBOT and self.client_bt.is_connected:
-            print(f"sent: {message}")
+            # print(f"sent: {message}")
             await self.client_bt.write_gatt_char(CHARACTERISTIC_UUID_ROBOT, message.encode())
         elif self.IO and self.client_bt.is_connected:
             # print(f"sent: {message}")

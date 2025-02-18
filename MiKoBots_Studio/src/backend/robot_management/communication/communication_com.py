@@ -30,14 +30,13 @@ class TalkThroughCOM():
 # Connect the robot
     def Connect(self, com_port = None, settings = None):
         try:        
-            print(com_port)
             self.com_port = com_port
             self.com_ser = serial.Serial(self.com_port, baudrate=57600)#, timeout=1)
             self.com_ser .dtr = False   # Ensure DTR is inactive
             self.com_ser .setRTS(False) # Deactivate RTS first
-            time.sleep(0.1)
+            time.sleep(0.2)
             self.com_ser .setRTS(True)  # Reactivate RTS to reset
-            time.sleep(0.5)
+            time.sleep(0.8)
             self.com_ser .dtr = True    # Enable DTR
 
             t_threadRead = threading.Thread(target=self.ReadDate)  
@@ -58,6 +57,7 @@ class TalkThroughCOM():
                     self.SendSettingsRobot()
                 
                 if self.IO:
+                    print("Send IO settings")
                     event_manager.publish("request_io_connect_button_color", True)
                     self.SendSettingsIO()
 
@@ -95,7 +95,6 @@ class TalkThroughCOM():
 # read data
     def ReadDate(self):
         while self.com_ser.is_open:
-
             try:
                 data = self.com_ser.readline().decode('latin-1').rstrip()  # Read a line
             except:
@@ -106,6 +105,7 @@ class TalkThroughCOM():
                     self.pause_event.set()
                 elif data.strip() == "go":
                     self.pause_event.clear()
+                    
                 elif data.strip() == "ROBOT_CONNECTED" and self.ROBOT:
                     self.connect = True
                     self.busy = False
@@ -114,6 +114,7 @@ class TalkThroughCOM():
                     print(var.LANGUAGE_DATA.get("message_robot_instead_of_io"))
                     
                 elif data.strip() == "IO_CONNECTED" and self.IO:
+                    print("IO connefcted")
                     self.connect = True
                     self.busy = False
                 elif data.strip() == "IO_CONNECTED" and self.ROBOT:
@@ -144,7 +145,6 @@ class TalkThroughCOM():
                         event_manager.publish("request_set_io_state_input", io_number, False)    
                 elif data.startswith("POS:"):
                     words = data.split()
-                    print("ROBOT: " + data)
 
                     for i in range(len(words)):
                         if words[i] == 'G':
@@ -164,9 +164,9 @@ class TalkThroughCOM():
                         event_manager.publish("request_label_pos_axis", var.POS_AXIS, var.NAME_AXIS, var.UNIT_AXIS)
 
                 else:
-                    pass
-                data_text = "ROBOT: " + data
-                print(data_text) 
+                
+                    data_text = "ROBOT: " + data
+                    print(data_text) 
                         
                 data = None
 
@@ -182,7 +182,7 @@ class TalkThroughCOM():
         
         self.busy = 1   
         try:
-            print(command)
+            # print(command)
             self.com_ser.write(command.encode())
         except:
             self.DisConnect()

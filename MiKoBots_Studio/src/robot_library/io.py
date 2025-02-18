@@ -22,6 +22,7 @@ class IO():
                     
             settings_io = f"Set_io_pin A{pin_number}B{IO_pin}C{self.type}\n"
             
+
             # send the settings to the IO box or the robot
             if var.ROBOT_SETTINGS["Set_io_pin"][1] == "IO" and connect_io_check():
                 send_line_to_io(settings_io)
@@ -33,12 +34,9 @@ class IO():
             print("error do not regonize this type, only INPUT or OUTPUT")        
     
     def digitalRead(self, pin_number):
-        print(self.type)
         if self.type == "INPUT":
             
-            print(f"IO check {IO_CHECK}")
             IO_CHECK = event_manager.publish("request_check_io_state", pin_number)[0]
-            print(f"IO check {IO_CHECK}")
             
             if IO_CHECK:
                 return True

@@ -9,7 +9,7 @@ from gui.windows.update_window import UpdateChecker
 from backend.open_program import check_folders, check_updates, open_setting, load_languages
 from gui.main_window import MainWindow
 
-CURRENT_VERSION = 1.14 
+CURRENT_VERSION = 1.15
 
 class StartupWorker(QThread):
     version = pyqtSignal(float, str)

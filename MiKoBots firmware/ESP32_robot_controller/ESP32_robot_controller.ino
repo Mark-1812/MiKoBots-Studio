@@ -1,6 +1,6 @@
 // FIRMWARE for the robot
-// Version 1.2
-// date 11-1-2025
+// Version 1.22
+// date 18-2-2025
 
 /*
 The current version of the firmware allows you to use also arduino mega boards and
@@ -12,8 +12,8 @@ ps. diclaimer I'm not an software engineer, if you have any tips please share
 */
 
 
-#define type_device "ROBOT"       /// change to IO if you installing the IO box
-#define board_expansion "None" // Needed for Braccio robot arm can be set to "None" if not use, else set to "Braccio"
+#define type_device "IO"       /// change to IO if you installing the IO box
+#define board_expansion "Braccio" // Needed for Braccio robot arm can be set to "None" if not use, else set to "Braccio"
 
 
 #include <math.h>
@@ -97,6 +97,7 @@ void ForwardKinematic_3_PosEnd();
 typedef struct {
   int step_pin;
   int dir_pin;
+  int ena_pin;
   int limit_switch_pin;
   bool motor_type; // if it true it is a servo, false means stepper motor
   bool servo_dir;
@@ -294,6 +295,10 @@ void initializeBLE(){
     SERVICE_UUID = SERVICE_UUID_ROBOT;
     CHARACTERISTIC_UUID = CHARACTERISTIC_UUID_ROBOT;
   }
+  if (type_device == "IO"){
+    SERVICE_UUID = SERVICE_UUID_IO;
+    CHARACTERISTIC_UUID = CHARACTERISTIC_UUID_IO;
+  }
 
   BLEService *pService = pServer->createService(SERVICE_UUID);
   pCharacteristic = pService->createCharacteristic(
@@ -383,6 +388,7 @@ void Task2code(void * pvParameters) {
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_motor_type")) set_motor_type(command);
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_pin")) set_servo_pin(command);
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_pulse")) set_servo_pulse(command);
+      else if (type_device == "ROBOT" and typeOfCommand.equals("Set_ena_pin")) set_enable_pin(command);
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_position")) set_servo_pos(command);
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_motor_pin")) set_motor_pin(command);
       else if (type_device == "ROBOT" and typeOfCommand.equals("Set_switch_pin")) set_switch_pin(command);
@@ -506,6 +512,7 @@ Servo servoTool;
 typedef struct {
   int step_pin;
   int dir_pin;
+  int ena_pin;
   int limit_switch_pin;
   bool motor_type; // if it true it is a servo, false means stepper motor
   bool servo_dir;
@@ -615,6 +622,7 @@ void processCommand(const String& command) {
     else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_pulse")) set_servo_pulse(command);
     else if (type_device == "ROBOT" and typeOfCommand.equals("Set_servo_position")) set_servo_pos(command);
     else if (type_device == "ROBOT" and typeOfCommand.equals("Set_motor_pin")) set_motor_pin(command);
+    else if (type_device == "ROBOT" and typeOfCommand.equals("Set_ena_pin")) set_enable_pin(command);
     else if (type_device == "ROBOT" and typeOfCommand.equals("Set_switch_pin")) set_switch_pin(command);
     else if (type_device == "ROBOT" and typeOfCommand.equals("Set_max_pos")) set_max_pos(command);
     else if (type_device == "ROBOT" and typeOfCommand.equals("Set_lim_pos")) set_lim_pos(command);

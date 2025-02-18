@@ -61,7 +61,7 @@ class Robot3dModel:
         name = os.path.basename(file_path)
         
         # Get the name of the folder of the current robot
-        folder_name = robot_name 
+        folder_name = robot_name
 
         # Save the modified mesh to a new STL file             
         self.settings_3d_models[i][0] = name
@@ -70,7 +70,6 @@ class Robot3dModel:
         self.settings_3d_models[i][3] = "red"
         self.settings_3d_models[i][4] = [0,0,0,0,0,0] # Position origin
         self.settings_3d_models[i][5] = "Base" # Link
-
 
         # Get the name of the folder of the current robot
         file_path_1 = get_file_path(self.settings_3d_models[i][1])

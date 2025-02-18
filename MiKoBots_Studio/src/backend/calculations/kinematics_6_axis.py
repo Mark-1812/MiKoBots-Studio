@@ -422,20 +422,16 @@ class InverseKinematics_6:
                 J5 = 0
 
         if J5 < 0:
-            test = math.degrees(math.atan2(R03_6matrix[1][2], R03_6matrix[0][2]))
-            J4 = -test
+            J4 = -math.degrees(math.atan2(R03_6matrix[1][2], R03_6matrix[0][2]))
         else:
-            test = math.degrees(math.atan2(-R03_6matrix[1][2], R03_6matrix[0][2]))
-            J4 = -test
+            J4 = -math.degrees(math.atan2(-R03_6matrix[1][2], R03_6matrix[0][2]))
 
 
 
         if J5 < 0:
-            test = math.degrees(math.atan2(R03_6matrix[2][1], R03_6matrix[2][0]))
-            J6 = -test
+            J6 = -math.degrees(math.atan2(R03_6matrix[2][1], R03_6matrix[2][0]))
         else:
-            test = math.degrees(math.atan2(-R03_6matrix[2][1], -R03_6matrix[2][0]))
-            J6 = -test
+            J6 = -math.degrees(math.atan2(-R03_6matrix[2][1], -R03_6matrix[2][0]))
             
 
         Joint_angles = [J1, J2, J3, J4, J5, J6]
